@@ -8,6 +8,7 @@
 	import ElementSheet from '#lib/story/ElementSheet.svelte';
 	import {
 		ELEMENT_DISCOVERY_CONFIG,
+		ELEMENT_DISCOVERY_IMAGES,
 		hiddenCopyTargets,
 		loadElementDiscovery,
 		shownCopySources,
@@ -111,6 +112,7 @@
 				{summaries}
 				hiddenSteps={hiddenTargets}
 				copySources={ELEMENT_DISCOVERY_CONFIG.copySources}
+				images={ELEMENT_DISCOVERY_IMAGES}
 				onselect={openElement}
 			/>
 		</section>
@@ -149,6 +151,7 @@
 			<SourceList
 				sources={ready.sources}
 				copySources={shownCopySources(hiddenTargets)}
+				images={ELEMENT_DISCOVERY_IMAGES}
 				note={SOURCE_NOTE}
 			/>
 		</section>

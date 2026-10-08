@@ -1,8 +1,10 @@
-// 구성 문구와 데이터 대조(순수 함수). 문구에 적은 연도·고대 여부·강조 칸·퀴즈 정답이 데이터와 다르면
+// 구성 문구와 데이터 대조(순수 함수). 문구에 적은 연도·고대 여부·강조 칸·퀴즈 정답이 데이터와 다르거나
+// 출처·그림 id 가 목록에 없으면
 // 불일치로 돌려준다. 화면은 불일치가 있는 단계(또는 퀴즈)의 문구를 보여 주지 않는다.
 import type { StoryElement } from './elements.ts';
 import { highlightNumbers, isKnownAt, type StepDefinition } from './steps.ts';
 import type { StoryConfig } from './storyConfig.ts';
+import { isStorySvgId, type StoryImage } from './storyMedia.ts';
 
 export const QUIZ_TARGET = 'quiz';
 
@@ -76,14 +78,44 @@ function checkStep(
 	return problems;
 }
 
+// 곁들임 카드의 출처·이미지와 단계 그림이 실제로 있는지 확인한다.
+function checkAsideAndMedia(
+	step: StepDefinition,
+	copySourceIds: Set<string>,
+	imageIds: Set<string>
+): string[] {
+	const problems: string[] = [];
+	if (step.aside !== null) {
+		for (const sourceId of step.aside.sources) {
+			if (!copySourceIds.has(sourceId)) {
+				problems.push(`aside source ${sourceId}: not in copySources`);
+			}
+		}
+		if (step.aside.image !== null && !imageIds.has(step.aside.image)) {
+			problems.push(`aside image ${step.aside.image}: not in images`);
+		}
+	}
+	if (step.media !== null) {
+		const exists =
+			step.media.type === 'image' ? imageIds.has(step.media.id) : isStorySvgId(step.media.id);
+		if (!exists) problems.push(`media ${step.media.type} ${step.media.id}: not found`);
+	}
+	return problems;
+}
+
 export function findStoryMismatches(
 	elements: StoryElement[],
-	config: StoryConfig
+	config: StoryConfig,
+	images: StoryImage[]
 ): StoryMismatch[] {
 	const byNumber = new Map(elements.map((element) => [element.atomicNumber, element]));
 	const copySourceIds = new Set(config.copySources.map((source) => source.id));
+	const imageIds = new Set(images.map((image) => image.id));
 	const mismatches: StoryMismatch[] = config.steps.flatMap((step) =>
-		checkStep(step, byNumber, elements, copySourceIds).map((message) => ({
+		[
+			...checkStep(step, byNumber, elements, copySourceIds),
+			...checkAsideAndMedia(step, copySourceIds, imageIds)
+		].map((message) => ({
 			target: step.id,
 			message
 		}))

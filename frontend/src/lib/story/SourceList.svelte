@@ -1,11 +1,18 @@
 <script lang="ts">
-	// 스토리 출처 두 묶음: 데이터셋 출처 "제목: URL (기준 날짜)" · 직접 작성은 "직접 작성"(C3) / 화면에 쓴 문구의 출처.
+	// 스토리 출처 세 묶음: 데이터셋 출처 "제목: URL (기준 날짜)" · 직접 작성은 "직접 작성"(C3) / 화면에 쓴 문구의 출처
+	// / 이미지 출처(제목 · 작가 · 연도 · 라이선스 · 커먼즈 링크, D-25).
 	import type { SourceView } from './elements.ts';
 	import type { CopySource } from './storyConfig.ts';
+	import type { StoryImage } from './storyMedia.ts';
 
-	type Props = { sources: SourceView[]; copySources: CopySource[]; note: string };
+	type Props = {
+		sources: SourceView[];
+		copySources: CopySource[];
+		images: StoryImage[];
+		note: string;
+	};
 
-	let { sources, copySources, note }: Props = $props();
+	let { sources, copySources, images, note }: Props = $props();
 </script>
 
 <h3 class="first">데이터 출처</h3>
@@ -30,6 +37,19 @@
 		{#each copySources as source (source.id)}
 			<li>
 				<a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>
+			</li>
+		{/each}
+	</ul>
+{/if}
+
+{#if images.length > 0}
+	<h3>이미지 출처</h3>
+	<ul class="sources">
+		{#each images as image (image.id)}
+			<li>
+				{image.title} · {image.creator} · {image.date} · {image.license}
+				<br />
+				<a href={image.sourceUrl} target="_blank" rel="noopener noreferrer">위키미디어 커먼즈</a>
 			</li>
 		{/each}
 	</ul>
