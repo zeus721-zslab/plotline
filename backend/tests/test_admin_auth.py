@@ -39,20 +39,20 @@ from app.admin_auth.service import (
 )
 from app.config import Settings, get_settings
 from app.main import app
+from conftest import (
+    ADMIN_PASSWORD,
+    ADMIN_USERNAME,
+    ALLOWED_ORIGIN,
+    TEST_HASH_MEMORY_KIB,
+    TEST_PASSWORD_HASH,
+    make_settings,
+    session_cookie_header,
+)
 
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "correct horse battery staple"
-ALLOWED_ORIGIN = "https://plotline.test"
 OTHER_ORIGIN = "https://evil.test"
-VALID_SECRET = "s" * 48
 OTHER_VALID_SECRET = "o" * 48
 SHORT_SECRET = "s" * 31
-# 테스트 시간을 줄이기 위한 낮은 비용 파라미터. 운영 해시는 hash_password 도구의 기본 파라미터를 쓴다.
-# 운영 하한(MIN_PASSWORD_HASH_MEMORY_KIB)보다 낮으므로 allow_low_cost_test_hash 픽스처가 하한을 이 값으로 낮춘다.
-TEST_HASH_MEMORY_KIB = 8
-TEST_PASSWORD_HASH = PasswordHasher(
-    time_cost=1, memory_cost=TEST_HASH_MEMORY_KIB, parallelism=1
-).hash(ADMIN_PASSWORD)
+# TEST_PASSWORD_HASH 는 운영 하한보다 낮은 비용이므로 allow_low_cost_test_hash 픽스처가 하한을 그 값으로 낮춘다.
 TEST_ARGON2I_HASH = PasswordHasher(
     time_cost=1, memory_cost=TEST_HASH_MEMORY_KIB, parallelism=1, type=Type.I
 ).hash(ADMIN_PASSWORD)
@@ -65,18 +65,6 @@ SECONDS_BEFORE_EXPIRY_MARGIN = 60
 LOGIN_PATH = f"{ADMIN_PREFIX}/login"
 
 ClientFactory = Callable[[Settings], TestClient]
-
-
-def make_settings(**overrides: object) -> Settings:
-    values: dict[str, object] = {
-        "admin_username": ADMIN_USERNAME,
-        "admin_password_hash": SecretStr(TEST_PASSWORD_HASH),
-        "session_secret": SecretStr(VALID_SECRET),
-        "session_cookie_secure": True,
-        "admin_allowed_origins": f"{ALLOWED_ORIGIN}, http://127.0.0.1:5173",
-    }
-    values.update(overrides)
-    return Settings.model_validate(values)
 
 
 @pytest.fixture(autouse=True)
@@ -114,11 +102,6 @@ def login(
         json={"username": username, "password": password},
         headers={"Origin": ALLOWED_ORIGIN},
     )
-
-
-def session_cookie_header(token: str) -> dict[str, str]:
-    # Secure 쿠키는 http TestClient 쿠키 저장소가 다시 보내지 않으므로 헤더로 직접 싣는다.
-    return {"Cookie": f"{SESSION_COOKIE_NAME}={token}"}
 
 
 def token_from_response(response: httpx.Response) -> str:
@@ -746,7 +729,15 @@ def test_every_admin_route_except_login_requires_session() -> None:
     checked, violations = inspect_admin_routes(app.routes)
 
     # 순회가 include_router 로 붙은 라우트를 실제로 보고 있는지(0건 통과 방지) 알려진 라우트로 확인한다.
-    assert {LOGIN_ROUTE_LABEL, "POST /api/admin/logout", "GET /api/admin/me"} <= set(checked)
+    assert {
+        LOGIN_ROUTE_LABEL,
+        "POST /api/admin/logout",
+        "GET /api/admin/me",
+        "GET /api/admin/datasets",
+        "POST /api/admin/datasets",
+        "GET /api/admin/datasets/{slug}",
+        "POST /api/admin/datasets/{slug}/schemas",
+    } <= set(checked)
     assert violations == []
 
 

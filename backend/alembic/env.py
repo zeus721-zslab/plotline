@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import create_engine, pool
+from sqlalchemy import Connection, create_engine, pool
 
 from alembic import context
 from app.config import get_settings
@@ -31,14 +31,24 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def run_migrations_on(connection: Connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
 def run_migrations_online() -> None:
+    # 테스트는 db-test 연결을 config.attributes 로 넘긴다. 이때는 DB_* 접속 정보(개발 DB)로 새로 접속하지 않는다.
+    injected_connection = config.attributes.get("connection")
+    if injected_connection is not None:
+        run_migrations_on(injected_connection)
+        return
+
     connectable = create_engine(database_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-
-        with context.begin_transaction():
-            context.run_migrations()
+        run_migrations_on(connection)
 
 
 if context.is_offline_mode():

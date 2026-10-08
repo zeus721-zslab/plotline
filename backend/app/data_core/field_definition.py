@@ -16,6 +16,8 @@ NAME_PATTERN = re.compile(r"^[a-z0-9_]+$")
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # number 는 같은 값도 표기(1 · 1.0 · 1e0)에 따라 row_key 문자열이 달라질 수 있어 key 로 쓰지 않는다.
 KEY_DISALLOWED_TYPES = frozenset({FieldType.NUMBER})
+# 행 입력에서 출처 칸으로 쓰는 이름. 필드 이름으로 쓰면 행의 값 칸과 출처 칸이 겹친다.
+RESERVED_FIELD_NAMES = frozenset({"source_kind", "source_url", "as_of_date"})
 
 COMMON_ATTRIBUTES = frozenset({"name", "label", "type", "required", "key", "required_if"})
 TYPE_SPECIFIC_ATTRIBUTES: dict[FieldType, frozenset[str]] = {
@@ -85,6 +87,9 @@ def _parse_one_field(raw_field: object, position: int, problems: list[str]) -> F
         problems.append(f"{where}: name 은 영문 소문자·숫자·_ 로 된 문자열이어야 합니다.")
         return None
     where = f"필드 '{name}'"
+    if name in RESERVED_FIELD_NAMES:
+        problems.append(f"{where}: 출처 칸 이름({', '.join(sorted(RESERVED_FIELD_NAMES))})은 필드 이름으로 쓸 수 없습니다.")
+        return None
 
     raw_type = raw_field.get("type")
     if not isinstance(raw_type, str) or raw_type not in FieldType:
