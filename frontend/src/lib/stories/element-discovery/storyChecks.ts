@@ -1,10 +1,11 @@
 // 구성 문구와 데이터 대조(순수 함수). 문구에 적은 연도·고대 여부·강조 칸·퀴즈 정답이 데이터와 다르거나
 // 출처·그림 id 가 목록에 없으면
 // 불일치로 돌려준다. 화면은 불일치가 있는 단계(또는 퀴즈)의 문구를 보여 주지 않는다.
+import type { StoryImage } from '../../story/storyMedia.ts';
+import type { StoryConfig } from './config.ts';
 import type { StoryElement } from './elements.ts';
+import { isStorySvgId } from './stepMedia.ts';
 import { highlightNumbers, isKnownAt, type StepDefinition } from './steps.ts';
-import type { StoryConfig } from './storyConfig.ts';
-import { isStorySvgId, type StoryImage } from './storyMedia.ts';
 
 export const QUIZ_TARGET = 'quiz';
 

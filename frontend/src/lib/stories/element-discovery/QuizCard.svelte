@@ -1,6 +1,7 @@
 <script lang="ts">
 	// 표지 퀴즈: 보기 하나를 누르면 정답을 강조하고 나머지는 흐리게, 정답 문구를 보여 준다. 다시 고를 수 없다.
-	import { fillTemplate, type QuizConfig } from './storyConfig.ts';
+	import { fillTemplate } from '../../story/storyConfig.ts';
+	import type { QuizConfig } from './config.ts';
 
 	type Props = { quiz: QuizConfig; answer: number; dated: number };
 

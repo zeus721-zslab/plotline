@@ -1,12 +1,8 @@
 // 원소 발견사 스토리의 원소 목록 조립(순수 함수). 두 데이터셋(이름·발견 연도)을 원자 번호로 합친다.
-import type { CellValue, PublishedDataset, PublishedRow, PublishedSource } from './published.ts';
+import type { CellValue, PublishedDataset, PublishedRow } from '../../story/published.ts';
+import { toSourceView, type SourceView } from '../../story/sourceViews.ts';
 
 export type Discovery = { era: 'ancient' } | { era: 'dated'; year: number };
-
-// 화면 표시용 출처. 데이터셋 제목을 함께 들고 다녀 "제목: URL (기준 날짜)" 를 만들 수 있게 한다.
-export type SourceView =
-	| { datasetTitle: string; kind: 'external'; url: string; asOfDate: string }
-	| { datasetTitle: string; kind: 'self' };
 
 export type StoryElement = {
 	atomicNumber: number;
@@ -16,15 +12,6 @@ export type StoryElement = {
 	nameSource: SourceView;
 	discoverySource: SourceView;
 };
-
-function toSourceView(datasetTitle: string, source: PublishedSource): SourceView {
-	if (source.kind === 'self') return { datasetTitle, kind: 'self' };
-	return { datasetTitle, kind: 'external', url: source.url, asOfDate: source.as_of_date };
-}
-
-export function datasetSourceViews(dataset: PublishedDataset): SourceView[] {
-	return dataset.sources.map((source) => toSourceView(dataset.title, source));
-}
 
 function rowSourceView(dataset: PublishedDataset, row: PublishedRow): SourceView | null {
 	const source = dataset.sources.find((candidate) => candidate.id === row.source);

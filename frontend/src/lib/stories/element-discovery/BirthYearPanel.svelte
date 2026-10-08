@@ -1,9 +1,10 @@
 <script lang="ts">
 	// 출생 연도 비교: 연도를 넣으면 그해까지 알려진 원소 수와 그 뒤 발견 수, 그 뒤 가장 최근 발견을 보여 준다.
+	import CountUp from '../../story/CountUp.svelte';
+	import { templateParts } from '../../story/storyConfig.ts';
 	import { compareWithYear, type BirthYearResult } from './birthYear.ts';
-	import CountUp from './CountUp.svelte';
+	import type { BirthYearConfig } from './config.ts';
 	import { discoveryLabel, type StoryElement } from './elements.ts';
-	import { templateParts, type BirthYearConfig } from './storyConfig.ts';
 
 	type Props = { config: BirthYearConfig; elements: StoryElement[] };
 

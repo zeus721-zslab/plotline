@@ -2,10 +2,10 @@
 	// 원소 발견사 스토리: 표지(퀴즈) → 시그니처 장면 → 50년 구간 막대 → 출생 연도 → 직접 찾아보기 → 출처.
 	// 페이지 틀은 프리렌더하고 데이터는 클라이언트에서 /data/ 를 읽는다.
 	import { onMount } from 'svelte';
-	import BirthYearPanel from '#lib/story/BirthYearPanel.svelte';
-	import DecadeBars from '#lib/story/DecadeBars.svelte';
-	import { binDiscoveries, busiestBin } from '#lib/story/discoveryBins.ts';
-	import ElementSheet from '#lib/story/ElementSheet.svelte';
+	import BirthYearPanel from '#lib/stories/element-discovery/BirthYearPanel.svelte';
+	import DecadeBars from '#lib/stories/element-discovery/DecadeBars.svelte';
+	import { binDiscoveries, busiestBin } from '#lib/stories/element-discovery/discoveryBins.ts';
+	import ElementSheet from '#lib/stories/element-discovery/ElementSheet.svelte';
 	import {
 		ELEMENT_DISCOVERY_CONFIG,
 		ELEMENT_DISCOVERY_IMAGES,
@@ -13,17 +13,17 @@
 		loadElementDiscovery,
 		shownCopySources,
 		type ElementDiscoveryData
-	} from '#lib/story/elementDiscovery.ts';
-	import type { StoryElement } from '#lib/story/elements.ts';
+	} from '#lib/stories/element-discovery/elementDiscovery.ts';
+	import type { StoryElement } from '#lib/stories/element-discovery/elements.ts';
 	import LoadStatus from '#lib/story/LoadStatus.svelte';
-	import PeriodicGrid from '#lib/story/PeriodicGrid.svelte';
-	import QuizCard from '#lib/story/QuizCard.svelte';
-	import SignatureScene from '#lib/story/SignatureScene.svelte';
+	import PeriodicGrid from '#lib/stories/element-discovery/PeriodicGrid.svelte';
+	import QuizCard from '#lib/stories/element-discovery/QuizCard.svelte';
+	import SignatureScene from '#lib/stories/element-discovery/SignatureScene.svelte';
 	import SourceList from '#lib/story/SourceList.svelte';
-	import { summarizeSteps } from '#lib/story/steps.ts';
-	import { countAncient, QUIZ_TARGET } from '#lib/story/storyChecks.ts';
+	import { summarizeSteps } from '#lib/stories/element-discovery/steps.ts';
+	import { countAncient, QUIZ_TARGET } from '#lib/stories/element-discovery/storyChecks.ts';
 	import { fillTemplate } from '#lib/story/storyConfig.ts';
-	import '#lib/story/theme.css';
+	import '#lib/stories/element-discovery/theme.css';
 
 	type ViewState =
 		| { kind: 'loading' }
@@ -146,8 +146,7 @@
 			/>
 		</section>
 
-		<section class="block" aria-labelledby="sources-title">
-			<h2 id="sources-title">출처</h2>
+		<section class="block" aria-label="출처">
 			<SourceList
 				sources={ready.sources}
 				copySources={shownCopySources(hiddenTargets)}

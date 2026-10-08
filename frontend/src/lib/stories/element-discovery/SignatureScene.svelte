@@ -4,12 +4,14 @@
 	import { onMount } from 'svelte';
 	import { prefersReducedMotion } from 'svelte/motion';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { NO_ACTIVE_STEP, trackActiveStep } from '../../story/activeStep.ts';
+	import type { CopySource } from '../../story/storyConfig.ts';
+	import type { StoryImage } from '../../story/storyMedia.ts';
 	import { compareByDiscovery, type StoryElement } from './elements.ts';
 	import PeriodicGrid from './PeriodicGrid.svelte';
 	import StepCard from './StepCard.svelte';
+	import { resolveMedia } from './stepMedia.ts';
 	import type { StepSummary } from './steps.ts';
-	import type { CopySource } from './storyConfig.ts';
-	import { resolveMedia, type StoryImage } from './storyMedia.ts';
 	import { NO_ZOOM, zoomToCells } from './zoom.ts';
 
 	type Props = {
@@ -26,14 +28,12 @@
 
 	// 카드 윗변이 화면 위에서 60% 지점(휴대폰은 고정된 표 아래 영역)을 넘으면 그 단계로 바뀐다.
 	const ACTIVE_LINE_RATIO = 0.6;
-	const ACTIVE_AREA_MARGIN = `0px 0px -${Math.round((1 - ACTIVE_LINE_RATIO) * 100)}% 0px`;
 	const STAGGER_MS = 40;
 	// 한 단계에서 새로 켜지는 칸이 많아도 전체 지연이 이 값을 넘지 않게 간격을 줄인다.
 	const MAX_STAGGER_SPREAD_MS = 900;
 	// 예언 적중 단계에서 강조 칸을 발견 연도순으로 켜는 간격
 	const REVEAL_INTERVAL_MS = 400;
 	const MAX_CHIP_COUNT = 6;
-	const NO_ACTIVE_STEP = -1;
 	// theme 과 같은 기준: 이 폭 이상은 PC 배치(확대 없음)
 	const wide = new MediaQuery('(min-width: 960px)');
 
@@ -110,21 +110,9 @@
 
 	onMount(() => {
 		const cards = Array.from(cardList.querySelectorAll<HTMLElement>('[data-step-index]'));
-		// 카드가 판정 영역(화면 위 ~ 판정선)에 드나들 때마다 "판정선을 이미 넘은 마지막 카드"를 다시 고른다.
-		// 빠른 스크롤·중간 새로고침으로 카드가 판정선을 건너뛰어도 현재 단계가 맞게 잡힌다.
-		const observer = new IntersectionObserver(
-			() => {
-				const activeLine = window.innerHeight * ACTIVE_LINE_RATIO;
-				let passed = NO_ACTIVE_STEP;
-				cards.forEach((card, index) => {
-					if (card.getBoundingClientRect().top < activeLine) passed = index;
-				});
-				activeIndex = passed;
-			},
-			{ rootMargin: ACTIVE_AREA_MARGIN }
-		);
-		for (const card of cards) observer.observe(card);
-		return () => observer.disconnect();
+		return trackActiveStep(cards, ACTIVE_LINE_RATIO, (index) => {
+			activeIndex = index;
+		});
 	});
 </script>
 

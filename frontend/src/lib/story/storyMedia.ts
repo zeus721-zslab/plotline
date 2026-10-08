@@ -1,5 +1,4 @@
-// 스토리 그림 해석(순수 함수): 이미지 목록(위키미디어 커먼즈 퍼블릭 도메인, D-25)과 코드로 그린 SVG 연출 id.
-import type { StepMedia } from './steps.ts';
+// 스토리 이미지 해석(순수 함수): 이미지 목록(위키미디어 커먼즈 퍼블릭 도메인, D-25).
 
 // 휴대폰용(480)·크게 보기용(960) 두 크기. 숫자는 긴 변 픽셀.
 export type ImageFiles = { small: string; large: string };
@@ -22,12 +21,6 @@ export type StoryImage = {
 	// 인물 초상: 잘라 보일 때 얼굴이 남도록 위쪽 기준으로 자른다.
 	portrait: boolean;
 };
-
-// 코드로 그린 연출. 화면(StepMedia.svelte)이 id 마다 컴포넌트를 고른다.
-export const STORY_SVG_IDS = ['spectrum', 'eclipse', 'leadbox'] as const;
-export type StorySvgId = (typeof STORY_SVG_IDS)[number];
-
-export type ResolvedMedia = { type: 'image'; image: StoryImage } | { type: 'svg'; id: StorySvgId };
 
 const SMALL_FILE_KEY = '480';
 const LARGE_FILE_KEY = '960';
@@ -76,21 +69,6 @@ function parseImage(raw: unknown): StoryImage {
 export function parseStoryImages(raw: unknown): StoryImage[] {
 	if (!Array.isArray(raw)) throw new Error('story images must be a list');
 	return raw.map(parseImage);
-}
-
-export function isStorySvgId(value: string): value is StorySvgId {
-	return STORY_SVG_IDS.some((id) => id === value);
-}
-
-/** 단계 그림 정의를 화면에 쓸 값으로 바꾼다. 찾을 수 없는 id 는 null(대조 함수가 따로 불일치로 알린다). */
-export function resolveMedia(
-	media: StepMedia | null,
-	imagesById: Map<string, StoryImage>
-): ResolvedMedia | null {
-	if (media === null) return null;
-	if (media.type === 'svg') return isStorySvgId(media.id) ? { type: 'svg', id: media.id } : null;
-	const image = imagesById.get(media.id);
-	return image === undefined ? null : { type: 'image', image };
 }
 
 /** 그림 아래 한 줄 크레디트: "작가, 연도, 라이선스" */
