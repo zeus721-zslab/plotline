@@ -1,0 +1,52 @@
+# 운영 서버(DEPLOY)용 구성. 로컬 개발은 docker-compose.yml 을 쓴다.
+# 서버는 빌드하지 않고 GHCR 이미지를 받아 기동한다. 태그는 .env 의 WEB_IMAGE_TAG · API_IMAGE_TAG (비우면 latest).
+name: plotline
+
+services:
+  web:
+    image: ghcr.io/zeus721-zslab/plotline-web:${WEB_IMAGE_TAG:-latest}
+    container_name: plotline-web
+    restart: unless-stopped
+    mem_limit: 64m
+    volumes:
+      - published:/srv/published:ro
+    networks:
+      gateway_net:
+        aliases:
+          - plotline-web
+    # 기동 순서만 보장. api 가 unhealthy여도 공개 정적 페이지는 서빙한다(D-07, nginx 변수 방식 upstream)
+    depends_on:
+      - api
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  api:
+    image: ghcr.io/zeus721-zslab/plotline-api:${API_IMAGE_TAG:-latest}
+    container_name: plotline-api
+    restart: unless-stopped
+    mem_limit: 256m
+    env_file: .env
+    volumes:
+      - published:/srv/published
+    networks:
+      infra_net: {}
+      gateway_net:
+        aliases:
+          - plotline-api
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  published:
+
+networks:
+  infra_net:
+    external: true
+  gateway_net:
+    external: true

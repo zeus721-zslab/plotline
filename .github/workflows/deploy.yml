@@ -1,0 +1,171 @@
+name: Deploy
+
+# 방식 A(D-15): Actions가 변경된 서비스 이미지만 GHCR에 빌드·push하고, 서버는 scripts/deploy.sh 로 pull·기동만 한다.
+# 테스트 게이트는 PR 단계의 pr-ci.yml 이며, 이 워크플로는 테스트를 실행하지 않는다.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 연속 머지로 배포가 겹치면 먼저 시작한 쪽이 나중에 끝나 구버전이 최종 상태가 될 수 있어 진행 중인 실행을 끝까지 보낸다.
+# 한계: 같은 group의 대기 실행은 1개만 남아, 짧은 간격의 연속 push에서 가운데 실행의 빌드가 누락될 수 있다.
+# 누락 시 workflow_dispatch로 web·api를 모두 재빌드·배포해 복구한다.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WEB_IMAGE: ghcr.io/zeus721-zslab/plotline-web
+  API_IMAGE: ghcr.io/zeus721-zslab/plotline-api
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      # workflow_dispatch에는 비교 대상 push가 없으므로 web·api 모두 빌드한다.
+      web: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.web == 'true' }}
+      api: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.api == 'true' }}
+      deploy: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.deploy == 'true' }}
+    steps:
+      - name: Checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v7
+
+      - name: Detect changed areas
+        id: filter
+        if: github.event_name == 'push'
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            web:
+              - 'frontend/**'
+            api:
+              - 'backend/**'
+            deploy:
+              - 'docker-compose.prod.yml'
+              - 'scripts/deploy.sh'
+              - 'scripts/env-check.sh'
+
+  build-web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Short sha
+        id: sha
+        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push web
+        uses: docker/build-push-action@v7
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:sha-${{ steps.sha.outputs.short }}
+            ${{ env.WEB_IMAGE }}:latest
+          provenance: false
+          # scope를 서비스별로 나누지 않으면 두 이미지가 같은 캐시 키를 두고 서로를 축출한다.
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  build-api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Short sha
+        id: sha
+        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push api
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:sha-${{ steps.sha.outputs.short }}
+            ${{ env.API_IMAGE }}:latest
+          provenance: false
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+  deploy:
+    needs: [changes, build-web, build-api]
+    # 빌드 잡이 skipped(변경 없음)여도 진행하되, 실패·취소가 하나라도 있으면 배포하지 않는다.
+    # DEPLOY_ENABLED 저장소 변수로 서버·시크릿 준비 전에는 배포 잡을 끈다.
+    if: >-
+      !cancelled()
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
+      && (needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.deploy == 'true')
+      && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Deploy via SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
+        run: |
+          set -euo pipefail
+          umask 077
+          ssh_dir="$RUNNER_TEMP/deploy-ssh"
+          mkdir -p "$ssh_dir"
+          trap 'rm -rf "$ssh_dir"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$ssh_dir/id_key"
+          # 호스트 키는 시크릿 값만 신뢰한다(ssh-keyscan으로 받으면 첫 접속 MITM을 검증할 수 없다).
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          # 원격 명령은 스크립트 호출 1줄. 실행 비트 유무와 무관하도록 bash로 호출하고, 경로는 원격 셸용으로 인용한다.
+          ssh -i "$ssh_dir/id_key" -p "$DEPLOY_PORT" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$ssh_dir/known_hosts" \
+            -o GlobalKnownHostsFile=/dev/null \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "bash $(printf '%q' "$DEPLOY_DIR")/scripts/deploy.sh"
