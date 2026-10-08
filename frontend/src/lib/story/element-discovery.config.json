@@ -59,6 +59,31 @@
 			"id": "names2016",
 			"title": "EPS News — IUPAC names 113, 115, 117, 118",
 			"url": "https://www.epsnews.eu/2017/01/iupac-approved-the-names-of-the-elements-113-115-117-and-118/"
+		},
+		{
+			"id": "davyExhibit",
+			"title": "University of Illinois — Humphry Davy exhibit",
+			"url": "https://www.scs.uiuc.edu/~mainzv/exhibit/davy.htm"
+		},
+		{
+			"id": "heliumName",
+			"title": "Etymonline — helium",
+			"url": "https://www.etymonline.com/word/helium"
+		},
+		{
+			"id": "mendeleevDream",
+			"title": "The Marginalian — Mendeleev's dream",
+			"url": "https://www.themarginalian.org/2016/02/08/mendeleev-periodic-table-dream/"
+		},
+		{
+			"id": "polonium",
+			"title": "Britannica — polonium",
+			"url": "https://www.britannica.com/science/polonium"
+		},
+		{
+			"id": "curieNotes",
+			"title": "ScienceAlert — Marie Curie's personal effects",
+			"url": "https://www.sciencealert.com/these-personal-effects-of-marie-curie-will-be-radioactive-for-another-1-500-years"
 		}
 	],
 	"quiz": {
@@ -86,7 +111,13 @@
 			"title": "이름이 남은 첫 발견자",
 			"body": "독일의 연금술사 헤니히 브란트가 소변에서 하얗고 밀랍 같은 물질을 얻었습니다. 인은 발견한 사람의 이름이 기록된 첫 원소입니다.",
 			"checks": [[15, 1669]],
-			"sources": ["brand"]
+			"sources": ["brand"],
+			"media": { "type": "image", "id": "alchemist" },
+			"aside": {
+				"kind": "fact",
+				"text": "브란트가 원래 찾던 건 금을 만들어 준다는 '현자의 돌'이었습니다. 대신 얻은 물질이 어둠 속에서 빛나서 '인(phosphorus)'이라는 이름이 붙었습니다.",
+				"sources": ["brand"]
+			}
 		},
 		{
 			"id": "o1800",
@@ -109,7 +140,13 @@
 				[19, 1807]
 			],
 			"mustBeAncient": [20],
-			"sources": ["davy"]
+			"sources": ["davy"],
+			"media": { "type": "image", "id": "davy" },
+			"aside": {
+				"kind": "legend",
+				"text": "포타슘 알갱이가 불꽃을 튀기며 터져 나오자, 데이비는 기뻐서 방 안을 춤추듯 돌아다녔다고 전해집니다.",
+				"sources": ["davyExhibit"]
+			}
 		},
 		{
 			"id": "color",
@@ -122,7 +159,8 @@
 				[55, 1860],
 				[37, 1861]
 			],
-			"sources": ["cesium", "rubidium"]
+			"sources": ["cesium", "rubidium"],
+			"media": { "type": "svg", "id": "spectrum" }
 		},
 		{
 			"id": "helium",
@@ -132,7 +170,13 @@
 			"title": "지구보다 태양에서 먼저",
 			"body": "1868년 일식 때 태양 빛에서 처음 보는 선이 나타났습니다. 그리스어 태양(helios)에서 이름을 딴 헬륨은 27년 뒤인 1895년에야 지구에서 찾았습니다.",
 			"checks": [[2, 1868]],
-			"sources": ["helium"]
+			"sources": ["helium"],
+			"media": { "type": "svg", "id": "eclipse" },
+			"aside": {
+				"kind": "fact",
+				"text": "이름 끝의 '-ium'은 주로 금속 원소에 붙는 어미입니다. 처음에는 헬륨을 알칼리 금속으로 여겼기 때문인데, 실제로는 기체였습니다.",
+				"sources": ["heliumName"]
+			}
 		},
 		{
 			"id": "predict",
@@ -142,7 +186,13 @@
 			"predicted": [31, 21, 32],
 			"title": "빈칸에 미리 이름을 붙인 표",
 			"body": "멘델레예프는 1869년 주기율표를 발표하며 빈칸을 남겼고, 그 자리에 들어갈 원소를 예언했습니다. 에카알루미늄, 에카붕소, 에카규소.",
-			"sources": ["mendeleev"]
+			"sources": ["mendeleev"],
+			"media": { "type": "image", "id": "mendeleev" },
+			"aside": {
+				"kind": "legend",
+				"text": "멘델레예프가 꿈에서 모든 원소가 제자리에 놓인 표를 봤다는 이야기가 유명합니다. 일기에 남긴 말이라고 전해지지만, 사실인지는 분명하지 않습니다.",
+				"sources": ["mendeleevDream"]
+			}
 		},
 		{
 			"id": "fulfilled",
@@ -172,6 +222,22 @@
 				[54, 1898]
 			],
 			"sources": ["travers"]
+		},
+		{
+			"id": "curie",
+			"label": "1898년",
+			"until": 1898,
+			"highlight": [84],
+			"title": "나라 이름을 붙인 원소",
+			"body": "같은 해 마리 퀴리와 피에르 퀴리가 폴로늄을 찾았습니다. 이름은 마리 퀴리의 조국 폴란드에서 따왔습니다.",
+			"checks": [[84, 1898]],
+			"sources": ["polonium", "curieNotes"],
+			"media": { "type": "svg", "id": "leadbox" },
+			"aside": {
+				"kind": "fact",
+				"text": "퀴리의 실험 노트는 지금도 방사능을 띠어 납으로 된 상자에 보관되고, 열람하려면 면책 동의서에 서명해야 합니다.",
+				"sources": ["curieNotes"]
+			}
 		},
 		{
 			"id": "ytterby",

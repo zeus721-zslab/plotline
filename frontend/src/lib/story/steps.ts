@@ -10,6 +10,25 @@ export type StepHighlight = { kind: 'ancient' } | { kind: 'numbers'; numbers: nu
 // 문구 속 연도를 데이터와 대조할 항목
 export type YearCheck = { atomicNumber: number; year: number };
 
+// 단계 곁들임 카드: fact 는 출처로 확인되는 사실, legend 는 전해지는 이야기(사실 여부가 분명하지 않음)
+export const ASIDE_KINDS = ['fact', 'legend'] as const;
+export type AsideKind = (typeof ASIDE_KINDS)[number];
+
+export type StepAside = {
+	kind: AsideKind;
+	text: string;
+	// copySources[].id 참조
+	sources: string[];
+	// 이미지 목록(images.json)의 id. 없으면 null.
+	image: string | null;
+};
+
+// 단계 카드 위쪽 그림: image 는 이미지 목록의 id, svg 는 코드로 그린 연출의 id
+export const MEDIA_TYPES = ['image', 'svg'] as const;
+export type MediaType = (typeof MEDIA_TYPES)[number];
+
+export type StepMedia = { type: MediaType; id: string };
+
 export type StepDefinition = {
 	id: string;
 	label: string;
@@ -27,6 +46,8 @@ export type StepDefinition = {
 	predicted: number[];
 	// 강조 칸을 발견 연도순으로 하나씩 켠다
 	revealInOrder: boolean;
+	aside: StepAside | null;
+	media: StepMedia | null;
 };
 
 export type StepSummary = {
@@ -93,6 +114,33 @@ function parseChecks(raw: unknown): YearCheck[] {
 	});
 }
 
+function isAsideKind(value: unknown): value is AsideKind {
+	return ASIDE_KINDS.some((kind) => kind === value);
+}
+
+function isMediaType(value: unknown): value is MediaType {
+	return MEDIA_TYPES.some((type) => type === value);
+}
+
+function parseAside(raw: unknown): StepAside | null {
+	if (raw === undefined) return null;
+	if (!isRecord(raw)) throw new Error('step aside must be an object');
+	if (!isAsideKind(raw.kind)) throw new Error(`unknown step aside kind: ${String(raw.kind)}`);
+	return {
+		kind: raw.kind,
+		text: requireString(raw.text, 'aside.text'),
+		sources: stringList(raw.sources, 'aside.sources'),
+		image: raw.image === undefined ? null : requireString(raw.image, 'aside.image')
+	};
+}
+
+function parseMedia(raw: unknown): StepMedia | null {
+	if (raw === undefined) return null;
+	if (!isRecord(raw)) throw new Error('step media must be an object');
+	if (!isMediaType(raw.type)) throw new Error(`unknown step media type: ${String(raw.type)}`);
+	return { type: raw.type, id: requireString(raw.id, 'media.id') };
+}
+
 function parseStep(raw: unknown): StepDefinition {
 	if (!isRecord(raw)) throw new Error('step must be an object');
 	return {
@@ -107,7 +155,9 @@ function parseStep(raw: unknown): StepDefinition {
 		mustBeAncient: integerList(raw.mustBeAncient, 'mustBeAncient'),
 		chips: integerList(raw.chips, 'chips'),
 		predicted: integerList(raw.predicted, 'predicted'),
-		revealInOrder: raw.revealInOrder === true
+		revealInOrder: raw.revealInOrder === true,
+		aside: parseAside(raw.aside),
+		media: parseMedia(raw.media)
 	};
 }
 

@@ -9,6 +9,7 @@
 	import StepCard from './StepCard.svelte';
 	import type { StepSummary } from './steps.ts';
 	import type { CopySource } from './storyConfig.ts';
+	import { resolveMedia, type StoryImage } from './storyMedia.ts';
 	import { NO_ZOOM, zoomToCells } from './zoom.ts';
 
 	type Props = {
@@ -17,10 +18,11 @@
 		// 문구가 데이터와 맞지 않아 문구를 숨길 단계 id
 		hiddenSteps: Set<string>;
 		copySources: CopySource[];
+		images: StoryImage[];
 		onselect: (element: StoryElement, trigger: HTMLButtonElement) => void;
 	};
 
-	let { elements, summaries, hiddenSteps, copySources, onselect }: Props = $props();
+	let { elements, summaries, hiddenSteps, copySources, images, onselect }: Props = $props();
 
 	// 카드 윗변이 화면 위에서 60% 지점(휴대폰은 고정된 표 아래 영역)을 넘으면 그 단계로 바뀐다.
 	const ACTIVE_LINE_RATIO = 0.6;
@@ -41,6 +43,7 @@
 
 	const byNumber = $derived(new Map(elements.map((element) => [element.atomicNumber, element])));
 	const sourcesById = $derived(new Map(copySources.map((source) => [source.id, source])));
+	const imagesById = $derived(new Map(images.map((image) => [image.id, image])));
 	const activeSummary = $derived(activeIndex === NO_ACTIVE_STEP ? null : summaries[activeIndex]);
 	const litNumbers = $derived(
 		activeSummary === null ? new Set<number>() : activeSummary.knownNumbers
@@ -91,11 +94,18 @@
 		return element === undefined ? [] : [element];
 	}
 
-	function stepSources(summary: StepSummary): CopySource[] {
-		return summary.step.sources.flatMap((id) => {
+	function sourcesOf(ids: string[]): CopySource[] {
+		return ids.flatMap((id) => {
 			const source = sourcesById.get(id);
 			return source === undefined ? [] : [source];
 		});
+	}
+
+	function asideImageOf(summary: StepSummary): StoryImage | null {
+		const aside = summary.step.aside;
+		if (aside === null || aside.image === null) return null;
+		const image = imagesById.get(aside.image);
+		return image === undefined ? null : image;
 	}
 
 	onMount(() => {
@@ -160,7 +170,10 @@
 						previousCount={index === 0 ? 0 : summaries[index - 1].knownNumbers.size}
 						active={index === activeIndex}
 						verified={!hiddenSteps.has(summary.step.id)}
-						sources={stepSources(summary)}
+						sources={sourcesOf(summary.step.sources)}
+						media={resolveMedia(summary.step.media, imagesById)}
+						asideSources={summary.step.aside === null ? [] : sourcesOf(summary.step.aside.sources)}
+						asideImage={asideImageOf(summary)}
 					/>
 				</div>
 			</li>

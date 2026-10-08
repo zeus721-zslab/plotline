@@ -1,0 +1,53 @@
+[
+	{
+		"id": "alchemist",
+		"title": "The Alchemist Discovering Phosphorus",
+		"creator": "Joseph Wright of Derby",
+		"date": "1771",
+		"holder": "Derby Museum and Art Gallery",
+		"license": "Public domain",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Joseph_Wright_of_Derby_The_Alchemist.jpg",
+		"files": {
+			"480": "/stories/element-discovery/images/alchemist-480.webp",
+			"960": "/stories/element-discovery/images/alchemist-960.webp"
+		},
+		"width": 740,
+		"height": 960,
+		"portrait": false,
+		"alt": "어두운 실험실에서 흰 수염의 노인이 무릎을 꿇은 채 환하게 빛나는 둥근 유리병을 바라보는 그림."
+	},
+	{
+		"id": "davy",
+		"title": "Sir Humphry Davy, Bt",
+		"creator": "Thomas Lawrence",
+		"date": "c. 1821 (복제본)",
+		"holder": "National Portrait Gallery, London",
+		"license": "Public domain",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Sir_Humphry_Davy,_Bt_by_Sir_Thomas_Lawrence.jpg",
+		"files": {
+			"480": "/stories/element-discovery/images/davy-480.webp",
+			"960": "/stories/element-discovery/images/davy-960.webp"
+		},
+		"width": 750,
+		"height": 960,
+		"portrait": true,
+		"alt": "짙은 외투에 흰 목도리를 맨 젊은 남자가 한 손을 허리에 얹고 서 있는 초상화."
+	},
+	{
+		"id": "mendeleev",
+		"title": "Portrait of Dmitri Mendeleev",
+		"creator": "Ilya Repin",
+		"date": "1885",
+		"holder": "State Tretyakov Gallery",
+		"license": "Public domain",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Medeleeff_by_repin.jpg",
+		"files": {
+			"480": "/stories/element-discovery/images/mendeleev-480.webp",
+			"960": "/stories/element-discovery/images/mendeleev-960.webp"
+		},
+		"width": 803,
+		"height": 960,
+		"portrait": true,
+		"alt": "붉은색과 푸른색 가운에 검은 모자를 쓴 수염 긴 남자가 펼친 책을 들고 앉아 있는 초상화."
+	}
+]

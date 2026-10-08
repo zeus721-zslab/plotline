@@ -1,8 +1,11 @@
 <script lang="ts">
-	// 시그니처 장면 단계 카드 1장: 단계 이름 · 제목 · 이야기 · 문구 출처 · 그때까지 알려진 원소 수.
+	// 시그니처 장면 단계 카드 1장: 그림 · 단계 이름 · 제목 · 이야기 · 곁들임 카드 · 문구 출처 · 그때까지 알려진 원소 수.
+	import Aside from './Aside.svelte';
 	import CountUp from './CountUp.svelte';
+	import StepMedia from './StepMedia.svelte';
 	import type { StepSummary } from './steps.ts';
 	import { fillTemplate, type CopySource } from './storyConfig.ts';
+	import type { ResolvedMedia, StoryImage } from './storyMedia.ts';
 
 	type Props = {
 		summary: StepSummary;
@@ -10,22 +13,41 @@
 		// 직전 단계의 알려진 원소 수(이 단계가 켜질 때 여기서부터 센다)
 		previousCount: number;
 		active: boolean;
-		// 문구가 데이터와 대조를 통과했는가. 아니면 제목·이야기·출처를 숨긴다.
+		// 문구가 데이터와 대조를 통과했는가. 아니면 그림·제목·이야기·곁들임·출처를 숨긴다.
 		verified: boolean;
 		sources: CopySource[];
+		media: ResolvedMedia | null;
+		asideSources: CopySource[];
+		asideImage: StoryImage | null;
 	};
 
-	let { summary, total, previousCount, active, verified, sources }: Props = $props();
+	let {
+		summary,
+		total,
+		previousCount,
+		active,
+		verified,
+		sources,
+		media,
+		asideSources,
+		asideImage
+	}: Props = $props();
 
 	const count = $derived(summary.knownNumbers.size);
 	const body = $derived(fillTemplate(summary.step.body, { count }));
 </script>
 
 <article class="card">
+	{#if verified && media !== null}
+		<StepMedia {media} {active} />
+	{/if}
 	<p class="label">{summary.step.label}</p>
 	{#if verified}
 		<h3>{summary.step.title}</h3>
 		<p class="body">{body}</p>
+		{#if summary.step.aside !== null}
+			<Aside aside={summary.step.aside} sources={asideSources} image={asideImage} />
+		{/if}
 	{/if}
 	<p class="count">
 		<span class="count-value"><CountUp value={count} from={previousCount} play={active} /></span>
