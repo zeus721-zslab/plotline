@@ -45,6 +45,16 @@ def test_name_must_be_lowercase_snake(bad_name: object) -> None:
     assert "name 은 영문 소문자" in problems[0]
 
 
+@pytest.mark.parametrize("reserved_name", ["source_kind", "source_url", "as_of_date"])
+def test_reserved_source_name_is_rejected(reserved_name: str) -> None:
+    problems = _problems_of(
+        [{"name": "code", "type": "text", "key": True}, {"name": reserved_name, "type": "text"}]
+    )
+
+    assert len(problems) == 1
+    assert problems[0].startswith(f"필드 '{reserved_name}': 출처 칸 이름")
+
+
 def test_duplicate_name_is_rejected() -> None:
     problems = _problems_of(
         [{"name": "code", "type": "text", "key": True}, {"name": "code", "type": "int"}]

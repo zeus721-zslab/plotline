@@ -53,6 +53,30 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      mariadb:
+        image: mariadb:10.11
+        # CI 일회용 컨테이너 전용 값이다. 시크릿 아님(운영·개발 DB 와 무관).
+        env:
+          MARIADB_DATABASE: plotline_test
+          MARIADB_USER: plotline_test
+          MARIADB_PASSWORD: plotline_test_password
+          MARIADB_ROOT_PASSWORD: plotline_test_root_password
+        ports:
+          - 3306:3306
+        options: >-
+          --tmpfs /var/lib/mysql
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    # db 테스트 접속 정보. 위 서비스와 같은 CI 전용 값이다(시크릿 아님).
+    env:
+      DB_NAME: plotline_test
+      DB_USER: plotline_test
+      DB_PASSWORD: plotline_test_password
+      DB_PORT: 3306
+      TEST_DB_HOST: 127.0.0.1
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -71,4 +95,4 @@ jobs:
         run: uv sync --frozen
 
       - name: Test
-        run: uv run pytest
+        run: uv run pytest --durations=10

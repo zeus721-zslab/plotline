@@ -22,3 +22,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = ["--strict-markers"]
+markers = [
+    "db: 실제 MariaDB(db-test)를 쓰는 테스트",
+]

@@ -1,7 +1,10 @@
-from sqlalchemy import URL
-from sqlalchemy.orm import DeclarativeBase
+from collections.abc import Iterator
+from functools import lru_cache
 
-from app.config import Settings
+from sqlalchemy import URL, Engine, create_engine
+from sqlalchemy.orm import DeclarativeBase, Session
+
+from app.config import Settings, get_settings
 
 
 class Base(DeclarativeBase):
@@ -19,3 +22,18 @@ def build_database_url(settings: Settings) -> URL:
         database=settings.db_name,
         query={"charset": "utf8mb4"},
     )
+
+
+@lru_cache
+def get_engine() -> Engine:
+    """프로세스당 엔진 1개. 첫 호출 때 만들어 import 만으로는 DB 에 접속하지 않는다.
+
+    pool_pre_ping: DB 재시작·유휴 연결 끊김 뒤 첫 요청이 끊긴 연결로 실패하지 않게 한다.
+    """
+    return create_engine(build_database_url(get_settings()), pool_pre_ping=True)
+
+
+def get_db_session() -> Iterator[Session]:
+    """FastAPI 의존성: 요청 1개 = Session 1개. commit 은 서비스 함수가 유스케이스 단위로 한다."""
+    with Session(get_engine()) as session:
+        yield session
