@@ -1,0 +1,16 @@
+{
+  "story": "element-discovery",
+  "title": "원소는 언제 발견됐을까",
+  "question": "원소 118개는 언제 발견됐을까",
+  "published_at": "2026-10-08T17:17:08Z",
+  "datasets": {
+    "elements_ko": {
+      "version": 1,
+      "path": "/data/datasets/elements_ko/v1.json"
+    },
+    "element_discoveries": {
+      "version": 1,
+      "path": "/data/datasets/element_discoveries/v1.json"
+    }
+  }
+}

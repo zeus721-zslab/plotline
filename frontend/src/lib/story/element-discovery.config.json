@@ -1,0 +1,214 @@
+{
+	"copySources": [
+		{
+			"id": "brand",
+			"title": "Britannica — Hennig Brand",
+			"url": "https://www.britannica.com/biography/Hennig-Brand"
+		},
+		{
+			"id": "scheele",
+			"title": "Britannica — Carl Wilhelm Scheele",
+			"url": "https://www.britannica.com/biography/Carl-Wilhelm-Scheele"
+		},
+		{
+			"id": "davy",
+			"title": "University of Waterloo — Davy's Elements",
+			"url": "https://uwaterloo.ca/chemistry/community-outreach/timeline-of-elements/davys-elements-1805-1824"
+		},
+		{
+			"id": "cesium",
+			"title": "Britannica — cesium",
+			"url": "https://www.britannica.com/science/cesium"
+		},
+		{
+			"id": "rubidium",
+			"title": "Today in Science — Bunsen, Caesium and Rubidium (1861)",
+			"url": "https://todayinsci.com/B/Bunsen_Robert/BunsenRobert-CaesiumRubidium(1861).htm"
+		},
+		{
+			"id": "helium",
+			"title": "Collins — 1868: The element of the Sun",
+			"url": "https://collins.co.uk/blogs/collins-schools/chemical-anniversaries-1868-the-element-of-the-sun"
+		},
+		{
+			"id": "mendeleev",
+			"title": "Wikipedia — Mendeleev's predicted elements",
+			"url": "https://en.wikipedia.org/wiki/Mendeleev%27s_predicted_elements"
+		},
+		{
+			"id": "travers",
+			"title": "Chemistry Explained — Morris Travers",
+			"url": "https://www.chemistryexplained.com/Te-Va/Travers-Morris.html"
+		},
+		{
+			"id": "ytterby",
+			"title": "Amusing Planet — Ytterby",
+			"url": "https://www.amusingplanet.com/2017/08/ytterby-village-that-chemists-love.html"
+		},
+		{
+			"id": "technetium",
+			"title": "WebElements — Technetium history",
+			"url": "https://webelements.co.uk/technetium/history.html"
+		},
+		{
+			"id": "riken",
+			"title": "RIKEN — Nihonium (2016-12-02)",
+			"url": "https://www.riken.jp/en/news_pubs/research_news/rr/20161202"
+		},
+		{
+			"id": "names2016",
+			"title": "EPS News — IUPAC names 113, 115, 117, 118",
+			"url": "https://www.epsnews.eu/2017/01/iupac-approved-the-names-of-the-elements-113-115-117-and-118/"
+		}
+	],
+	"quiz": {
+		"question": "원소 118개, 처음부터 알던 건 몇 개였을까?",
+		"choices": [3, 13, 30],
+		"answer": "{ancient}개. 나머지 {dated}개는 발견한 해가 기록되어 있습니다."
+	},
+	"steps": [
+		{
+			"id": "ancient",
+			"label": "고대",
+			"until": null,
+			"highlight": "ancient",
+			"title": "기록 이전부터 알던 원소",
+			"body": "금, 은, 구리, 철, 납처럼 도구와 장신구로 쓰던 원소들입니다. 언제 누가 찾았는지 남지 않아 발견 연도가 '고대'로만 적혀 있습니다.",
+			"mustBeAncient": [79, 47, 29, 26, 82],
+			"chips": [79, 47, 29, 26, 82, 6],
+			"sources": []
+		},
+		{
+			"id": "p1669",
+			"label": "1669년",
+			"until": 1669,
+			"highlight": [15],
+			"title": "이름이 남은 첫 발견자",
+			"body": "독일의 연금술사 헤니히 브란트가 소변에서 하얗고 밀랍 같은 물질을 얻었습니다. 인은 발견한 사람의 이름이 기록된 첫 원소입니다.",
+			"checks": [[15, 1669]],
+			"sources": ["brand"]
+		},
+		{
+			"id": "o1800",
+			"label": "1800년",
+			"until": 1800,
+			"highlight": [8],
+			"title": "같은 기체, 두 명의 발견자",
+			"body": "스웨덴의 셸레와 영국의 프리스틀리가 서로 모른 채 거의 같은 시기에 산소를 찾았습니다. 1800년까지 알려진 원소는 {count}개입니다.",
+			"sources": ["scheele"]
+		},
+		{
+			"id": "davy",
+			"label": "1808년",
+			"until": 1808,
+			"highlight": [11, 19, 20],
+			"title": "전기로 쪼갠 원소",
+			"body": "영국의 험프리 데이비는 전기 분해로 1807년 소듐과 포타슘을 처음 분리했습니다. 이듬해 칼슘도 분리했지만, PubChem은 칼슘의 발견 연도를 '고대'로 적습니다. 분리한 해와 발견한 해가 다른 셈입니다.",
+			"checks": [
+				[11, 1807],
+				[19, 1807]
+			],
+			"mustBeAncient": [20],
+			"sources": ["davy"]
+		},
+		{
+			"id": "color",
+			"label": "1861년",
+			"until": 1861,
+			"highlight": [55, 37],
+			"title": "색깔로 찾은 원소",
+			"body": "분젠과 키르히호프는 빛을 색깔별로 나눠 보는 분광 분석으로 새 원소를 찾았습니다. 세슘은 라틴어 '하늘색(caesius)', 루비듐은 '짙은 빨강(rubidus)'에서 이름을 따왔습니다.",
+			"checks": [
+				[55, 1860],
+				[37, 1861]
+			],
+			"sources": ["cesium", "rubidium"]
+		},
+		{
+			"id": "helium",
+			"label": "1868년",
+			"until": 1868,
+			"highlight": [2],
+			"title": "지구보다 태양에서 먼저",
+			"body": "1868년 일식 때 태양 빛에서 처음 보는 선이 나타났습니다. 그리스어 태양(helios)에서 이름을 딴 헬륨은 27년 뒤인 1895년에야 지구에서 찾았습니다.",
+			"checks": [[2, 1868]],
+			"sources": ["helium"]
+		},
+		{
+			"id": "predict",
+			"label": "1869년",
+			"until": 1869,
+			"highlight": [31, 21, 32],
+			"predicted": [31, 21, 32],
+			"title": "빈칸에 미리 이름을 붙인 표",
+			"body": "멘델레예프는 1869년 주기율표를 발표하며 빈칸을 남겼고, 그 자리에 들어갈 원소를 예언했습니다. 에카알루미늄, 에카붕소, 에카규소.",
+			"sources": ["mendeleev"]
+		},
+		{
+			"id": "fulfilled",
+			"label": "1886년",
+			"until": 1886,
+			"highlight": [31, 21, 32],
+			"revealInOrder": true,
+			"title": "예언이 맞았다",
+			"body": "갈륨 1875년, 스칸듐 1879년, 저마늄 1886년. 예언한 빈칸이 하나씩 채워졌습니다.",
+			"checks": [
+				[31, 1875],
+				[21, 1879],
+				[32, 1886]
+			],
+			"sources": ["mendeleev"]
+		},
+		{
+			"id": "noble",
+			"label": "1898년",
+			"until": 1898,
+			"highlight": [36, 10, 54],
+			"title": "42일 동안 세 개",
+			"body": "램지와 트래버스는 액체로 만든 공기를 나눠, 1898년 42일 사이에 크립톤, 네온, 제논을 찾았습니다.",
+			"checks": [
+				[36, 1898],
+				[10, 1898],
+				[54, 1898]
+			],
+			"sources": ["travers"]
+		},
+		{
+			"id": "ytterby",
+			"label": "마을 하나",
+			"until": 1898,
+			"highlight": [39, 65, 68, 70],
+			"title": "원소 넷의 고향",
+			"body": "스웨덴의 작은 마을 이테르비의 광산에서 나온 원소 가운데 넷이 마을 이름을 땄습니다. 이트륨, 터븀, 어븀, 이터븀.",
+			"sources": ["ytterby"]
+		},
+		{
+			"id": "technetium",
+			"label": "1937년",
+			"until": 1937,
+			"highlight": [43],
+			"title": "사람이 만든 첫 원소",
+			"body": "1937년 페리에와 세그레가 찾은 테크네튬은 처음으로 인공적으로 만든 원소입니다. 이름도 그리스어 '인공'에서 왔습니다.",
+			"checks": [[43, 1937]],
+			"sources": ["technetium"]
+		},
+		{
+			"id": "today",
+			"label": "오늘",
+			"until": "all",
+			"highlight": [113, 115, 117, 118],
+			"title": "마지막 네 칸",
+			"body": "2016년 113, 115, 117, 118번의 이름이 정해지며 {count}칸이 모두 찼습니다. 113번 니호늄은 아시아에서 발견된 첫 원소이고, 118번 오가네손은 1933년생 과학자 유리 오가네시안의 이름을 땄습니다.",
+			"sources": ["riken", "names2016"]
+		}
+	],
+	"bars": {
+		"title": "가장 바빴던 50년",
+		"body": "{bin}년 사이에만 {n}개가 발견됐습니다."
+	},
+	"birthYear": {
+		"title": "내가 태어난 해에는?",
+		"minYear": 1900,
+		"result": "{year}년까지 알려진 원소는 {known}개, 그 뒤로 {after}개가 더 발견됐습니다."
+	}
+}

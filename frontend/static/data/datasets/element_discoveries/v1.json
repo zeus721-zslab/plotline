@@ -1,0 +1,1095 @@
+{
+  "dataset": "element_discoveries",
+  "title": "원소 발견 연도",
+  "version": 1,
+  "schema_version": 1,
+  "created_at": "2026-10-08T17:17:08Z",
+  "fields": [
+    {
+      "name": "atomic_number",
+      "label": "원자 번호",
+      "type": "int",
+      "key": true,
+      "required": true,
+      "min": 1,
+      "max": 118
+    },
+    {
+      "name": "era",
+      "label": "시기",
+      "type": "category",
+      "required": true,
+      "options": [
+        "ancient",
+        "dated"
+      ]
+    },
+    {
+      "name": "discovery_year",
+      "label": "발견 연도",
+      "type": "year",
+      "required_if": {
+        "era": "dated"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "kind": "external",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/periodic-table/",
+      "as_of_date": "2026-10-09"
+    }
+  ],
+  "rows": [
+    {
+      "key": "1",
+      "values": {
+        "atomic_number": 1,
+        "era": "dated",
+        "discovery_year": 1766
+      },
+      "source": "s1"
+    },
+    {
+      "key": "2",
+      "values": {
+        "atomic_number": 2,
+        "era": "dated",
+        "discovery_year": 1868
+      },
+      "source": "s1"
+    },
+    {
+      "key": "3",
+      "values": {
+        "atomic_number": 3,
+        "era": "dated",
+        "discovery_year": 1817
+      },
+      "source": "s1"
+    },
+    {
+      "key": "4",
+      "values": {
+        "atomic_number": 4,
+        "era": "dated",
+        "discovery_year": 1798
+      },
+      "source": "s1"
+    },
+    {
+      "key": "5",
+      "values": {
+        "atomic_number": 5,
+        "era": "dated",
+        "discovery_year": 1808
+      },
+      "source": "s1"
+    },
+    {
+      "key": "6",
+      "values": {
+        "atomic_number": 6,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "7",
+      "values": {
+        "atomic_number": 7,
+        "era": "dated",
+        "discovery_year": 1772
+      },
+      "source": "s1"
+    },
+    {
+      "key": "8",
+      "values": {
+        "atomic_number": 8,
+        "era": "dated",
+        "discovery_year": 1774
+      },
+      "source": "s1"
+    },
+    {
+      "key": "9",
+      "values": {
+        "atomic_number": 9,
+        "era": "dated",
+        "discovery_year": 1670
+      },
+      "source": "s1"
+    },
+    {
+      "key": "10",
+      "values": {
+        "atomic_number": 10,
+        "era": "dated",
+        "discovery_year": 1898
+      },
+      "source": "s1"
+    },
+    {
+      "key": "11",
+      "values": {
+        "atomic_number": 11,
+        "era": "dated",
+        "discovery_year": 1807
+      },
+      "source": "s1"
+    },
+    {
+      "key": "12",
+      "values": {
+        "atomic_number": 12,
+        "era": "dated",
+        "discovery_year": 1808
+      },
+      "source": "s1"
+    },
+    {
+      "key": "13",
+      "values": {
+        "atomic_number": 13,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "14",
+      "values": {
+        "atomic_number": 14,
+        "era": "dated",
+        "discovery_year": 1854
+      },
+      "source": "s1"
+    },
+    {
+      "key": "15",
+      "values": {
+        "atomic_number": 15,
+        "era": "dated",
+        "discovery_year": 1669
+      },
+      "source": "s1"
+    },
+    {
+      "key": "16",
+      "values": {
+        "atomic_number": 16,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "17",
+      "values": {
+        "atomic_number": 17,
+        "era": "dated",
+        "discovery_year": 1774
+      },
+      "source": "s1"
+    },
+    {
+      "key": "18",
+      "values": {
+        "atomic_number": 18,
+        "era": "dated",
+        "discovery_year": 1894
+      },
+      "source": "s1"
+    },
+    {
+      "key": "19",
+      "values": {
+        "atomic_number": 19,
+        "era": "dated",
+        "discovery_year": 1807
+      },
+      "source": "s1"
+    },
+    {
+      "key": "20",
+      "values": {
+        "atomic_number": 20,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "21",
+      "values": {
+        "atomic_number": 21,
+        "era": "dated",
+        "discovery_year": 1879
+      },
+      "source": "s1"
+    },
+    {
+      "key": "22",
+      "values": {
+        "atomic_number": 22,
+        "era": "dated",
+        "discovery_year": 1791
+      },
+      "source": "s1"
+    },
+    {
+      "key": "23",
+      "values": {
+        "atomic_number": 23,
+        "era": "dated",
+        "discovery_year": 1801
+      },
+      "source": "s1"
+    },
+    {
+      "key": "24",
+      "values": {
+        "atomic_number": 24,
+        "era": "dated",
+        "discovery_year": 1797
+      },
+      "source": "s1"
+    },
+    {
+      "key": "25",
+      "values": {
+        "atomic_number": 25,
+        "era": "dated",
+        "discovery_year": 1774
+      },
+      "source": "s1"
+    },
+    {
+      "key": "26",
+      "values": {
+        "atomic_number": 26,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "27",
+      "values": {
+        "atomic_number": 27,
+        "era": "dated",
+        "discovery_year": 1735
+      },
+      "source": "s1"
+    },
+    {
+      "key": "28",
+      "values": {
+        "atomic_number": 28,
+        "era": "dated",
+        "discovery_year": 1751
+      },
+      "source": "s1"
+    },
+    {
+      "key": "29",
+      "values": {
+        "atomic_number": 29,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "30",
+      "values": {
+        "atomic_number": 30,
+        "era": "dated",
+        "discovery_year": 1746
+      },
+      "source": "s1"
+    },
+    {
+      "key": "31",
+      "values": {
+        "atomic_number": 31,
+        "era": "dated",
+        "discovery_year": 1875
+      },
+      "source": "s1"
+    },
+    {
+      "key": "32",
+      "values": {
+        "atomic_number": 32,
+        "era": "dated",
+        "discovery_year": 1886
+      },
+      "source": "s1"
+    },
+    {
+      "key": "33",
+      "values": {
+        "atomic_number": 33,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "34",
+      "values": {
+        "atomic_number": 34,
+        "era": "dated",
+        "discovery_year": 1817
+      },
+      "source": "s1"
+    },
+    {
+      "key": "35",
+      "values": {
+        "atomic_number": 35,
+        "era": "dated",
+        "discovery_year": 1826
+      },
+      "source": "s1"
+    },
+    {
+      "key": "36",
+      "values": {
+        "atomic_number": 36,
+        "era": "dated",
+        "discovery_year": 1898
+      },
+      "source": "s1"
+    },
+    {
+      "key": "37",
+      "values": {
+        "atomic_number": 37,
+        "era": "dated",
+        "discovery_year": 1861
+      },
+      "source": "s1"
+    },
+    {
+      "key": "38",
+      "values": {
+        "atomic_number": 38,
+        "era": "dated",
+        "discovery_year": 1790
+      },
+      "source": "s1"
+    },
+    {
+      "key": "39",
+      "values": {
+        "atomic_number": 39,
+        "era": "dated",
+        "discovery_year": 1794
+      },
+      "source": "s1"
+    },
+    {
+      "key": "40",
+      "values": {
+        "atomic_number": 40,
+        "era": "dated",
+        "discovery_year": 1789
+      },
+      "source": "s1"
+    },
+    {
+      "key": "41",
+      "values": {
+        "atomic_number": 41,
+        "era": "dated",
+        "discovery_year": 1801
+      },
+      "source": "s1"
+    },
+    {
+      "key": "42",
+      "values": {
+        "atomic_number": 42,
+        "era": "dated",
+        "discovery_year": 1778
+      },
+      "source": "s1"
+    },
+    {
+      "key": "43",
+      "values": {
+        "atomic_number": 43,
+        "era": "dated",
+        "discovery_year": 1937
+      },
+      "source": "s1"
+    },
+    {
+      "key": "44",
+      "values": {
+        "atomic_number": 44,
+        "era": "dated",
+        "discovery_year": 1827
+      },
+      "source": "s1"
+    },
+    {
+      "key": "45",
+      "values": {
+        "atomic_number": 45,
+        "era": "dated",
+        "discovery_year": 1803
+      },
+      "source": "s1"
+    },
+    {
+      "key": "46",
+      "values": {
+        "atomic_number": 46,
+        "era": "dated",
+        "discovery_year": 1803
+      },
+      "source": "s1"
+    },
+    {
+      "key": "47",
+      "values": {
+        "atomic_number": 47,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "48",
+      "values": {
+        "atomic_number": 48,
+        "era": "dated",
+        "discovery_year": 1817
+      },
+      "source": "s1"
+    },
+    {
+      "key": "49",
+      "values": {
+        "atomic_number": 49,
+        "era": "dated",
+        "discovery_year": 1863
+      },
+      "source": "s1"
+    },
+    {
+      "key": "50",
+      "values": {
+        "atomic_number": 50,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "51",
+      "values": {
+        "atomic_number": 51,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "52",
+      "values": {
+        "atomic_number": 52,
+        "era": "dated",
+        "discovery_year": 1782
+      },
+      "source": "s1"
+    },
+    {
+      "key": "53",
+      "values": {
+        "atomic_number": 53,
+        "era": "dated",
+        "discovery_year": 1811
+      },
+      "source": "s1"
+    },
+    {
+      "key": "54",
+      "values": {
+        "atomic_number": 54,
+        "era": "dated",
+        "discovery_year": 1898
+      },
+      "source": "s1"
+    },
+    {
+      "key": "55",
+      "values": {
+        "atomic_number": 55,
+        "era": "dated",
+        "discovery_year": 1860
+      },
+      "source": "s1"
+    },
+    {
+      "key": "56",
+      "values": {
+        "atomic_number": 56,
+        "era": "dated",
+        "discovery_year": 1808
+      },
+      "source": "s1"
+    },
+    {
+      "key": "57",
+      "values": {
+        "atomic_number": 57,
+        "era": "dated",
+        "discovery_year": 1839
+      },
+      "source": "s1"
+    },
+    {
+      "key": "58",
+      "values": {
+        "atomic_number": 58,
+        "era": "dated",
+        "discovery_year": 1803
+      },
+      "source": "s1"
+    },
+    {
+      "key": "59",
+      "values": {
+        "atomic_number": 59,
+        "era": "dated",
+        "discovery_year": 1885
+      },
+      "source": "s1"
+    },
+    {
+      "key": "60",
+      "values": {
+        "atomic_number": 60,
+        "era": "dated",
+        "discovery_year": 1885
+      },
+      "source": "s1"
+    },
+    {
+      "key": "61",
+      "values": {
+        "atomic_number": 61,
+        "era": "dated",
+        "discovery_year": 1945
+      },
+      "source": "s1"
+    },
+    {
+      "key": "62",
+      "values": {
+        "atomic_number": 62,
+        "era": "dated",
+        "discovery_year": 1879
+      },
+      "source": "s1"
+    },
+    {
+      "key": "63",
+      "values": {
+        "atomic_number": 63,
+        "era": "dated",
+        "discovery_year": 1901
+      },
+      "source": "s1"
+    },
+    {
+      "key": "64",
+      "values": {
+        "atomic_number": 64,
+        "era": "dated",
+        "discovery_year": 1880
+      },
+      "source": "s1"
+    },
+    {
+      "key": "65",
+      "values": {
+        "atomic_number": 65,
+        "era": "dated",
+        "discovery_year": 1843
+      },
+      "source": "s1"
+    },
+    {
+      "key": "66",
+      "values": {
+        "atomic_number": 66,
+        "era": "dated",
+        "discovery_year": 1886
+      },
+      "source": "s1"
+    },
+    {
+      "key": "67",
+      "values": {
+        "atomic_number": 67,
+        "era": "dated",
+        "discovery_year": 1878
+      },
+      "source": "s1"
+    },
+    {
+      "key": "68",
+      "values": {
+        "atomic_number": 68,
+        "era": "dated",
+        "discovery_year": 1843
+      },
+      "source": "s1"
+    },
+    {
+      "key": "69",
+      "values": {
+        "atomic_number": 69,
+        "era": "dated",
+        "discovery_year": 1879
+      },
+      "source": "s1"
+    },
+    {
+      "key": "70",
+      "values": {
+        "atomic_number": 70,
+        "era": "dated",
+        "discovery_year": 1878
+      },
+      "source": "s1"
+    },
+    {
+      "key": "71",
+      "values": {
+        "atomic_number": 71,
+        "era": "dated",
+        "discovery_year": 1907
+      },
+      "source": "s1"
+    },
+    {
+      "key": "72",
+      "values": {
+        "atomic_number": 72,
+        "era": "dated",
+        "discovery_year": 1923
+      },
+      "source": "s1"
+    },
+    {
+      "key": "73",
+      "values": {
+        "atomic_number": 73,
+        "era": "dated",
+        "discovery_year": 1802
+      },
+      "source": "s1"
+    },
+    {
+      "key": "74",
+      "values": {
+        "atomic_number": 74,
+        "era": "dated",
+        "discovery_year": 1783
+      },
+      "source": "s1"
+    },
+    {
+      "key": "75",
+      "values": {
+        "atomic_number": 75,
+        "era": "dated",
+        "discovery_year": 1925
+      },
+      "source": "s1"
+    },
+    {
+      "key": "76",
+      "values": {
+        "atomic_number": 76,
+        "era": "dated",
+        "discovery_year": 1803
+      },
+      "source": "s1"
+    },
+    {
+      "key": "77",
+      "values": {
+        "atomic_number": 77,
+        "era": "dated",
+        "discovery_year": 1803
+      },
+      "source": "s1"
+    },
+    {
+      "key": "78",
+      "values": {
+        "atomic_number": 78,
+        "era": "dated",
+        "discovery_year": 1735
+      },
+      "source": "s1"
+    },
+    {
+      "key": "79",
+      "values": {
+        "atomic_number": 79,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "80",
+      "values": {
+        "atomic_number": 80,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "81",
+      "values": {
+        "atomic_number": 81,
+        "era": "dated",
+        "discovery_year": 1861
+      },
+      "source": "s1"
+    },
+    {
+      "key": "82",
+      "values": {
+        "atomic_number": 82,
+        "era": "ancient"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "83",
+      "values": {
+        "atomic_number": 83,
+        "era": "dated",
+        "discovery_year": 1753
+      },
+      "source": "s1"
+    },
+    {
+      "key": "84",
+      "values": {
+        "atomic_number": 84,
+        "era": "dated",
+        "discovery_year": 1898
+      },
+      "source": "s1"
+    },
+    {
+      "key": "85",
+      "values": {
+        "atomic_number": 85,
+        "era": "dated",
+        "discovery_year": 1940
+      },
+      "source": "s1"
+    },
+    {
+      "key": "86",
+      "values": {
+        "atomic_number": 86,
+        "era": "dated",
+        "discovery_year": 1900
+      },
+      "source": "s1"
+    },
+    {
+      "key": "87",
+      "values": {
+        "atomic_number": 87,
+        "era": "dated",
+        "discovery_year": 1939
+      },
+      "source": "s1"
+    },
+    {
+      "key": "88",
+      "values": {
+        "atomic_number": 88,
+        "era": "dated",
+        "discovery_year": 1898
+      },
+      "source": "s1"
+    },
+    {
+      "key": "89",
+      "values": {
+        "atomic_number": 89,
+        "era": "dated",
+        "discovery_year": 1899
+      },
+      "source": "s1"
+    },
+    {
+      "key": "90",
+      "values": {
+        "atomic_number": 90,
+        "era": "dated",
+        "discovery_year": 1828
+      },
+      "source": "s1"
+    },
+    {
+      "key": "91",
+      "values": {
+        "atomic_number": 91,
+        "era": "dated",
+        "discovery_year": 1913
+      },
+      "source": "s1"
+    },
+    {
+      "key": "92",
+      "values": {
+        "atomic_number": 92,
+        "era": "dated",
+        "discovery_year": 1789
+      },
+      "source": "s1"
+    },
+    {
+      "key": "93",
+      "values": {
+        "atomic_number": 93,
+        "era": "dated",
+        "discovery_year": 1940
+      },
+      "source": "s1"
+    },
+    {
+      "key": "94",
+      "values": {
+        "atomic_number": 94,
+        "era": "dated",
+        "discovery_year": 1940
+      },
+      "source": "s1"
+    },
+    {
+      "key": "95",
+      "values": {
+        "atomic_number": 95,
+        "era": "dated",
+        "discovery_year": 1944
+      },
+      "source": "s1"
+    },
+    {
+      "key": "96",
+      "values": {
+        "atomic_number": 96,
+        "era": "dated",
+        "discovery_year": 1944
+      },
+      "source": "s1"
+    },
+    {
+      "key": "97",
+      "values": {
+        "atomic_number": 97,
+        "era": "dated",
+        "discovery_year": 1949
+      },
+      "source": "s1"
+    },
+    {
+      "key": "98",
+      "values": {
+        "atomic_number": 98,
+        "era": "dated",
+        "discovery_year": 1950
+      },
+      "source": "s1"
+    },
+    {
+      "key": "99",
+      "values": {
+        "atomic_number": 99,
+        "era": "dated",
+        "discovery_year": 1952
+      },
+      "source": "s1"
+    },
+    {
+      "key": "100",
+      "values": {
+        "atomic_number": 100,
+        "era": "dated",
+        "discovery_year": 1952
+      },
+      "source": "s1"
+    },
+    {
+      "key": "101",
+      "values": {
+        "atomic_number": 101,
+        "era": "dated",
+        "discovery_year": 1955
+      },
+      "source": "s1"
+    },
+    {
+      "key": "102",
+      "values": {
+        "atomic_number": 102,
+        "era": "dated",
+        "discovery_year": 1957
+      },
+      "source": "s1"
+    },
+    {
+      "key": "103",
+      "values": {
+        "atomic_number": 103,
+        "era": "dated",
+        "discovery_year": 1961
+      },
+      "source": "s1"
+    },
+    {
+      "key": "104",
+      "values": {
+        "atomic_number": 104,
+        "era": "dated",
+        "discovery_year": 1964
+      },
+      "source": "s1"
+    },
+    {
+      "key": "105",
+      "values": {
+        "atomic_number": 105,
+        "era": "dated",
+        "discovery_year": 1967
+      },
+      "source": "s1"
+    },
+    {
+      "key": "106",
+      "values": {
+        "atomic_number": 106,
+        "era": "dated",
+        "discovery_year": 1974
+      },
+      "source": "s1"
+    },
+    {
+      "key": "107",
+      "values": {
+        "atomic_number": 107,
+        "era": "dated",
+        "discovery_year": 1976
+      },
+      "source": "s1"
+    },
+    {
+      "key": "108",
+      "values": {
+        "atomic_number": 108,
+        "era": "dated",
+        "discovery_year": 1984
+      },
+      "source": "s1"
+    },
+    {
+      "key": "109",
+      "values": {
+        "atomic_number": 109,
+        "era": "dated",
+        "discovery_year": 1982
+      },
+      "source": "s1"
+    },
+    {
+      "key": "110",
+      "values": {
+        "atomic_number": 110,
+        "era": "dated",
+        "discovery_year": 1994
+      },
+      "source": "s1"
+    },
+    {
+      "key": "111",
+      "values": {
+        "atomic_number": 111,
+        "era": "dated",
+        "discovery_year": 1994
+      },
+      "source": "s1"
+    },
+    {
+      "key": "112",
+      "values": {
+        "atomic_number": 112,
+        "era": "dated",
+        "discovery_year": 1996
+      },
+      "source": "s1"
+    },
+    {
+      "key": "113",
+      "values": {
+        "atomic_number": 113,
+        "era": "dated",
+        "discovery_year": 2004
+      },
+      "source": "s1"
+    },
+    {
+      "key": "114",
+      "values": {
+        "atomic_number": 114,
+        "era": "dated",
+        "discovery_year": 1998
+      },
+      "source": "s1"
+    },
+    {
+      "key": "115",
+      "values": {
+        "atomic_number": 115,
+        "era": "dated",
+        "discovery_year": 2003
+      },
+      "source": "s1"
+    },
+    {
+      "key": "116",
+      "values": {
+        "atomic_number": 116,
+        "era": "dated",
+        "discovery_year": 2000
+      },
+      "source": "s1"
+    },
+    {
+      "key": "117",
+      "values": {
+        "atomic_number": 117,
+        "era": "dated",
+        "discovery_year": 2010
+      },
+      "source": "s1"
+    },
+    {
+      "key": "118",
+      "values": {
+        "atomic_number": 118,
+        "era": "dated",
+        "discovery_year": 2006
+      },
+      "source": "s1"
+    }
+  ]
+}

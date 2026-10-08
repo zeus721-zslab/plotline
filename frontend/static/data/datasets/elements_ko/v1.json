@@ -1,0 +1,1104 @@
+{
+  "dataset": "elements_ko",
+  "title": "원소 한국어 이름",
+  "version": 1,
+  "schema_version": 1,
+  "created_at": "2026-10-08T17:17:08Z",
+  "fields": [
+    {
+      "name": "atomic_number",
+      "label": "원자 번호",
+      "type": "int",
+      "key": true,
+      "required": true,
+      "min": 1,
+      "max": 118
+    },
+    {
+      "name": "symbol",
+      "label": "원소 기호",
+      "type": "text",
+      "required": true,
+      "max_length": 3
+    },
+    {
+      "name": "name_ko",
+      "label": "한국어 이름",
+      "type": "text",
+      "required": true,
+      "max_length": 20
+    }
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "kind": "external",
+      "url": "https://d11dbvc62xodqh.cloudfront.net/kcs/homepage/periodic_table_of_the_elements_kor_eng_20210602.pdf",
+      "as_of_date": "2026-10-09"
+    }
+  ],
+  "rows": [
+    {
+      "key": "1",
+      "values": {
+        "atomic_number": 1,
+        "symbol": "H",
+        "name_ko": "수소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "2",
+      "values": {
+        "atomic_number": 2,
+        "symbol": "He",
+        "name_ko": "헬륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "3",
+      "values": {
+        "atomic_number": 3,
+        "symbol": "Li",
+        "name_ko": "리튬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "4",
+      "values": {
+        "atomic_number": 4,
+        "symbol": "Be",
+        "name_ko": "베릴륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "5",
+      "values": {
+        "atomic_number": 5,
+        "symbol": "B",
+        "name_ko": "붕소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "6",
+      "values": {
+        "atomic_number": 6,
+        "symbol": "C",
+        "name_ko": "탄소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "7",
+      "values": {
+        "atomic_number": 7,
+        "symbol": "N",
+        "name_ko": "질소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "8",
+      "values": {
+        "atomic_number": 8,
+        "symbol": "O",
+        "name_ko": "산소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "9",
+      "values": {
+        "atomic_number": 9,
+        "symbol": "F",
+        "name_ko": "플루오린"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "10",
+      "values": {
+        "atomic_number": 10,
+        "symbol": "Ne",
+        "name_ko": "네온"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "11",
+      "values": {
+        "atomic_number": 11,
+        "symbol": "Na",
+        "name_ko": "소듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "12",
+      "values": {
+        "atomic_number": 12,
+        "symbol": "Mg",
+        "name_ko": "마그네슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "13",
+      "values": {
+        "atomic_number": 13,
+        "symbol": "Al",
+        "name_ko": "알루미늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "14",
+      "values": {
+        "atomic_number": 14,
+        "symbol": "Si",
+        "name_ko": "규소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "15",
+      "values": {
+        "atomic_number": 15,
+        "symbol": "P",
+        "name_ko": "인"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "16",
+      "values": {
+        "atomic_number": 16,
+        "symbol": "S",
+        "name_ko": "황"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "17",
+      "values": {
+        "atomic_number": 17,
+        "symbol": "Cl",
+        "name_ko": "염소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "18",
+      "values": {
+        "atomic_number": 18,
+        "symbol": "Ar",
+        "name_ko": "아르곤"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "19",
+      "values": {
+        "atomic_number": 19,
+        "symbol": "K",
+        "name_ko": "포타슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "20",
+      "values": {
+        "atomic_number": 20,
+        "symbol": "Ca",
+        "name_ko": "칼슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "21",
+      "values": {
+        "atomic_number": 21,
+        "symbol": "Sc",
+        "name_ko": "스칸듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "22",
+      "values": {
+        "atomic_number": 22,
+        "symbol": "Ti",
+        "name_ko": "타이타늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "23",
+      "values": {
+        "atomic_number": 23,
+        "symbol": "V",
+        "name_ko": "바나듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "24",
+      "values": {
+        "atomic_number": 24,
+        "symbol": "Cr",
+        "name_ko": "크로뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "25",
+      "values": {
+        "atomic_number": 25,
+        "symbol": "Mn",
+        "name_ko": "망가니즈"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "26",
+      "values": {
+        "atomic_number": 26,
+        "symbol": "Fe",
+        "name_ko": "철"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "27",
+      "values": {
+        "atomic_number": 27,
+        "symbol": "Co",
+        "name_ko": "코발트"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "28",
+      "values": {
+        "atomic_number": 28,
+        "symbol": "Ni",
+        "name_ko": "니켈"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "29",
+      "values": {
+        "atomic_number": 29,
+        "symbol": "Cu",
+        "name_ko": "구리"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "30",
+      "values": {
+        "atomic_number": 30,
+        "symbol": "Zn",
+        "name_ko": "아연"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "31",
+      "values": {
+        "atomic_number": 31,
+        "symbol": "Ga",
+        "name_ko": "갈륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "32",
+      "values": {
+        "atomic_number": 32,
+        "symbol": "Ge",
+        "name_ko": "저마늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "33",
+      "values": {
+        "atomic_number": 33,
+        "symbol": "As",
+        "name_ko": "비소"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "34",
+      "values": {
+        "atomic_number": 34,
+        "symbol": "Se",
+        "name_ko": "셀레늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "35",
+      "values": {
+        "atomic_number": 35,
+        "symbol": "Br",
+        "name_ko": "브로민"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "36",
+      "values": {
+        "atomic_number": 36,
+        "symbol": "Kr",
+        "name_ko": "크립톤"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "37",
+      "values": {
+        "atomic_number": 37,
+        "symbol": "Rb",
+        "name_ko": "루비듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "38",
+      "values": {
+        "atomic_number": 38,
+        "symbol": "Sr",
+        "name_ko": "스트론튬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "39",
+      "values": {
+        "atomic_number": 39,
+        "symbol": "Y",
+        "name_ko": "이트륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "40",
+      "values": {
+        "atomic_number": 40,
+        "symbol": "Zr",
+        "name_ko": "지르코늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "41",
+      "values": {
+        "atomic_number": 41,
+        "symbol": "Nb",
+        "name_ko": "나이오븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "42",
+      "values": {
+        "atomic_number": 42,
+        "symbol": "Mo",
+        "name_ko": "몰리브데넘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "43",
+      "values": {
+        "atomic_number": 43,
+        "symbol": "Tc",
+        "name_ko": "테크네튬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "44",
+      "values": {
+        "atomic_number": 44,
+        "symbol": "Ru",
+        "name_ko": "루테늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "45",
+      "values": {
+        "atomic_number": 45,
+        "symbol": "Rh",
+        "name_ko": "로듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "46",
+      "values": {
+        "atomic_number": 46,
+        "symbol": "Pd",
+        "name_ko": "팔라듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "47",
+      "values": {
+        "atomic_number": 47,
+        "symbol": "Ag",
+        "name_ko": "은"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "48",
+      "values": {
+        "atomic_number": 48,
+        "symbol": "Cd",
+        "name_ko": "카드뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "49",
+      "values": {
+        "atomic_number": 49,
+        "symbol": "In",
+        "name_ko": "인듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "50",
+      "values": {
+        "atomic_number": 50,
+        "symbol": "Sn",
+        "name_ko": "주석"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "51",
+      "values": {
+        "atomic_number": 51,
+        "symbol": "Sb",
+        "name_ko": "안티모니"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "52",
+      "values": {
+        "atomic_number": 52,
+        "symbol": "Te",
+        "name_ko": "텔루륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "53",
+      "values": {
+        "atomic_number": 53,
+        "symbol": "I",
+        "name_ko": "아이오딘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "54",
+      "values": {
+        "atomic_number": 54,
+        "symbol": "Xe",
+        "name_ko": "제논"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "55",
+      "values": {
+        "atomic_number": 55,
+        "symbol": "Cs",
+        "name_ko": "세슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "56",
+      "values": {
+        "atomic_number": 56,
+        "symbol": "Ba",
+        "name_ko": "바륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "57",
+      "values": {
+        "atomic_number": 57,
+        "symbol": "La",
+        "name_ko": "란타넘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "58",
+      "values": {
+        "atomic_number": 58,
+        "symbol": "Ce",
+        "name_ko": "세륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "59",
+      "values": {
+        "atomic_number": 59,
+        "symbol": "Pr",
+        "name_ko": "프라세오디뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "60",
+      "values": {
+        "atomic_number": 60,
+        "symbol": "Nd",
+        "name_ko": "네오디뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "61",
+      "values": {
+        "atomic_number": 61,
+        "symbol": "Pm",
+        "name_ko": "프로메튬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "62",
+      "values": {
+        "atomic_number": 62,
+        "symbol": "Sm",
+        "name_ko": "사마륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "63",
+      "values": {
+        "atomic_number": 63,
+        "symbol": "Eu",
+        "name_ko": "유로퓸"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "64",
+      "values": {
+        "atomic_number": 64,
+        "symbol": "Gd",
+        "name_ko": "가돌리늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "65",
+      "values": {
+        "atomic_number": 65,
+        "symbol": "Tb",
+        "name_ko": "터븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "66",
+      "values": {
+        "atomic_number": 66,
+        "symbol": "Dy",
+        "name_ko": "디스프로슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "67",
+      "values": {
+        "atomic_number": 67,
+        "symbol": "Ho",
+        "name_ko": "홀뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "68",
+      "values": {
+        "atomic_number": 68,
+        "symbol": "Er",
+        "name_ko": "어븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "69",
+      "values": {
+        "atomic_number": 69,
+        "symbol": "Tm",
+        "name_ko": "툴륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "70",
+      "values": {
+        "atomic_number": 70,
+        "symbol": "Yb",
+        "name_ko": "이터븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "71",
+      "values": {
+        "atomic_number": 71,
+        "symbol": "Lu",
+        "name_ko": "루테튬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "72",
+      "values": {
+        "atomic_number": 72,
+        "symbol": "Hf",
+        "name_ko": "하프늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "73",
+      "values": {
+        "atomic_number": 73,
+        "symbol": "Ta",
+        "name_ko": "탄탈럼"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "74",
+      "values": {
+        "atomic_number": 74,
+        "symbol": "W",
+        "name_ko": "텅스텐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "75",
+      "values": {
+        "atomic_number": 75,
+        "symbol": "Re",
+        "name_ko": "레늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "76",
+      "values": {
+        "atomic_number": 76,
+        "symbol": "Os",
+        "name_ko": "오스뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "77",
+      "values": {
+        "atomic_number": 77,
+        "symbol": "Ir",
+        "name_ko": "이리듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "78",
+      "values": {
+        "atomic_number": 78,
+        "symbol": "Pt",
+        "name_ko": "백금"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "79",
+      "values": {
+        "atomic_number": 79,
+        "symbol": "Au",
+        "name_ko": "금"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "80",
+      "values": {
+        "atomic_number": 80,
+        "symbol": "Hg",
+        "name_ko": "수은"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "81",
+      "values": {
+        "atomic_number": 81,
+        "symbol": "Tl",
+        "name_ko": "탈륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "82",
+      "values": {
+        "atomic_number": 82,
+        "symbol": "Pb",
+        "name_ko": "납"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "83",
+      "values": {
+        "atomic_number": 83,
+        "symbol": "Bi",
+        "name_ko": "비스무트"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "84",
+      "values": {
+        "atomic_number": 84,
+        "symbol": "Po",
+        "name_ko": "폴로늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "85",
+      "values": {
+        "atomic_number": 85,
+        "symbol": "At",
+        "name_ko": "아스타틴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "86",
+      "values": {
+        "atomic_number": 86,
+        "symbol": "Rn",
+        "name_ko": "라돈"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "87",
+      "values": {
+        "atomic_number": 87,
+        "symbol": "Fr",
+        "name_ko": "프랑슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "88",
+      "values": {
+        "atomic_number": 88,
+        "symbol": "Ra",
+        "name_ko": "라듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "89",
+      "values": {
+        "atomic_number": 89,
+        "symbol": "Ac",
+        "name_ko": "악티늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "90",
+      "values": {
+        "atomic_number": 90,
+        "symbol": "Th",
+        "name_ko": "토륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "91",
+      "values": {
+        "atomic_number": 91,
+        "symbol": "Pa",
+        "name_ko": "프로트악티늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "92",
+      "values": {
+        "atomic_number": 92,
+        "symbol": "U",
+        "name_ko": "우라늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "93",
+      "values": {
+        "atomic_number": 93,
+        "symbol": "Np",
+        "name_ko": "넵투늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "94",
+      "values": {
+        "atomic_number": 94,
+        "symbol": "Pu",
+        "name_ko": "플루토늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "95",
+      "values": {
+        "atomic_number": 95,
+        "symbol": "Am",
+        "name_ko": "아메리슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "96",
+      "values": {
+        "atomic_number": 96,
+        "symbol": "Cm",
+        "name_ko": "퀴륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "97",
+      "values": {
+        "atomic_number": 97,
+        "symbol": "Bk",
+        "name_ko": "버클륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "98",
+      "values": {
+        "atomic_number": 98,
+        "symbol": "Cf",
+        "name_ko": "캘리포늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "99",
+      "values": {
+        "atomic_number": 99,
+        "symbol": "Es",
+        "name_ko": "아인슈타이늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "100",
+      "values": {
+        "atomic_number": 100,
+        "symbol": "Fm",
+        "name_ko": "페르뮴"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "101",
+      "values": {
+        "atomic_number": 101,
+        "symbol": "Md",
+        "name_ko": "멘델레븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "102",
+      "values": {
+        "atomic_number": 102,
+        "symbol": "No",
+        "name_ko": "노벨륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "103",
+      "values": {
+        "atomic_number": 103,
+        "symbol": "Lr",
+        "name_ko": "로렌슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "104",
+      "values": {
+        "atomic_number": 104,
+        "symbol": "Rf",
+        "name_ko": "러더포듐"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "105",
+      "values": {
+        "atomic_number": 105,
+        "symbol": "Db",
+        "name_ko": "두브늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "106",
+      "values": {
+        "atomic_number": 106,
+        "symbol": "Sg",
+        "name_ko": "시보귬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "107",
+      "values": {
+        "atomic_number": 107,
+        "symbol": "Bh",
+        "name_ko": "보륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "108",
+      "values": {
+        "atomic_number": 108,
+        "symbol": "Hs",
+        "name_ko": "하슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "109",
+      "values": {
+        "atomic_number": 109,
+        "symbol": "Mt",
+        "name_ko": "마이트너륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "110",
+      "values": {
+        "atomic_number": 110,
+        "symbol": "Ds",
+        "name_ko": "다름슈타튬"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "111",
+      "values": {
+        "atomic_number": 111,
+        "symbol": "Rg",
+        "name_ko": "뢴트게늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "112",
+      "values": {
+        "atomic_number": 112,
+        "symbol": "Cn",
+        "name_ko": "코페르니슘"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "113",
+      "values": {
+        "atomic_number": 113,
+        "symbol": "Nh",
+        "name_ko": "니호늄"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "114",
+      "values": {
+        "atomic_number": 114,
+        "symbol": "Fl",
+        "name_ko": "플레로븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "115",
+      "values": {
+        "atomic_number": 115,
+        "symbol": "Mc",
+        "name_ko": "모스코븀"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "116",
+      "values": {
+        "atomic_number": 116,
+        "symbol": "Lv",
+        "name_ko": "리버모륨"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "117",
+      "values": {
+        "atomic_number": 117,
+        "symbol": "Ts",
+        "name_ko": "테네신"
+      },
+      "source": "s1"
+    },
+    {
+      "key": "118",
+      "values": {
+        "atomic_number": 118,
+        "symbol": "Og",
+        "name_ko": "오가네손"
+      },
+      "source": "s1"
+    }
+  ]
+}

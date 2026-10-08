@@ -1,0 +1,16 @@
+/* 원소 발견사 스토리 테마. 이 클래스를 단 요소 안에서만 쓴다.
+   대비(바탕 #0F1A33 기준): 본문 약 15:1 · 보조 약 7.9:1 · 켜진 칸 위 바탕색 글자 약 9.6:1 · 꺼진 칸 위 보조 글자 약 6.5:1 */
+.story-theme {
+	--story-bg: #0f1a33;
+	--story-cell-off: #1c2a4d;
+	--story-cell-on: #f2b84b;
+	/* 강조가 있는 단계에서 강조 밖 켜진 칸(켜진 색 65% + 바탕 35%, 바탕색 글자 약 4.7:1) · 강조 칸 */
+	--story-cell-dim: #a28043;
+	--story-cell-bright: #ffd27a;
+	--story-text: #eef1f8;
+	--story-muted: #9fb0d6;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}

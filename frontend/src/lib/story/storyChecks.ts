@@ -1,0 +1,99 @@
+// 구성 문구와 데이터 대조(순수 함수). 문구에 적은 연도·고대 여부·강조 칸·퀴즈 정답이 데이터와 다르면
+// 불일치로 돌려준다. 화면은 불일치가 있는 단계(또는 퀴즈)의 문구를 보여 주지 않는다.
+import type { StoryElement } from './elements.ts';
+import { highlightNumbers, isKnownAt, type StepDefinition } from './steps.ts';
+import type { StoryConfig } from './storyConfig.ts';
+
+export const QUIZ_TARGET = 'quiz';
+
+// target: 단계 id 또는 QUIZ_TARGET
+export type StoryMismatch = { target: string; message: string };
+
+export function countAncient(elements: StoryElement[]): number {
+	return elements.filter((element) => element.discovery.era === 'ancient').length;
+}
+
+function dataYearText(element: StoryElement): string {
+	return element.discovery.era === 'ancient' ? 'ancient' : String(element.discovery.year);
+}
+
+function checkStep(
+	step: StepDefinition,
+	byNumber: Map<number, StoryElement>,
+	elements: StoryElement[],
+	copySourceIds: Set<string>
+): string[] {
+	const problems: string[] = [];
+	const find = (atomicNumber: number, role: string): StoryElement | null => {
+		const element = byNumber.get(atomicNumber);
+		if (element === undefined) problems.push(`${role} ${atomicNumber}: not in data`);
+		return element === undefined ? null : element;
+	};
+
+	for (const check of step.checks) {
+		const element = find(check.atomicNumber, 'check');
+		if (element === null) continue;
+		if (element.discovery.era !== 'dated' || element.discovery.year !== check.year) {
+			problems.push(
+				`check ${check.atomicNumber}: copy year ${check.year}, data year ${dataYearText(element)}`
+			);
+		}
+	}
+	for (const atomicNumber of step.mustBeAncient) {
+		const element = find(atomicNumber, 'mustBeAncient');
+		if (element !== null && element.discovery.era !== 'ancient') {
+			problems.push(`mustBeAncient ${atomicNumber}: data year ${dataYearText(element)}`);
+		}
+	}
+	// 예언 칸은 그 단계에서 아직 꺼져 있어야 하고, 나머지 강조 칸은 그 단계에 켜져 있어야 한다.
+	const predicted = new Set(step.predicted);
+	for (const atomicNumber of step.predicted) {
+		const element = find(atomicNumber, 'predicted');
+		if (element !== null && isKnownAt(element, step.until)) {
+			problems.push(
+				`predicted ${atomicNumber}: already known (data year ${dataYearText(element)})`
+			);
+		}
+	}
+	for (const atomicNumber of highlightNumbers(elements, step.highlight)) {
+		if (predicted.has(atomicNumber)) continue;
+		const element = find(atomicNumber, 'highlight');
+		if (element !== null && !isKnownAt(element, step.until)) {
+			problems.push(
+				`highlight ${atomicNumber}: not known yet (data year ${dataYearText(element)})`
+			);
+		}
+	}
+	for (const atomicNumber of step.chips) {
+		const element = find(atomicNumber, 'chips');
+		if (element !== null && !isKnownAt(element, step.until)) {
+			problems.push(`chips ${atomicNumber}: not known yet (data year ${dataYearText(element)})`);
+		}
+	}
+	for (const sourceId of step.sources) {
+		if (!copySourceIds.has(sourceId)) problems.push(`source ${sourceId}: not in copySources`);
+	}
+	return problems;
+}
+
+export function findStoryMismatches(
+	elements: StoryElement[],
+	config: StoryConfig
+): StoryMismatch[] {
+	const byNumber = new Map(elements.map((element) => [element.atomicNumber, element]));
+	const copySourceIds = new Set(config.copySources.map((source) => source.id));
+	const mismatches: StoryMismatch[] = config.steps.flatMap((step) =>
+		checkStep(step, byNumber, elements, copySourceIds).map((message) => ({
+			target: step.id,
+			message
+		}))
+	);
+	const answer = countAncient(elements);
+	if (!config.quiz.choices.includes(answer)) {
+		mismatches.push({
+			target: QUIZ_TARGET,
+			message: `answer ${answer} (ancient count) not in choices ${config.quiz.choices.join(',')}`
+		});
+	}
+	return mismatches;
+}
