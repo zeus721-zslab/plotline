@@ -1,8 +1,8 @@
 <script lang="ts">
-	// 첫 화면 스토리 표지 1장: 질문 문장 · 요약 · 작은 주기율표 미리보기.
-	import PeriodicPreview from './PeriodicPreview.svelte';
+	// 첫 화면 스토리 표지 1장: 질문 문장(없으면 제목) · 요약 · 작은 주기율표 미리보기.
+	import PeriodicPreview from '../stories/element-discovery/PeriodicPreview.svelte';
 	import type { StoryIndexEntry } from './published.ts';
-	import './theme.css';
+	import '../stories/element-discovery/theme.css';
 
 	type Props = { entry: StoryIndexEntry };
 
@@ -10,7 +10,7 @@
 </script>
 
 <a class="cover story-theme" href="/stories/{entry.story}">
-	<span class="question">{entry.question}</span>
+	<span class="question">{entry.question === undefined ? entry.title : entry.question}</span>
 	<span class="summary">{entry.summary}</span>
 	<span class="preview"><PeriodicPreview /></span>
 </a>

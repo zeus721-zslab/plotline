@@ -1,16 +1,18 @@
 // 원소 발견사 스토리 데이터 불러오기: 스토리 파일 → 두 데이터셋 → 원소 목록.
+import {
+	loadDataset,
+	loadStory,
+	loadStoryIndex,
+	type LoadResult
+} from '../../story/fetchPublished.ts';
+import { datasetSourceViews, type SourceView } from '../../story/sourceViews.ts';
+import type { CopySource } from '../../story/storyConfig.ts';
+import { parseStoryImages, type StoryImage } from '../../story/storyMedia.ts';
+import { parseStoryConfig, type StoryConfig } from './config.ts';
 import config from './element-discovery.config.json';
 import images from './element-discovery.images.json';
-import {
-	buildElements,
-	datasetSourceViews,
-	type SourceView,
-	type StoryElement
-} from './elements.ts';
-import { loadDataset, loadStory, loadStoryIndex, type LoadResult } from './fetchPublished.ts';
+import { buildElements, type StoryElement } from './elements.ts';
 import { findStoryMismatches } from './storyChecks.ts';
-import { parseStoryConfig, type CopySource, type StoryConfig } from './storyConfig.ts';
-import { parseStoryImages, type StoryImage } from './storyMedia.ts';
 
 export const ELEMENT_DISCOVERY_STORY = 'element-discovery';
 const NAMES_DATASET = 'elements_ko';
@@ -83,7 +85,7 @@ export async function loadElementDiscovery(): Promise<LoadResult<ElementDiscover
 		kind: 'ok',
 		data: {
 			title: story.data.title,
-			question: story.data.question,
+			question: story.data.question === undefined ? story.data.title : story.data.question,
 			summary: indexEntry === undefined ? null : indexEntry.summary,
 			elements,
 			sources: [...datasetSourceViews(names.data), ...datasetSourceViews(discoveries.data)]

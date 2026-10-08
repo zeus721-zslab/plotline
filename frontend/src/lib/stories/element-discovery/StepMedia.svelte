@@ -1,10 +1,10 @@
 <script lang="ts">
 	// 단계 카드 위쪽 그림 자리: 이미지면 StoryFigure, 코드로 그린 연출이면 id 에 맞는 SVG 를 둔다.
+	import StoryFigure from '../../story/StoryFigure.svelte';
 	import EclipseScene from './EclipseScene.svelte';
 	import LeadBoxScene from './LeadBoxScene.svelte';
 	import SpectrumScene from './SpectrumScene.svelte';
-	import StoryFigure from './StoryFigure.svelte';
-	import type { ResolvedMedia } from './storyMedia.ts';
+	import type { ResolvedMedia } from './stepMedia.ts';
 
 	type Props = { media: ResolvedMedia; active: boolean };
 

@@ -2,10 +2,10 @@
 	// 단계 곁들임 카드 1장. 사실(fact)과 전해지는 이야기(legend)를 색뿐 아니라 라벨·테두리 모양으로도 구분한다.
 	// 화면에 처음 들어올 때 한 번 0.3초 동안 나타나고, 동작 줄이기면 처음부터 보인다.
 	import { onMount } from 'svelte';
-	import type { AsideKind, StepAside } from './steps.ts';
 	import type { CopySource } from './storyConfig.ts';
 	import StoryFigure from './StoryFigure.svelte';
 	import type { StoryImage } from './storyMedia.ts';
+	import type { AsideKind, StepAside } from './storySteps.ts';
 
 	type Props = { aside: StepAside; sources: CopySource[]; image: StoryImage | null };
 

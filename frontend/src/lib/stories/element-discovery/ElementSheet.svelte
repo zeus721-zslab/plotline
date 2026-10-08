@@ -1,6 +1,7 @@
 <script lang="ts">
 	// 원소 상세(아래에서 올라오는 dialog). Esc·바깥 누름·닫기 버튼으로 닫히고, 닫히면 onclose 로 알린다.
-	import { discoveryLabel, type SourceView, type StoryElement } from './elements.ts';
+	import type { SourceView } from '../../story/sourceViews.ts';
+	import { discoveryLabel, type StoryElement } from './elements.ts';
 
 	type Props = { element: StoryElement | null; onclose: () => void };
 
