@@ -1,0 +1,28 @@
+# 로컬 작업 기록 · 정찰 보고서 · 백로그
+PROGRESS.md
+docs/backlog/
+docs/recon/
+
+# 로컬 작업 규칙 문서
+CLAUDE.md
+CLAUDE-DEV.md
+
+# 환경변수
+.env
+.env.*
+!.env.example
+
+# 의존성
+node_modules/
+.venv/
+
+# 빌드 산출물 · 캐시
+frontend/build/
+frontend/.svelte-kit/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
