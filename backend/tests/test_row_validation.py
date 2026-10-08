@@ -252,6 +252,37 @@ def test_too_long_key_is_error() -> None:
     assert results[1].row_key is None
 
 
+def test_key_value_with_separator_is_error() -> None:
+    fields = parse_field_definitions(
+        [
+            {"name": "first", "type": "text", "key": True},
+            {"name": "second", "type": "text", "key": True},
+        ]
+    )
+
+    # 구분자를 허용하면 두 행의 row_key 가 모두 "a|b|c" 가 된다.
+    results = validate_rows(
+        fields,
+        [_external({"first": "a|b", "second": "c"}), _external({"first": "a", "second": "b|c"})],
+        ImportSourceType.UPLOAD,
+        None,
+    )
+
+    assert _codes(results[0]) == [(RowErrorCode.KEY_SEPARATOR, "first")]
+    assert _codes(results[1]) == [(RowErrorCode.KEY_SEPARATOR, "second")]
+    assert [result.row_key for result in results] == [None, None]
+    assert results[0].data == {"first": "a|b", "second": "c"}
+
+
+def test_separator_in_non_key_field_is_allowed() -> None:
+    fields = _single_field({"name": "note", "type": "text"})
+
+    result = _validate_one(fields, _external({"id": "a", "note": "x|y"}))
+
+    assert result.errors == []
+    assert result.row_key == "a"
+
+
 # --- 출처 규칙(D-18) ---
 
 

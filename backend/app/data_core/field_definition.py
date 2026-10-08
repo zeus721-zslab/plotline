@@ -7,11 +7,15 @@
 import math
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from datetime import date
+from typing import Any, assert_never
 
 from app.data_core.enums import FieldType
 
 NAME_PATTERN = re.compile(r"^[a-z0-9_]+$")
+DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# number 는 같은 값도 표기(1 · 1.0 · 1e0)에 따라 row_key 문자열이 달라질 수 있어 key 로 쓰지 않는다.
+KEY_DISALLOWED_TYPES = frozenset({FieldType.NUMBER})
 
 COMMON_ATTRIBUTES = frozenset({"name", "label", "type", "required", "key", "required_if"})
 TYPE_SPECIFIC_ATTRIBUTES: dict[FieldType, frozenset[str]] = {
@@ -97,6 +101,8 @@ def _parse_one_field(raw_field: object, position: int, problems: list[str]) -> F
     label = _optional_string(raw_field, "label", where, problems)
     required = _optional_bool(raw_field, "required", where, problems)
     key = _optional_bool(raw_field, "key", where, problems)
+    if key and field_type in KEY_DISALLOWED_TYPES:
+        problems.append(f"{where}: {field_type} 타입은 key 로 쓸 수 없습니다.")
     bound_min = _optional_bound(raw_field, "min", field_type, where, problems)
     bound_max = _optional_bound(raw_field, "max", field_type, where, problems)
     if bound_min is not None and bound_max is not None and bound_min > bound_max:
@@ -211,14 +217,61 @@ def _check_across_fields(specs: list[FieldSpec]) -> list[str]:
     for name in duplicated:
         problems.append(f"필드 '{name}': name 이 정의 안에서 중복됩니다.")
 
-    known_names = set(names)
+    specs_by_name = {spec.name: spec for spec in specs}
     for spec in specs:
-        for referenced in spec.required_if:
+        for referenced, condition_value in spec.required_if.items():
             if referenced == spec.name:
                 problems.append(f"필드 '{spec.name}': required_if 가 자기 자신을 가리킬 수 없습니다.")
-            elif referenced not in known_names:
+            elif referenced not in specs_by_name:
                 problems.append(f"필드 '{spec.name}': required_if 가 없는 필드 '{referenced}' 를 가리킵니다.")
+            else:
+                problem = _check_condition_value(spec.name, specs_by_name[referenced], referenced, condition_value)
+                if problem is not None:
+                    problems.append(problem)
 
     if not any(spec.key for spec in specs):
         problems.append("key 필드가 1개 이상 있어야 합니다.")
     return problems
+
+
+def _check_condition_value(
+    owner_name: str, target: FieldSpec, referenced: str, condition_value: RequiredIfValue
+) -> str | None:
+    # 조건 비교는 행 검사에서 정규화된 값과 == 로 하므로, 타입이 다르면 조건이 영영 맞지 않는다(조용한 무효화 방지).
+    where = f"필드 '{owner_name}'"
+    if target.type is FieldType.CATEGORY:
+        if isinstance(condition_value, str) and condition_value in target.options:
+            return None
+        options = ", ".join(target.options)
+        return f"{where}: required_if 의 '{referenced}' 조건 값은 options({options}) 중 하나여야 합니다."
+    if _matches_normalized_type(target.type, condition_value):
+        return None
+    return f"{where}: required_if 의 '{referenced}' 조건 값이 {target.type} 타입과 맞지 않습니다."
+
+
+def _matches_normalized_type(field_type: FieldType, value: RequiredIfValue) -> bool:
+    """행 검사가 만드는 정규화 값의 타입과 같은지 본다(date 는 YYYY-MM-DD 문자열로 정규화된다)."""
+    match field_type:
+        case FieldType.TEXT | FieldType.URL | FieldType.CATEGORY:
+            return isinstance(value, str)
+        case FieldType.INT | FieldType.YEAR:
+            return isinstance(value, int) and not isinstance(value, bool)
+        case FieldType.NUMBER:
+            return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
+        case FieldType.DATE:
+            return isinstance(value, str) and _is_iso_date(value)
+        case FieldType.BOOL:
+            return isinstance(value, bool)
+        case _:
+            assert_never(field_type)
+
+
+def _is_iso_date(text: str) -> bool:
+    if not DATE_PATTERN.match(text):
+        return False
+    try:
+        date.fromisoformat(text)
+    except ValueError:
+        # 형식은 맞지만 존재하지 않는 날짜(2026-02-30 등)는 조건 값으로 쓸 수 없다는 판정 자체가 결과다.
+        return False
+    return True

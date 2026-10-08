@@ -45,6 +45,7 @@ class RowErrorCode(StrEnum):
     UNKNOWN_FIELD = "unknown_field"
     DUPLICATE_KEY = "duplicate_key"
     KEY_TOO_LONG = "key_too_long"
+    KEY_SEPARATOR = "key_separator"
     SOURCE_KIND_MISSING = "source_kind_missing"
     SOURCE_KIND_INVALID = "source_kind_invalid"
     SOURCE_URL_MISSING = "source_url_missing"

@@ -14,13 +14,12 @@ from typing import assert_never
 from urllib.parse import urlsplit
 
 from app.data_core.enums import FieldType, ImportSourceType, RowErrorCode, RowStatus, SourceKind
-from app.data_core.field_definition import FieldSpec
+from app.data_core.field_definition import DATE_PATTERN, FieldSpec
 from app.data_core.models import ROW_KEY_MAX_LENGTH, URL_MAX_LENGTH
 
 ROW_KEY_SEPARATOR = "|"
 INTEGER_PATTERN = re.compile(r"^[+-]?\d+$")
 DECIMAL_PATTERN = re.compile(r"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$")
-DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 ALLOWED_URL_SCHEMES = frozenset({"http", "https"})
 TRUE_STRINGS = frozenset({"true", "1", "yes"})
 FALSE_STRINGS = frozenset({"false", "0", "no"})
@@ -263,14 +262,27 @@ def _build_row_key(
     fields: Sequence[FieldSpec], data: Mapping[str, CellValue | None], errors: list[RowError]
 ) -> str | None:
     parts: list[str] = []
+    has_unusable_part = False
     for spec in fields:
         if not spec.key:
             continue
         value = data[spec.name]
         if value is None:
-            return None
-        parts.append(_key_part(value))
+            has_unusable_part = True
+            continue
+        part = _key_part(value)
+        # 구분자가 값 안에 있으면 ("a|b", "c") 와 ("a", "b|c") 가 같은 row_key 가 되어 서로 다른 행이 겹친다.
+        if ROW_KEY_SEPARATOR in part:
+            errors.append(
+                RowError(RowErrorCode.KEY_SEPARATOR, spec.name, f"key 값에는 '{ROW_KEY_SEPARATOR}' 를 쓸 수 없습니다.")
+            )
+            has_unusable_part = True
+            continue
+        parts.append(part)
 
+    # key 오류 행도 저장되며(row_key NULL), 관리자가 보고 반려한다.
+    if has_unusable_part:
+        return None
     row_key = ROW_KEY_SEPARATOR.join(parts)
     if len(row_key) > ROW_KEY_MAX_LENGTH:
         errors.append(
