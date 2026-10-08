@@ -124,8 +124,13 @@ class DatasetRow(Base):
     import_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("imports.id"), nullable=False, comment="이 행을 만든 입력"
     )
-    row_key: Mapped[str] = mapped_column(
-        String(ROW_KEY_MAX_LENGTH), nullable=False, comment="key 필드 값을 정의 순서대로 | 로 연결한 값"
+    # NULL: key 오류(누락·구분자·길이 초과) 행도 저장해 관리자가 보고 반려하게 한다.
+    # utf8mb4_bin: "Fe" 와 "fe" 처럼 대소문자·악센트만 다른 key 를 같은 행으로 보지 않게 한다.
+    # MariaDB 의 utf8mb4_bin 은 끝 공백을 무시(PAD SPACE)하지만, 행 검사가 key 값을 strip 하므로 끝 공백 key 는 생기지 않는다.
+    row_key: Mapped[str | None] = mapped_column(
+        String(ROW_KEY_MAX_LENGTH, collation="utf8mb4_bin"),
+        nullable=True,
+        comment="key 필드 값을 정의 순서대로 | 로 연결한 값",
     )
     data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, comment="정규화된 칸 값")
     source_kind: Mapped[SourceKind | None] = mapped_column(

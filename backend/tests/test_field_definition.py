@@ -115,6 +115,54 @@ def test_required_if_cannot_point_to_itself() -> None:
     assert problems == ["필드 'code': required_if 가 자기 자신을 가리킬 수 없습니다."]
 
 
+def test_number_cannot_be_key() -> None:
+    problems = _problems_of([{"name": "mass", "type": "number", "key": True}])
+
+    assert problems == ["필드 'mass': number 타입은 key 로 쓸 수 없습니다."]
+
+
+def _definition_with_condition(target: dict[str, object], condition_value: object) -> list[dict[str, object]]:
+    return [
+        {"name": "code", "type": "text", "key": True},
+        {"name": "target", **target},
+        {"name": "note", "type": "text", "required_if": {"target": condition_value}},
+    ]
+
+
+CATEGORY_TARGET = {"type": "category", "options": ["gas", "solid"]}
+
+
+@pytest.mark.parametrize(
+    ("target", "condition_value", "expected"),
+    [
+        ({"type": "int"}, "2", "필드 'note': required_if 의 'target' 조건 값이 int 타입과 맞지 않습니다."),
+        ({"type": "int"}, True, "필드 'note': required_if 의 'target' 조건 값이 int 타입과 맞지 않습니다."),
+        ({"type": "number"}, "1", "필드 'note': required_if 의 'target' 조건 값이 number 타입과 맞지 않습니다."),
+        ({"type": "date"}, "2026-02-30", "필드 'note': required_if 의 'target' 조건 값이 date 타입과 맞지 않습니다."),
+        ({"type": "bool"}, "true", "필드 'note': required_if 의 'target' 조건 값이 bool 타입과 맞지 않습니다."),
+        (CATEGORY_TARGET, "liquid", "필드 'note': required_if 의 'target' 조건 값은 options(gas, solid) 중 하나여야 합니다."),
+    ],
+)
+def test_required_if_value_must_match_target_type(
+    target: dict[str, object], condition_value: object, expected: str
+) -> None:
+    assert _problems_of(_definition_with_condition(target, condition_value)) == [expected]
+
+
+@pytest.mark.parametrize(
+    ("target", "condition_value"),
+    [
+        ({"type": "int"}, 2),
+        ({"type": "bool"}, True),
+        (CATEGORY_TARGET, "solid"),
+    ],
+)
+def test_required_if_value_matching_target_type_passes(target: dict[str, object], condition_value: object) -> None:
+    specs = parse_field_definitions(_definition_with_condition(target, condition_value))
+
+    assert specs[2].required_if == {"target": condition_value}
+
+
 def test_all_problems_are_collected_at_once() -> None:
     problems = _problems_of(
         [

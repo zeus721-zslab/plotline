@@ -16,7 +16,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
 # 호스트에서 생긴 __pycache__ 가 실행 단계로 넘어가지 않게 제거(.dockerignore 는 개발 이미지와 공유하므로 건드리지 않음)
 RUN uv sync --frozen --no-dev \
-    && find /app/app -name __pycache__ -type d -prune -exec rm -rf {} +
+    && find /app/app /app/alembic -name __pycache__ -type d -prune -exec rm -rf {} +
 
 # --- 실행 단계: 빌드 단계와 같은 Python(/usr/local/bin/python3.14) 경로를 쓰는 slim 이미지 ---
 FROM python:3.14.8-slim-trixie
@@ -34,8 +34,11 @@ ENV PATH=/opt/venv/bin:$PATH \
 WORKDIR /app
 
 # 테스트·캐시는 제외하고 venv 와 앱 소스만 복사한다.
+# alembic 은 배포 시 deploy.sh 가 새 api 기동 전에 실행한다(D-19). 앱 소스와 같이 root 소유로 두어 app 유저에게는 읽기 전용이다.
 COPY --from=build /opt/venv /opt/venv
 COPY --from=build /app/app ./app
+COPY --from=build /app/alembic ./alembic
+COPY --from=build /app/alembic.ini ./alembic.ini
 
 USER app
 EXPOSE 8000
