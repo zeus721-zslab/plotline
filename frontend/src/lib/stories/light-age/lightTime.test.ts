@@ -8,7 +8,6 @@ import { parseStoryImages } from '../../story/storyMedia.ts';
 import { CHAPTER_ASIDES } from './asides.ts';
 import { CHAPTERS, chapterSlots } from './chapters.ts';
 import {
-	birthRelation,
 	departureText,
 	distanceText,
 	koreanNumber,
@@ -168,7 +167,7 @@ describe('사건 대조', () => {
 	});
 });
 
-describe('날짜 · 출생 연도', () => {
+describe('날짜', () => {
 	test('보이저 기준 날짜 전후', () => {
 		assert.equal(voyagerVerb('2026-11-17'), '닿습니다');
 		assert.equal(voyagerVerb('2026-11-18'), '닿았습니다');
@@ -177,12 +176,6 @@ describe('날짜 · 출생 연도', () => {
 	test('오늘은 한국 시각 기준', () => {
 		assert.equal(storyToday(new Date('2026-11-17T15:30:00Z')), '2026-11-18');
 		assert.equal(storyToday(new Date('2026-11-17T14:59:00Z')), '2026-11-17');
-	});
-
-	test('출생 연도 잇기', () => {
-		assert.equal(birthRelation(2022, 1990), '당신이 32살 때');
-		assert.equal(birthRelation(2001, 2010), '태어나기 9년 전');
-		assert.equal(birthRelation(2017, 2017), '당신이 태어난 해');
 	});
 });
 

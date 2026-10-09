@@ -50,7 +50,6 @@ export function shownCopySources(hiddenTargets: Set<string>): CopySource[] {
 
 export type ElementDiscoveryData = {
 	title: string;
-	question: string;
 	// 목록에서 내려진 스토리면 요약이 없을 수 있다.
 	summary: string | null;
 	elements: StoryElement[];
@@ -85,7 +84,6 @@ export async function loadElementDiscovery(): Promise<LoadResult<ElementDiscover
 		kind: 'ok',
 		data: {
 			title: story.data.title,
-			question: story.data.question === undefined ? story.data.title : story.data.question,
 			summary: indexEntry === undefined ? null : indexEntry.summary,
 			elements,
 			sources: [...datasetSourceViews(names.data), ...datasetSourceViews(discoveries.data)]

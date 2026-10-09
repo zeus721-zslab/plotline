@@ -1,20 +1,14 @@
-// 구성 문구와 데이터 대조(순수 함수). 문구에 적은 연도·고대 여부·강조 칸·퀴즈 정답이 데이터와 다르거나
+// 구성 문구와 데이터 대조(순수 함수). 문구에 적은 연도·고대 여부·강조 칸이 데이터와 다르거나
 // 출처·그림 id 가 목록에 없으면
-// 불일치로 돌려준다. 화면은 불일치가 있는 단계(또는 퀴즈)의 문구를 보여 주지 않는다.
+// 불일치로 돌려준다. 화면은 불일치가 있는 단계의 문구를 보여 주지 않는다.
 import type { StoryImage } from '../../story/storyMedia.ts';
 import type { StoryConfig } from './config.ts';
 import type { StoryElement } from './elements.ts';
 import { isStorySvgId } from './stepMedia.ts';
 import { highlightNumbers, isKnownAt, type StepDefinition } from './steps.ts';
 
-export const QUIZ_TARGET = 'quiz';
-
-// target: 단계 id 또는 QUIZ_TARGET
+// target: 단계 id
 export type StoryMismatch = { target: string; message: string };
-
-export function countAncient(elements: StoryElement[]): number {
-	return elements.filter((element) => element.discovery.era === 'ancient').length;
-}
 
 function dataYearText(element: StoryElement): string {
 	return element.discovery.era === 'ancient' ? 'ancient' : String(element.discovery.year);
@@ -121,12 +115,5 @@ export function findStoryMismatches(
 			message
 		}))
 	);
-	const answer = countAncient(elements);
-	if (!config.quiz.choices.includes(answer)) {
-		mismatches.push({
-			target: QUIZ_TARGET,
-			message: `answer ${answer} (ancient count) not in choices ${config.quiz.choices.join(',')}`
-		});
-	}
 	return mismatches;
 }

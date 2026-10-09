@@ -1,8 +1,7 @@
 <script lang="ts">
-	// 원소 발견사 스토리: 표지(퀴즈) → 시그니처 장면 → 50년 구간 막대 → 출생 연도 → 직접 찾아보기 → 출처.
+	// 원소 발견사 스토리: 표지 → 시그니처 장면 → 50년 구간 막대 → 직접 찾아보기 → 출처.
 	// 페이지 틀은 프리렌더하고 데이터는 클라이언트에서 /data/ 를 읽는다.
 	import { onMount } from 'svelte';
-	import BirthYearPanel from '#lib/stories/element-discovery/BirthYearPanel.svelte';
 	import DecadeBars from '#lib/stories/element-discovery/DecadeBars.svelte';
 	import { binDiscoveries, busiestBin } from '#lib/stories/element-discovery/discoveryBins.ts';
 	import ElementSheet from '#lib/stories/element-discovery/ElementSheet.svelte';
@@ -17,11 +16,9 @@
 	import type { StoryElement } from '#lib/stories/element-discovery/elements.ts';
 	import LoadStatus from '#lib/story/LoadStatus.svelte';
 	import PeriodicGrid from '#lib/stories/element-discovery/PeriodicGrid.svelte';
-	import QuizCard from '#lib/stories/element-discovery/QuizCard.svelte';
 	import SignatureScene from '#lib/stories/element-discovery/SignatureScene.svelte';
 	import SourceList from '#lib/story/SourceList.svelte';
 	import { summarizeSteps } from '#lib/stories/element-discovery/steps.ts';
-	import { countAncient, QUIZ_TARGET } from '#lib/stories/element-discovery/storyChecks.ts';
 	import { fillTemplate } from '#lib/story/storyConfig.ts';
 	import '#lib/stories/element-discovery/theme.css';
 
@@ -42,7 +39,6 @@
 	const summaries = $derived(
 		ready === null ? [] : summarizeSteps(ready.elements, ELEMENT_DISCOVERY_CONFIG.steps)
 	);
-	const ancientCount = $derived(ready === null ? 0 : countAncient(ready.elements));
 	const bins = $derived(ready === null ? [] : binDiscoveries(ready.elements));
 	const busiest = $derived(busiestBin(bins));
 	const allNumbers = $derived(
@@ -94,15 +90,8 @@
 		</div>
 	{:else}
 		<header class="cover">
-			<h1>{ready.question}</h1>
+			<h1>{ready.title}</h1>
 			{#if ready.summary !== null}<p class="summary">{ready.summary}</p>{/if}
-			{#if !hiddenTargets.has(QUIZ_TARGET)}
-				<QuizCard
-					quiz={ELEMENT_DISCOVERY_CONFIG.quiz}
-					answer={ancientCount}
-					dated={ready.elements.length - ancientCount}
-				/>
-			{/if}
 			<p class="scroll-hint" aria-hidden="true">아래로 스크롤 ↓</p>
 		</header>
 
@@ -128,11 +117,6 @@
 				</p>
 			{/if}
 			<DecadeBars {bins} highlightId={busiest === null ? null : busiest.id} />
-		</section>
-
-		<section class="block" aria-labelledby="birth-year-title">
-			<h2 id="birth-year-title">{ELEMENT_DISCOVERY_CONFIG.birthYear.title}</h2>
-			<BirthYearPanel config={ELEMENT_DISCOVERY_CONFIG.birthYear} elements={ready.elements} />
 		</section>
 
 		<section class="block" aria-labelledby="explore-title">

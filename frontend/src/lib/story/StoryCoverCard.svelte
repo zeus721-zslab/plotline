@@ -1,5 +1,5 @@
 <script lang="ts">
-	// 첫 화면 스토리 표지 1장: 질문 문장(없으면 제목) · 요약 · 스토리별 미리보기 그림.
+	// 첫 화면 스토리 표지 1장: 제목 · 요약 · 스토리별 미리보기 그림.
 	// 테마 클래스와 그림은 스토리마다 다르므로 부르는 쪽이 넘긴다.
 	import type { Component } from 'svelte';
 	import type { StoryIndexEntry } from './published.ts';
@@ -10,7 +10,7 @@
 </script>
 
 <a class="cover {themeClass}" href="/stories/{entry.story}">
-	<span class="question">{entry.question === undefined ? entry.title : entry.question}</span>
+	<span class="title">{entry.title}</span>
 	<span class="summary">{entry.summary}</span>
 	{#if Preview !== null}
 		<span class="preview"><Preview /></span>
@@ -31,7 +31,7 @@
 		outline-offset: 3px;
 	}
 
-	.question {
+	.title {
 		font-size: 1.75rem;
 		font-weight: 700;
 		line-height: 1.3;
@@ -56,7 +56,7 @@
 			padding: 2.5rem;
 		}
 
-		.question {
+		.title {
 			font-size: 2.25rem;
 		}
 
