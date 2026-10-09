@@ -1,0 +1,15 @@
+{
+  "story": "black-hole",
+  "title": "사건의 지평선 너머",
+  "published_at": "2026-10-10T00:00:00Z",
+  "datasets": {
+    "black_holes": {
+      "version": 1,
+      "path": "/data/datasets/black_holes/v1.json"
+    },
+    "bh_boundaries": {
+      "version": 1,
+      "path": "/data/datasets/bh_boundaries/v1.json"
+    }
+  }
+}

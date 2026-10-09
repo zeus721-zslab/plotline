@@ -133,7 +133,7 @@ export function travelTime(object: SkyObject): TravelTime {
 }
 
 /** 앞 두 자리 반올림(384400 → 380000). */
-function roundTwoDigits(value: number): number {
+export function roundTwoDigits(value: number): number {
 	if (value < HUNDRED) return Math.round(value);
 	const step = 10 ** (Math.floor(Math.log10(value)) - 1);
 	return roundTo(value, step);

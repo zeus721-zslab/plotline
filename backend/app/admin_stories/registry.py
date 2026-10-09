@@ -7,4 +7,5 @@
 STORY_REGISTRY: dict[str, tuple[str, ...]] = {
     "element-discovery": ("elements_ko", "element_discoveries"),
     "light-age": ("sky_objects", "earth_moments"),
+    "black-hole": ("black_holes", "bh_boundaries"),
 }

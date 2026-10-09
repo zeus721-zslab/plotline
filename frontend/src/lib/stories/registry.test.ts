@@ -46,8 +46,8 @@ function changeRow(
 describe('registry.checkHidden — static/data 기준', () => {
 	const now = new Date();
 
-	test('두 이야기 모두 숨겨질 문구 0건', () => {
-		assert.equal(STORY_ENTRIES.length, 2);
+	test('세 이야기 모두 숨겨질 문구 0건', () => {
+		assert.equal(STORY_ENTRIES.length, 3);
 		for (const entry of STORY_ENTRIES) {
 			assert.deepEqual([...entry.checkHidden(staticDatasets(entry), now)], [], entry.story);
 		}
@@ -69,6 +69,17 @@ describe('registry.checkHidden — static/data 기준', () => {
 		const entry = requireEntry('light-age');
 		const datasets = staticDatasets(entry);
 		datasets.sky_objects = changeRow(datasets.sky_objects, 'sun', 'distance_value', 1);
+		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
+	});
+
+	test('3편: 그림자를 실제 경계로 바꾸면 숨겨질 문구가 생김', () => {
+		const entry = requireEntry('black-hole');
+		const datasets = staticDatasets(entry);
+		const copy = JSON.parse(JSON.stringify(datasets.bh_boundaries)) as PublishedDataset;
+		const row = copy.rows.find((candidate) => candidate.key === 'shadow');
+		assert.ok(row !== undefined);
+		row.values.physical = true;
+		datasets.bh_boundaries = copy;
 		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
 	});
 

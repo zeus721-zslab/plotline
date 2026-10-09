@@ -10,6 +10,8 @@
 		DATASET_CONTENT_PROBLEM_MESSAGES,
 		TERMS
 	} from '#lib/admin/terms.ts';
+	import BlackHolePage from '#lib/stories/black-hole/BlackHolePage.svelte';
+	import { BLACK_HOLE_STORY } from '#lib/stories/black-hole/blackHoleStory.ts';
 	import ElementDiscoveryPage from '#lib/stories/element-discovery/ElementDiscoveryPage.svelte';
 	import { ELEMENT_DISCOVERY_STORY } from '#lib/stories/element-discovery/elementDiscovery.ts';
 	import LightAgePage from '#lib/stories/light-age/LightAgePage.svelte';
@@ -34,7 +36,8 @@
 	// 프론트 registry 의 이야기마다 페이지 컴포넌트가 있어야 타입 검사를 통과한다.
 	const PAGES: Record<RegisteredStory, StoryPage> = {
 		[ELEMENT_DISCOVERY_STORY]: ElementDiscoveryPage,
-		[LIGHT_AGE_STORY]: LightAgePage
+		[LIGHT_AGE_STORY]: LightAgePage,
+		[BLACK_HOLE_STORY]: BlackHolePage
 	};
 	const FORMAT_FAILURE: LoadResult<PublishedDataset> = { kind: 'error', reason: 'format' };
 
