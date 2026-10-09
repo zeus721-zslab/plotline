@@ -106,6 +106,18 @@ def test_integer_type_bounds_must_be_integers() -> None:
     assert problems == ["key 'year': 'min' 는 정수여야 합니다."]
 
 
+def test_label_null_is_rejected() -> None:
+    problems = _problems_of([{"name": "code", "type": "text", "key": True, "label": None}])
+
+    assert problems == ["key 'code': 'label' 은 빼거나 비어 있지 않은 문자열로 써야 합니다(null 은 쓸 수 없습니다)."]
+
+
+def test_label_can_be_omitted() -> None:
+    specs = parse_field_definitions([{"name": "code", "type": "text", "key": True}])
+
+    assert specs[0].label is None
+
+
 def test_required_if_must_point_to_existing_field() -> None:
     problems = _problems_of(
         [

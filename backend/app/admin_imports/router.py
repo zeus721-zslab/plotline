@@ -1,4 +1,4 @@
-"""데이터 묶음 · 붙여넣기 · 줄 검토 · 기록본 관리자 API.
+"""데이터 묶음 · 붙여넣기 · 줄 검토 · 발행 관리자 API.
 
 보호 의존성을 직접 두지 않는다. main 에서 admin_router 아래에 포함되어 캐시 금지·Origin 검사·세션 확인을
 그대로 물려받는다(보호 목록은 admin_auth/router.py 한 곳).
@@ -6,6 +6,7 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path as FilePath
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.admin_imports.errors import ImportErrorCode, ImportServiceError
 from app.admin_imports.paste import preview_import, save_import
+from app.admin_imports.publish import abandon_version, list_versions_with_usage, publish_dataset, retry_publish
 from app.admin_imports.schemas import (
     ApproveResponse,
     DatasetDetailResponse,
@@ -22,17 +24,19 @@ from app.admin_imports.schemas import (
     ImportPreviewResponse,
     ImportSaveResponse,
     NextVersionResponse,
+    PublishResponse,
     RowPageResponse,
     RowResponse,
-    VersionResponse,
+    VersionListResponse,
     to_detail_response,
     to_next_version_response,
     to_preview_response,
+    to_publish_response,
     to_row_page_response,
     to_row_response,
     to_save_response,
     to_summary_response,
-    to_version_response,
+    to_version_list_response,
 )
 from app.admin_imports.service import (
     BULK_APPROVABLE_KINDS,
@@ -40,18 +44,16 @@ from app.admin_imports.service import (
     add_exclusion,
     approve_rows,
     approve_rows_by_kind,
-    create_version,
     get_dataset_overview,
     list_dataset_overviews,
     list_rows,
-    list_versions,
     preview_next_version,
     reject_row,
     remove_exclusion,
 )
 from app.data_core.enums import ChangeKind, ImportSourceType
+from app.config import Settings, get_settings
 from app.data_core.models import (
-    NOTE_MAX_LENGTH,
     REJECT_REASON_MAX_LENGTH,
     ROW_KEY_MAX_LENGTH,
     SLUG_MAX_LENGTH,
@@ -86,15 +88,23 @@ ERROR_STATUS: dict[ImportErrorCode, int] = {
     ImportErrorCode.ROW_NOT_FOUND: status.HTTP_404_NOT_FOUND,
     ImportErrorCode.ROW_NOT_PENDING: status.HTTP_409_CONFLICT,
     ImportErrorCode.EXCLUSION_NOT_FOUND: status.HTTP_404_NOT_FOUND,
-    ImportErrorCode.VERSION_EMPTY: status.HTTP_409_CONFLICT,
-    ImportErrorCode.VERSION_UNCHANGED: status.HTTP_409_CONFLICT,
     ImportErrorCode.VERSION_CONFLICT: status.HTTP_409_CONFLICT,
+    ImportErrorCode.VERSION_NOT_FOUND: status.HTTP_404_NOT_FOUND,
+    ImportErrorCode.PUBLISH_EMPTY: status.HTTP_409_CONFLICT,
+    ImportErrorCode.PUBLISH_UNCHANGED: status.HTTP_409_CONFLICT,
+    ImportErrorCode.PUBLISH_INCOMPLETE: status.HTTP_409_CONFLICT,
+    ImportErrorCode.PUBLISH_CONTENT_INVALID: status.HTTP_409_CONFLICT,
+    ImportErrorCode.PUBLISH_FILE_MISSING: status.HTTP_409_CONFLICT,
+    ImportErrorCode.CONTENT_CHANGED: status.HTTP_409_CONFLICT,
+    ImportErrorCode.VERSION_NOT_ABANDONABLE: status.HTTP_409_CONFLICT,
+    ImportErrorCode.VERSION_ABANDONED: status.HTTP_409_CONFLICT,
 }
 
 datasets_router = APIRouter(prefix="/datasets")
 paste_router = APIRouter(prefix="/imports")
 
 DbSession = Annotated[Session, Depends(get_db_session)]
+AppSettings = Annotated[Settings, Depends(get_settings)]
 RecordId = Annotated[int, Path(ge=1, le=MAX_ROW_ID)]
 Slug = Annotated[str, StringConstraints(min_length=1, max_length=SLUG_MAX_LENGTH, pattern=SLUG_PATTERN)]
 RowKey = Annotated[str, StringConstraints(min_length=1, max_length=ROW_KEY_MAX_LENGTH)]
@@ -147,10 +157,6 @@ class ApproveKindRequest(BaseModel):
 
 class ExclusionRequest(BaseModel):
     row_key: RowKey
-
-
-class CreateVersionRequest(BaseModel):
-    note: Annotated[str, StringConstraints(strip_whitespace=True, max_length=NOTE_MAX_LENGTH)] | None = None
 
 
 def to_http_error(error: ImportServiceError) -> HTTPException:
@@ -268,16 +274,28 @@ def delete_exclusion(slug: str, body: ExclusionRequest, session: DbSession) -> N
         remove_exclusion(session, slug, body.row_key)
 
 
-# --- 기록본(화면 없음, 다음 발행 작업에서 흡수) ---
+# --- 발행(기록본 + 공개 파일, D-29) ---
 
 
-@datasets_router.post("/{slug}/versions", status_code=status.HTTP_201_CREATED)
-def post_version(slug: str, body: CreateVersionRequest, session: DbSession) -> VersionResponse:
-    # 빈 메모는 메모 없음으로 저장한다.
-    note = body.note or None
+@datasets_router.post("/{slug}/publish", status_code=status.HTTP_201_CREATED)
+def post_publish(slug: str, session: DbSession, settings: AppSettings) -> PublishResponse:
     with http_errors():
-        version = create_version(session, slug, note)
-    return to_version_response(version)
+        result = publish_dataset(session, slug, FilePath(settings.published_dir))
+    return to_publish_response(result)
+
+
+@datasets_router.post("/{slug}/versions/{version_no}/publish")
+def post_retry_publish(slug: str, version_no: RecordId, session: DbSession, settings: AppSettings) -> PublishResponse:
+    with http_errors():
+        result = retry_publish(session, slug, version_no, FilePath(settings.published_dir))
+    return to_publish_response(result)
+
+
+@datasets_router.post("/{slug}/versions/{version_no}/abandon")
+def post_abandon(slug: str, version_no: RecordId, session: DbSession, settings: AppSettings) -> PublishResponse:
+    with http_errors():
+        result = abandon_version(session, slug, version_no, FilePath(settings.published_dir))
+    return to_publish_response(result)
 
 
 @datasets_router.get("/{slug}/versions/next")
@@ -288,7 +306,7 @@ def get_next_version(slug: str, session: DbSession) -> NextVersionResponse:
 
 
 @datasets_router.get("/{slug}/versions")
-def get_versions(slug: str, session: DbSession) -> list[VersionResponse]:
+def get_versions(slug: str, session: DbSession, settings: AppSettings) -> VersionListResponse:
     with http_errors():
-        versions = list_versions(session, slug)
-    return [to_version_response(version) for version in versions]
+        versions, usage = list_versions_with_usage(session, slug, FilePath(settings.published_dir))
+    return to_version_list_response(versions, usage)

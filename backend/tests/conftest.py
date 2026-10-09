@@ -109,10 +109,20 @@ def db_session(db_engine: Engine) -> Iterator[Session]:
 
 
 @pytest.fixture
-def admin_client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+def published_dir(tmp_path: Path) -> Path:
+    """테스트마다 비어 있는 발행 폴더. 개발 발행 볼륨(/srv/published)에 쓰지 않게 한다."""
+    directory = tmp_path / "published"
+    directory.mkdir()
+    return directory
+
+
+@pytest.fixture
+def admin_client(
+    db_session: Session, published_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[TestClient]:
     """설정과 DB 세션을 테스트용으로 바꾼 앱 클라이언트. 인증 헤더는 admin_headers 로 따로 싣는다."""
     monkeypatch.setattr(service, "MIN_PASSWORD_HASH_MEMORY_KIB", TEST_HASH_MEMORY_KIB)
-    settings = make_settings()
+    settings = make_settings(published_dir=str(published_dir))
     app.dependency_overrides[get_settings] = lambda: settings
     app.dependency_overrides[get_db_session] = lambda: db_session
     yield TestClient(app)

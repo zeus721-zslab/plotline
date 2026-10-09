@@ -115,6 +115,9 @@ def _parse_one_field(raw_field: object, position: int, problems: list[str]) -> F
         if attribute not in allowed:
             problems.append(f"{where}: {_type_name(field_type)} 형식에는 '{attribute}' 를 쓸 수 없습니다.")
 
+    # 공개 파일은 정의를 그대로 싣고, 공개 계약(published.ts isFieldDefinition)은 label 을 없거나 문자열로만 받는다.
+    if "label" in raw_field and raw_field["label"] is None:
+        problems.append(f"{where}: 'label' 은 빼거나 비어 있지 않은 문자열로 써야 합니다(null 은 쓸 수 없습니다).")
     label = _optional_string(raw_field, "label", where, problems)
     required = _optional_bool(raw_field, "required", where, problems)
     key = _optional_bool(raw_field, "key", where, problems)

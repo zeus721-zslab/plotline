@@ -1,22 +1,22 @@
-"""관리자 데이터 묶음 · 붙여넣기 · 검토 · 기록본 API 의 응답 모델과 서비스 결과 → 응답 변환.
+"""관리자 데이터 묶음 · 붙여넣기 · 검토 · 발행 API 의 응답 모델과 서비스 결과 → 응답 변환.
 
 요청 모델(입력 검증)은 라우터에 두고, 여기에는 응답 형식만 둔다(라우터 파일 크기를 줄이기 위해 분리).
 """
 
 from datetime import UTC, date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from app.admin_imports.paste import ImportPreview, ImportSaveResult, RowSummary
+from app.admin_imports.publish import DatasetUsage, ListedVersion, PublishResult
 from app.admin_imports.service import (
     DatasetOverview,
     ListedRow,
     NextVersionPreview,
     RowPage,
-    VersionSummary,
 )
-from app.data_core.enums import ChangeKind, RowStatus, SourceKind
+from app.data_core.enums import ChangeKind, PublishStatus, RowStatus, SourceKind
 
 
 def to_utc_iso(value: datetime) -> str:
@@ -36,6 +36,7 @@ class DatasetSummaryResponse(BaseModel):
     title: str
     created_at: str
     latest_version_no: int | None
+    latest_published_version_no: int | None
     # 검토할 줄(대기 줄 전부, 오류 줄 포함)
     pending_count: int
     has_unpublished_changes: bool
@@ -65,6 +66,7 @@ class DatasetDetailResponse(BaseModel):
     title: str
     created_at: str
     latest_version_no: int | None
+    latest_published_version_no: int | None
     has_unpublished_changes: bool
     schema_: SchemaVersionResponse | None = Field(serialization_alias="schema")
     counts: RowCountsResponse
@@ -76,6 +78,7 @@ def to_summary_response(overview: DatasetOverview) -> DatasetSummaryResponse:
         title=overview.title,
         created_at=to_utc_iso(overview.created_at),
         latest_version_no=overview.latest_version_no,
+        latest_published_version_no=overview.latest_published_version_no,
         pending_count=overview.counts.pending,
         has_unpublished_changes=overview.has_unpublished_changes,
     )
@@ -88,6 +91,7 @@ def to_detail_response(overview: DatasetOverview) -> DatasetDetailResponse:
         title=overview.title,
         created_at=to_utc_iso(overview.created_at),
         latest_version_no=overview.latest_version_no,
+        latest_published_version_no=overview.latest_published_version_no,
         has_unpublished_changes=overview.has_unpublished_changes,
         schema_=None
         if schema is None
@@ -257,6 +261,7 @@ class NextVersionResponse(BaseModel):
     added: int
     replaced: int
     excluded: int
+    removed: int
     unchanged: bool
 
 
@@ -266,15 +271,92 @@ class VersionResponse(BaseModel):
     row_count: int
     note: str | None
     created_at: str
+    status: PublishStatus
+    path: str
+    published_at: str | None
+    # 실패 오류 코드(file_write_failed · file_conflict · content_invalid · content_changed). 화면은 쉬운 문장으로 바꿔 보인다.
+    publish_error: str | None
+    # 조회 시점에 공개 파일이 일반 파일로 있는가(저장하지 않음). 폐기 판의 남은 파일 · 공개 판의 사라진 파일을 알린다.
+    file_present: bool
 
 
-def to_version_response(version: VersionSummary) -> VersionResponse:
+class StoryReferenceResponse(BaseModel):
+    story: str
+    title: str
+    version: int
+    # 가리키는 판의 발행 상태(조회 시점). 이 묶음에 없는 판이면 missing
+    version_status: PublishStatus | Literal["missing"]
+
+
+class VersionListResponse(BaseModel):
+    versions: list[VersionResponse]
+    # 이 묶음을 쓰는 이야기(발행 폴더 stories/*.json 기준)
+    used_by: list[StoryReferenceResponse]
+    # 일반 파일 아님 · 크기 초과 · 해석 실패 · 형식 불일치로 건너뛴 이야기 파일 수
+    skipped_story_files: int
+    # path 의 판 번호가 version 과 어긋나 건너뛴 이 묶음 항목 수
+    skipped_references: int
+
+
+class PublishResponse(BaseModel):
+    version_no: int
+    status: PublishStatus
+    path: str
+    row_count: int
+    published_at: str | None
+    publish_error: str | None
+    file_present: bool
+    used_by: list[StoryReferenceResponse]
+
+
+def _optional_utc_iso(value: datetime | None) -> str | None:
+    return None if value is None else to_utc_iso(value)
+
+
+def _story_references(usage: DatasetUsage) -> list[StoryReferenceResponse]:
+    return [
+        StoryReferenceResponse(
+            story=use.story, title=use.title, version=use.version, version_status=use.version_status
+        )
+        for use in usage.used_by
+    ]
+
+
+def to_version_response(listed: ListedVersion) -> VersionResponse:
+    version = listed.summary
     return VersionResponse(
         version_no=version.version_no,
         schema_version=version.schema_version,
         row_count=version.row_count,
         note=version.note,
         created_at=to_utc_iso(version.created_at),
+        status=version.publish_status,
+        path=version.path,
+        published_at=_optional_utc_iso(version.published_at),
+        publish_error=version.publish_error,
+        file_present=listed.file_present,
+    )
+
+
+def to_version_list_response(versions: list[ListedVersion], usage: DatasetUsage) -> VersionListResponse:
+    return VersionListResponse(
+        versions=[to_version_response(version) for version in versions],
+        used_by=_story_references(usage),
+        skipped_story_files=usage.skipped_story_files,
+        skipped_references=usage.skipped_references,
+    )
+
+
+def to_publish_response(result: PublishResult) -> PublishResponse:
+    return PublishResponse(
+        version_no=result.version_no,
+        status=result.status,
+        path=result.path,
+        row_count=result.row_count,
+        published_at=_optional_utc_iso(result.published_at),
+        publish_error=result.publish_error,
+        file_present=result.file_present,
+        used_by=_story_references(result.usage),
     )
 
 

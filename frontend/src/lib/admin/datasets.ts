@@ -11,6 +11,8 @@ export type DatasetSummary = {
 	title: string;
 	created_at: string;
 	latest_version_no: number | null;
+	/** 공개 파일까지 쓴(done) 판 중 가장 큰 번호 */
+	latest_published_version_no: number | null;
 	/** 검토할 줄(대기 줄 전부, 오류 줄 포함) */
 	pending_count: number;
 	/** 기록본 후보가 있고 최신 기록본과 구성이 다름 */
@@ -43,6 +45,7 @@ export type DatasetDetail = {
 	title: string;
 	created_at: string;
 	latest_version_no: number | null;
+	latest_published_version_no: number | null;
 	has_unpublished_changes: boolean;
 	schema: SchemaVersion | null;
 	counts: RowCounts;
@@ -88,6 +91,7 @@ function isDatasetSummary(value: unknown): value is DatasetSummary {
 		typeof value.title === 'string' &&
 		typeof value.created_at === 'string' &&
 		isNullableNumber(value.latest_version_no) &&
+		isNullableNumber(value.latest_published_version_no) &&
 		typeof value.pending_count === 'number' &&
 		typeof value.has_unpublished_changes === 'boolean'
 	);
@@ -114,6 +118,7 @@ function isDatasetDetail(value: unknown): value is DatasetDetail {
 		typeof value.title === 'string' &&
 		typeof value.created_at === 'string' &&
 		isNullableNumber(value.latest_version_no) &&
+		isNullableNumber(value.latest_published_version_no) &&
 		typeof value.has_unpublished_changes === 'boolean' &&
 		(value.schema === null || isSchemaVersion(value.schema)) &&
 		isRowCounts(value.counts)

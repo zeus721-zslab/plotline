@@ -26,6 +26,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./backend:/app
+      # 발행 파일 볼륨(개발용). 운영은 docker-compose.prod.yml 의 발행 볼륨을 쓴다.
+      - published-dev:/srv/published
     depends_on:
       db:
         condition: service_healthy
@@ -65,3 +67,4 @@ services:
 
 volumes:
   db-data:
+  published-dev:

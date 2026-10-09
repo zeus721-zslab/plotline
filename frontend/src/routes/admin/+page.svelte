@@ -79,7 +79,7 @@
 						<tr>
 							<th scope="col">제목</th>
 							<th scope="col">{TERMS.slug}</th>
-							<th scope="col">최신 {TERMS.version}</th>
+							<th scope="col">{TERMS.publishedVersion}</th>
 							<th scope="col">검토할 {TERMS.row}</th>
 							<th scope="col">공개 안 된 변경</th>
 						</tr>
@@ -97,10 +97,10 @@
 								</td>
 								<td class="mono">{dataset.slug}</td>
 								<td>
-									{#if dataset.latest_version_no === null}
+									{#if dataset.latest_published_version_no === null}
 										<span class="muted">없음</span>
 									{:else}
-										v{dataset.latest_version_no}
+										v{dataset.latest_published_version_no}
 									{/if}
 								</td>
 								<td>

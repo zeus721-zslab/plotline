@@ -1,6 +1,6 @@
-"""데이터 묶음 개요 · 줄 검토(승인 · 제외 · 공개 제외) · 기록본 유스케이스. 함수 1개 = 유스케이스 1개 = commit 1회.
+"""데이터 묶음 개요 · 줄 검토(승인 · 제외 · 공개 제외) · 기록본 조회 유스케이스. 함수 1개 = 유스케이스 1개 = commit 1회.
 
-붙여넣기 확인 · 저장은 paste.py 가 맡는다. 요청 형식은 라우터의 Pydantic 모델이, 상태 전이 · 기록본 구성 규칙은 여기서 판정한다.
+붙여넣기 확인 · 저장은 paste.py, 발행(기록본 생성 + 공개 파일)은 publish.py 가 맡는다. 요청 형식은 라우터의 Pydantic 모델이, 상태 전이 · 기록본 구성 규칙은 여기서 판정한다.
 """
 
 from dataclasses import dataclass
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, aliased
 
 from app.admin_datasets import service as dataset_service
 from app.admin_imports.errors import ImportErrorCode, ImportServiceError
-from app.data_core.enums import ChangeKind, RowStatus, SourceKind
+from app.data_core.enums import ChangeKind, PublishStatus, RowStatus, SourceKind
 from app.data_core.models import (
     DataImport,
     Dataset,
@@ -25,6 +25,7 @@ from app.data_core.models import (
     DatasetVersionRow,
 )
 from app.data_core.row_validation import is_approvable
+from app.publishing.dataset_file import public_path
 
 FIRST_VERSION_NO = 1
 # 상태별 줄 조회 한 번에 돌려주는 최대 줄 수. 넘으면 앞부분만 주고 잘렸다고 알린다.
@@ -76,6 +77,8 @@ class DatasetOverview:
     title: str
     created_at: datetime
     latest_version_no: int | None
+    # 파일 쓰기까지 끝난(done) 기록본 중 가장 큰 판 번호
+    latest_published_version_no: int | None
     # 기록본 후보가 있고 최신 기록본과 구성이 다름(_plan_version 기준)
     has_unpublished_changes: bool
     counts: RowCounts
@@ -125,11 +128,20 @@ class VersionSummary:
     row_count: int
     note: str | None
     created_at: datetime
+    publish_status: PublishStatus
+    # 공개 경로(/data/datasets/{slug}/v{n}.json)
+    path: str
+    published_at: datetime | None
+    # 실패 · 폐기 전 실패의 오류 코드(화면은 코드 대신 쉬운 문장으로 바꿔 보인다)
+    publish_error: str | None
 
 
 @dataclass(frozen=True)
 class NextVersionPreview:
-    """다음 기록본을 지금 만들면 생길 구성. create_version 과 같은 선택 규칙(_plan_version)으로 계산한다."""
+    """다음 기록본을 지금 만들면 생길 구성. 발행(publish.publish_dataset)과 같은 선택 규칙(_plan_version)으로 계산한다.
+
+    아래 "최신 기록본"은 마지막 공개본(done)이다(D-30).
+    """
 
     next_version_no: int
     row_count: int
@@ -141,6 +153,8 @@ class NextVersionPreview:
     replaced: int
     # 최신 구조가 아닌 구조로 들어온 입력의 승인 줄(기록본에 들어가지 않음)
     excluded: int
+    # 최신 기록본에 있었지만 다음 기록본에서 빠지는 줄(바뀌는 줄 제외: 공개 제외 · 구조 변경 등)
+    removed: int
     # 최신 기록본과 구조 · 줄 구성이 같아 만들 것이 없음
     unchanged: bool
 
@@ -150,9 +164,9 @@ class _VersionPlan:
     schema: DatasetSchema | None
     # row_key → 그 구분 칸의 후보 줄 id
     candidates: dict[str, int]
-    # 최신 기록본에 든 줄 id → row_key
+    # 마지막 공개본(done 중 가장 큰 번호)에 든 줄 id → row_key. 아래 "최신 기록본"은 모두 이 공개본을 뜻한다(D-30).
     latest_rows: dict[int, str | None]
-    # 최신 기록본이 최신 구조를 따르는지(최신 기록본이 없으면 False)
+    # 마지막 공개본이 최신 구조를 따르는지(공개본이 없으면 False)
     latest_same_schema: bool
     next_version_no: int
     unchanged: bool
@@ -299,39 +313,6 @@ def remove_exclusion(session: Session, slug: str, row_key: str) -> None:
 # --- 기록본 ---
 
 
-def create_version(session: Session, slug: str, note: str | None) -> VersionSummary:
-    """최신 구조로 들어온 승인 줄 중 구분 칸마다 가장 최근(id 가 가장 큰) 줄로 새 기록본을 만든다. 공개 제외 구분 칸은 뺀다."""
-    _lock_existing_dataset(session, slug)
-    dataset = _require_dataset(session, slug)
-    plan = _plan_version(session, dataset.id)
-    schema = plan.schema
-    if schema is None or not plan.candidates:
-        raise ImportServiceError(ImportErrorCode.VERSION_EMPTY)
-    if plan.unchanged:
-        raise ImportServiceError(ImportErrorCode.VERSION_UNCHANGED)
-
-    row_ids = set(plan.candidates.values())
-    version = DatasetVersion(
-        dataset_id=dataset.id, schema_id=schema.id, version_no=plan.next_version_no, note=note
-    )
-    session.add(version)
-    try:
-        session.flush()
-    except IntegrityError as error:
-        # 동시에 같은 다음 번호를 저장하면 (dataset_id, version_no) 유니크 제약이 하나만 받아들인다.
-        session.rollback()
-        raise ImportServiceError(ImportErrorCode.VERSION_CONFLICT) from error
-    session.add_all(DatasetVersionRow(version_id=version.id, row_id=row_id) for row_id in sorted(row_ids))
-    session.commit()
-    return VersionSummary(
-        version_no=version.version_no,
-        schema_version=schema.version,
-        row_count=len(row_ids),
-        note=version.note,
-        created_at=version.created_at,
-    )
-
-
 def preview_next_version(session: Session, slug: str) -> NextVersionPreview:
     """지금 기록본을 만들면 생길 구성을 계산한다(저장하지 않음). 줄이 없거나 변화가 없어도 오류가 아니라 값으로 알린다."""
     dataset = _require_dataset(session, slug)
@@ -364,6 +345,7 @@ def preview_next_version(session: Session, slug: str) -> NextVersionPreview:
         added=len(candidate_ids) - carried,
         replaced=replaced,
         excluded=excluded,
+        removed=len(plan.latest_rows) - carried - replaced,
         unchanged=plan.unchanged,
     )
 
@@ -379,6 +361,9 @@ def list_versions(session: Session, slug: str) -> list[VersionSummary]:
             row_count,
             DatasetVersion.note,
             DatasetVersion.created_at,
+            DatasetVersion.publish_status,
+            DatasetVersion.published_at,
+            DatasetVersion.publish_error,
         )
         .join(DatasetSchema, DatasetSchema.id == DatasetVersion.schema_id)
         .outerjoin(DatasetVersionRow, DatasetVersionRow.version_id == DatasetVersion.id)
@@ -389,14 +374,34 @@ def list_versions(session: Session, slug: str) -> list[VersionSummary]:
             DatasetSchema.version,
             DatasetVersion.note,
             DatasetVersion.created_at,
+            DatasetVersion.publish_status,
+            DatasetVersion.published_at,
+            DatasetVersion.publish_error,
         )
         .order_by(DatasetVersion.version_no.desc())
     )
     return [
         VersionSummary(
-            version_no=version_no, schema_version=schema_version, row_count=count, note=note, created_at=created_at
+            version_no=version_no,
+            schema_version=schema_version,
+            row_count=count,
+            note=note,
+            created_at=created_at,
+            publish_status=publish_status,
+            path=public_path(dataset.slug, version_no),
+            published_at=published_at,
+            publish_error=publish_error,
         )
-        for version_no, schema_version, count, note, created_at in session.execute(statement)
+        for (
+            version_no,
+            schema_version,
+            count,
+            note,
+            created_at,
+            publish_status,
+            published_at,
+            publish_error,
+        ) in session.execute(statement)
     ]
 
 
@@ -407,7 +412,7 @@ def lock_dataset(session: Session, slug: str) -> int | None:
     """묶음 줄을 잠가(SELECT datasets.id … FOR UPDATE) 같은 묶음의 줄 상태를 바꾸는 요청끼리 줄 세운다. 없으면 None.
 
     트랜잭션의 첫 조회여야 한다. InnoDB 의 일관된 읽기 시점은 첫 일반 조회에서 정해지므로, 잠근 뒤에 읽어야 앞선
-    요청이 커밋한 상태를 본다. 붙여넣기 저장(paste._lock_target)과 승인 · 제외 · 공개 제외 · 기록본 생성이 함께 쓴다.
+    요청이 커밋한 상태를 본다. 붙여넣기 저장(paste._lock_target)과 승인 · 제외 · 공개 제외 · 발행이 함께 쓴다.
     """
     return session.scalar(select(Dataset.id).where(Dataset.slug == slug).with_for_update())
 
@@ -524,7 +529,13 @@ def _overview_statement(dataset_id: int | None) -> Select[Any]:
     exclusions = select(
         DatasetKeyExclusion.dataset_id, func.count(DatasetKeyExclusion.row_key).label("excluded_keys")
     )
-    versions = select(DatasetVersion.dataset_id, func.max(DatasetVersion.version_no).label("latest_version_no"))
+    versions = select(
+        DatasetVersion.dataset_id,
+        func.max(DatasetVersion.version_no).label("latest_version_no"),
+        func.max(
+            case((DatasetVersion.publish_status == PublishStatus.DONE, DatasetVersion.version_no), else_=None)
+        ).label("latest_published_version_no"),
+    )
     if dataset_id is not None:
         row_counts = row_counts.where(DatasetRow.dataset_id == dataset_id)
         exclusions = exclusions.where(DatasetKeyExclusion.dataset_id == dataset_id)
@@ -552,6 +563,7 @@ def _overview_statement(dataset_id: int | None) -> Select[Any]:
             *count_columns,
             func.coalesce(excluded.c.excluded_keys, 0).label("excluded_keys"),
             latest.c.latest_version_no,
+            latest.c.latest_published_version_no,
         )
         .outerjoin(rows, rows.c.dataset_id == Dataset.id)
         .outerjoin(excluded, excluded.c.dataset_id == Dataset.id)
@@ -581,6 +593,7 @@ def _to_overview(session: Session, row: Any, schema: SchemaVersion | None) -> Da
         title=dataset.title,
         created_at=dataset.created_at,
         latest_version_no=row.latest_version_no,
+        latest_published_version_no=row.latest_published_version_no,
         has_unpublished_changes=bool(plan.candidates) and not plan.unchanged,
         counts=counts,
         schema=schema,
@@ -588,15 +601,20 @@ def _to_overview(session: Session, row: Any, schema: SchemaVersion | None) -> Da
 
 
 def _plan_version(session: Session, dataset_id: int) -> _VersionPlan:
-    """기록본 구성 규칙의 단일 소스. create_version · preview_next_version · 개요의 공개 안 된 변경 판정이 함께 쓴다."""
+    """기록본 구성 규칙의 단일 소스. 발행(publish.publish_dataset) · preview_next_version · 개요의 공개 안 된 변경 판정이 함께 쓴다."""
     schema = dataset_service._latest_schema(session, dataset_id)
     candidates = {} if schema is None else _version_candidates(session, dataset_id, schema.id)
+    # 비교 기준은 마지막 공개본(done)이다. 폐기 · 실패 · 미완료 기록본은 공개된 적이 없어 기준이 되지 않는다(D-30).
     latest_version = session.scalars(
         select(DatasetVersion)
-        .where(DatasetVersion.dataset_id == dataset_id)
+        .where(DatasetVersion.dataset_id == dataset_id, DatasetVersion.publish_status == PublishStatus.DONE)
         .order_by(DatasetVersion.version_no.desc())
         .limit(1)
     ).one_or_none()
+    # 번호는 상태와 관계없이 쓴 적 있는 가장 큰 번호 다음이다(폐기한 번호도 소진, 다시 쓰지 않음).
+    highest_version_no = session.scalar(
+        select(func.max(DatasetVersion.version_no)).where(DatasetVersion.dataset_id == dataset_id)
+    )
     latest_rows: dict[int, str | None] = {}
     if latest_version is not None:
         latest_rows = {
@@ -610,7 +628,7 @@ def _plan_version(session: Session, dataset_id: int) -> _VersionPlan:
     latest_same_schema = schema is not None and latest_version is not None and latest_version.schema_id == schema.id
     # 구조가 같고 줄 구성이 같으면 새 기록본을 만들지 않는다(구조만 바뀐 경우는 새 기록본).
     unchanged = latest_same_schema and bool(candidates) and set(latest_rows) == set(candidates.values())
-    next_version_no = FIRST_VERSION_NO if latest_version is None else latest_version.version_no + 1
+    next_version_no = FIRST_VERSION_NO if highest_version_no is None else highest_version_no + 1
     return _VersionPlan(
         schema=schema,
         candidates=candidates,

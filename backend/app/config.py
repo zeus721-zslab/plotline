@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # 쉼표 구분 Origin 목록. pydantic-settings 는 list 타입 환경변수를 JSON 으로 해석하므로 문자열로 받아 나눈다.
     admin_allowed_origins: str = ""
 
+    # 발행 파일(공개 JSON)을 쓰는 폴더. 운영 web 이 이 볼륨을 /data/ 로 서빙한다(D-14 · D-29).
+    published_dir: str = "/srv/published"
+
     @field_validator("admin_username")
     @classmethod
     def strip_admin_username(cls, value: str) -> str:

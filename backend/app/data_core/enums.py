@@ -34,6 +34,16 @@ class ChangeKind(StrEnum):
     CARRIED = "carried"
 
 
+class PublishStatus(StrEnum):
+    """기록본의 발행 파일 상태(D-29 · D-30). pending: 기록본 저장 후 파일 쓰기 전 · 중단 / done: 파일 있음 / failed: 쓰기 실패
+    / abandoned: 미완료를 폐기(번호 소진, 줄 · 파일은 그대로)."""
+
+    PENDING = "pending"
+    DONE = "done"
+    FAILED = "failed"
+    ABANDONED = "abandoned"
+
+
 class FieldType(StrEnum):
     TEXT = "text"
     INT = "int"
