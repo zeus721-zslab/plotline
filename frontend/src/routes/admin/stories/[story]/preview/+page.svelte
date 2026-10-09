@@ -98,7 +98,7 @@
 			}
 			if (!isPublishedDataset(result.content)) {
 				console.warn('preview dataset shape mismatch', label);
-				view = { kind: 'invalid', message: `${label} 내용이 공개 형식이 아닙니다.` };
+				view = { kind: 'invalid', message: `${label} 내용이 판 파일 형식이 아닙니다.` };
 				return;
 			}
 			datasets[names[position]] = result.content;

@@ -92,12 +92,12 @@
 					<pre class="code"><code>{rowExample}</code></pre>
 				</section>
 				<section class="preview-column" aria-labelledby="published-example-title">
-					<h3 id="published-example-title">발행되는 파일 모양</h3>
+					<h3 id="published-example-title">판 파일 모양</h3>
 					<pre class="code"><code>{publishedExample}</code></pre>
 				</section>
 			</div>
 			<p class="muted note">
-				발행하면 이 모양의 파일이 이야기 화면으로 전달됩니다. 이야기 화면은 rows 의 값을 읽어
+				판을 확정하면 이 모양의 파일이 이야기 화면으로 전달됩니다. 이야기 화면은 rows 의 값을 읽어
 				그립니다.
 			</p>
 		</details>

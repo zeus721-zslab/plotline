@@ -81,7 +81,7 @@
 							<th scope="col">{TERMS.slug}</th>
 							<th scope="col">{TERMS.publishedVersion}</th>
 							<th scope="col">검토할 {TERMS.row}</th>
-							<th scope="col">공개 안 된 변경</th>
+							<th scope="col">판에 안 들어간 변경</th>
 						</tr>
 					</thead>
 					<tbody>

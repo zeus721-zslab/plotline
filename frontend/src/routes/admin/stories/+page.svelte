@@ -6,7 +6,7 @@
 	import {
 		COMMON_ERROR_MESSAGES,
 		PUBLIC_FILE_WARNINGS,
-		PUBLISH_STATUS_LABELS,
+		STORY_PUBLISH_STATUS_LABELS,
 		TERMS
 	} from '#lib/admin/terms.ts';
 	import { findStoryEntry } from '#lib/stories/registry.ts';
@@ -51,7 +51,7 @@
 	<h1>{TERMS.story}</h1>
 	<p class="lead">
 		{TERMS.story}마다 제목 · 요약과 쓸 {TERMS.dataset} 판을 고르고, {TERMS.preview}로 확인한 뒤
-		{TERMS.publish}합니다. 지난 판으로 되돌릴 수 있습니다.
+		{TERMS.storyPublish}합니다. 지난 판으로 되돌릴 수 있습니다.
 	</p>
 </section>
 
@@ -68,7 +68,7 @@
 			<thead>
 				<tr>
 					<th scope="col">{TERMS.story}</th>
-					<th scope="col">{TERMS.publishedVersion}</th>
+					<th scope="col">{TERMS.storyPublishedVersion}</th>
 					<th scope="col">최근 판 상태</th>
 					<th scope="col">새 데이터 판</th>
 				</tr>
@@ -105,7 +105,8 @@
 									class:ok={story.latest_status === 'done'}
 									class:bad={story.latest_status === 'failed'}
 									class:warn={story.latest_status === 'pending'}
-									>v{story.latest_version_no} {PUBLISH_STATUS_LABELS[story.latest_status]}</span
+									>v{story.latest_version_no}
+									{STORY_PUBLISH_STATUS_LABELS[story.latest_status]}</span
 								>
 							{/if}
 						</td>

@@ -50,18 +50,17 @@
 	const ACTION_ERROR_MESSAGES = {
 		...COMMON_ERROR_MESSAGES,
 		not_found: `${TERMS.dataset} 또는 판이 없습니다. 다시 읽었습니다.`,
-		unexpected: `${TERMS.publish}하지 못했습니다.`
+		unexpected: `판을 확정하지 못했습니다.`
 	} as const;
 	const BLOCKED_MESSAGES: Record<BlockedReason, string> = {
-		empty: '공개할 승인 줄이 없습니다. 이야기에서 이 데이터를 내리려면 이야기 파일을 고칩니다',
-		unchanged: `지난 공개 판과 줄 구성이 같아 ${TERMS.publish}할 것이 없습니다.`,
+		empty: '확정할 승인 줄이 없습니다.',
+		unchanged: `지난 최신 판과 줄 구성이 같아 확정할 것이 없습니다.`,
 		incomplete: `끝나지 않은 ${TERMS.publish}이 있습니다. 아래 이력에서 다시 시도하거나 폐기하세요.`,
 		content_invalid:
-			'공개 형식과 맞지 않는 값이 있어 발행하지 않았습니다. 승인한 줄의 값을 고친 뒤 다시 발행하세요.',
-		file_missing:
-			'공개 파일이 없어 다시 쓰려 했지만 쓰지 못했습니다. 저장 공간 · 권한을 확인하세요.',
-		content_changed: '처음 만든 내용과 달라져 공개 파일을 다시 쓰지 않았습니다.',
-		not_abandonable: '이미 공개되었거나 폐기된 판입니다. 다시 읽었습니다.',
+			'판 파일 형식과 맞지 않는 값이 있어 판을 확정하지 않았습니다. 승인한 줄의 값을 고친 뒤 다시 확정하세요.',
+		file_missing: '판 파일이 없어 다시 쓰려 했지만 쓰지 못했습니다. 저장 공간 · 권한을 확인하세요.',
+		content_changed: '처음 만든 내용과 달라져 판 파일을 다시 쓰지 않았습니다.',
+		not_abandonable: '이미 확정되었거나 폐기된 판입니다. 다시 읽었습니다.',
 		abandoned: '폐기한 판은 다시 시도할 수 없습니다. 다시 읽었습니다.',
 		conflict: '다른 처리와 겹쳤습니다. 다시 읽었으니 확인 후 다시 누르세요.'
 	};
@@ -137,15 +136,14 @@
 	function describeResult(result: PublishResult, action: Action): Message {
 		if (result.kind === 'ok') {
 			const { status, version_no: versionNo, publish_error: errorCode } = result.outcome;
-			if (status === 'done')
-				return { kind: 'success', text: `v${versionNo} 을 ${TERMS.publish}했습니다.` };
+			if (status === 'done') return { kind: 'success', text: `v${versionNo} 을 확정했습니다.` };
 			if (status === 'abandoned')
 				return action === 'abandon'
 					? { kind: 'success', text: `v${versionNo} 을 폐기했습니다.` }
 					: { kind: 'error', text: `v${versionNo} 은 그 사이 다른 곳에서 폐기되었습니다.` };
 			return {
 				kind: 'error',
-				text: `v${versionNo} 공개 파일을 쓰지 못했습니다. ${errorCode === null ? '이력에서 다시 시도하세요.' : PUBLISH_ERROR_MESSAGES[errorCode]}`
+				text: `v${versionNo} 판 파일을 쓰지 못했습니다. ${errorCode === null ? '이력에서 다시 시도하세요.' : PUBLISH_ERROR_MESSAGES[errorCode]}`
 			};
 		}
 		if (result.kind === 'blocked') return { kind: 'error', text: BLOCKED_MESSAGES[result.reason] };
@@ -212,7 +210,7 @@
 					>다음 판 <strong>v{preview.next_version_no}</strong> · {preview.row_count.toLocaleString()}{TERMS.row}</span
 				>
 				<span class="muted">
-					{latestDone === null ? '처음 공개' : `v${latestDone} 대비`}
+					{latestDone === null ? '처음 확정' : `v${latestDone} 대비`}
 					· 추가 {(preview.added - preview.replaced).toLocaleString()} · 바뀜 {preview.replaced.toLocaleString()}
 					· 빠짐 {preview.removed.toLocaleString()}
 				</span>
@@ -222,7 +220,7 @@
 				class="btn primary"
 				disabled={busy || blockedReason !== null}
 				onclick={() => run(() => publishDataset(slug))}
-				>{busy ? `${TERMS.publish} 중…` : TERMS.publish}</button
+				>{busy ? '확정 중…' : `v${preview.next_version_no} 확정`}</button
 			>
 		</div>
 		{#if blockedReason !== null}
@@ -262,7 +260,7 @@
 								>
 							{:else if latestDone !== null && use.version < latestDone}
 								<span class="small warn-text"
-									>{TERMS.story} 파일을 v{latestDone} 으로 바꿔야 화면에 반영됩니다</span
+									>{TERMS.story}에서 v{latestDone} 을 골라 발행해야 화면에 반영됩니다</span
 								>
 							{/if}
 						</li>
@@ -284,7 +282,7 @@
 		<div class="history">
 			<h3>판 이력</h3>
 			{#if load.history.versions.length === 0}
-				<p class="muted small">아직 {TERMS.publish}한 판이 없습니다.</p>
+				<p class="muted small">아직 확정한 판이 없습니다.</p>
 			{:else}
 				<ul>
 					{#each load.history.versions as version (version.version_no)}
@@ -331,7 +329,7 @@
 										onclick={() => run(() => retryPublish(slug, version.version_no))}
 										>다시 시도</button
 									>
-									<span class="muted small">발행했을 때의 줄로 공개됩니다</span>
+									<span class="muted small">처음 확정하려던 줄 그대로 다시 씁니다</span>
 									{#if confirmingAbandon === version.version_no}
 										<span class="small warn-text">이 판 번호는 다시 쓰지 않습니다</span>
 										<button

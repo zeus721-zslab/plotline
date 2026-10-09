@@ -3,7 +3,7 @@
 	// 되돌리기는 지금 공개 판과 내용이 다르거나 최신 판이 실패일 때만 보인다(restorable, 발행 버튼과 같은 규칙).
 	import { formatLocalDateTime } from './format.ts';
 	import type { PublicFileStatus, StoryVersion } from './stories.ts';
-	import { PUBLISH_STATUS_LABELS, STORY_PUBLISH_ERROR_MESSAGES, TERMS } from './terms.ts';
+	import { STORY_PUBLISH_ERROR_MESSAGES, STORY_PUBLISH_STATUS_LABELS, TERMS } from './terms.ts';
 
 	type Props = {
 		versions: StoryVersion[];
@@ -55,7 +55,8 @@
 						class="chip"
 						class:ok={version.status === 'done'}
 						class:bad={version.status === 'failed'}
-						class:warn={version.status === 'pending'}>{PUBLISH_STATUS_LABELS[version.status]}</span
+						class:warn={version.status === 'pending'}
+						>{STORY_PUBLISH_STATUS_LABELS[version.status]}</span
 					>
 					{#if version.version_no === latestNo && latestFailed && !publicFileOk}
 						<span class="chip warn">공개 이야기 파일이 이 판 내용으로 바뀌었을 수 있음</span>
@@ -85,7 +86,8 @@
 					{/if}
 					{#if version.status === 'done' && restorable(version)}
 						{#if confirming === version.version_no}
-							<span class="small">v{version.version_no} 내용으로 새 판을 {TERMS.publish}합니다</span
+							<span class="small"
+								>v{version.version_no} 내용으로 새 판을 {TERMS.storyPublish}합니다</span
 							>
 							<button
 								type="button"
