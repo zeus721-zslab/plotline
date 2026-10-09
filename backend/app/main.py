@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from app.admin_auth.dependencies import CACHE_CONTROL_HEADER, NO_STORE
 from app.admin_auth.router import admin_router, login_router
 from app.admin_auth.service import log_admin_auth_settings
-from app.admin_datasets.router import datasets_router
+from app.admin_imports.router import datasets_router, paste_router
 from app.config import get_settings
 
 VALIDATION_ERROR_INPUT_KEY = "input"
@@ -20,6 +20,7 @@ app = FastAPI(title="Plotline API", redirect_slashes=False)
 app.include_router(login_router)
 # 관리자 기능 라우터는 admin_router 아래에 포함해 보호 의존성을 물려받게 한다. app 에 붙이기 전에 포함해야 반영된다.
 admin_router.include_router(datasets_router)
+admin_router.include_router(paste_router)
 app.include_router(admin_router)
 
 

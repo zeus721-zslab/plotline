@@ -15,7 +15,7 @@ from alembic.config import Config
 from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sqlalchemy import URL, Engine, create_engine
+from sqlalchemy import URL, Engine, create_engine, text
 from sqlalchemy.orm import Session
 
 from app.admin_auth import service
@@ -123,3 +123,17 @@ def admin_client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Iterat
 def admin_headers() -> dict[str, str]:
     """유효한 세션 쿠키와 허용 Origin. GET 은 Origin 이 없어도 되지만 POST 와 같은 헤더로 통일한다."""
     return {**session_cookie_header(issue_session_token(make_settings())), "Origin": ALLOWED_ORIGIN}
+
+
+# 구분 칸마다 승인 줄 ≤ 1 · 대기 줄 ≤ 1(D-28) 을 어긴 (묶음, 구분 칸, 상태). 바인딩할 외부 값이 없는 고정 조회다.
+ROW_INVARIANT_VIOLATIONS_SQL = text(
+    "SELECT dataset_id, row_key, status, COUNT(*) FROM dataset_rows"
+    " WHERE row_key IS NOT NULL AND status IN ('pending', 'approved')"
+    " GROUP BY dataset_id, row_key, status HAVING COUNT(*) > 1"
+)
+
+
+def assert_row_invariant(session: Session) -> None:
+    """줄 상태를 바꾸는 db 테스트(붙여넣기 저장 · 승인 · 이월 · 대체) 끝에서 부른다. 위반 0행이어야 한다."""
+    violations = session.execute(ROW_INVARIANT_VIOLATIONS_SQL).all()
+    assert violations == []

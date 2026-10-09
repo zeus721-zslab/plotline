@@ -31,6 +31,17 @@ TYPE_SPECIFIC_ATTRIBUTES: dict[FieldType, frozenset[str]] = {
     FieldType.BOOL: frozenset(),
 }
 INTEGER_BOUND_TYPES = frozenset({FieldType.INT, FieldType.YEAR})
+# 문제 문장에 쓰는 value 형식 이름(관리자 화면 용어표, D-28). JSON 값은 괄호 안에 그대로 둔다.
+FIELD_TYPE_LABELS: dict[FieldType, str] = {
+    FieldType.TEXT: "글자",
+    FieldType.INT: "정수",
+    FieldType.NUMBER: "숫자",
+    FieldType.YEAR: "연도",
+    FieldType.DATE: "날짜",
+    FieldType.CATEGORY: "선택지",
+    FieldType.URL: "링크",
+    FieldType.BOOL: "예/아니오",
+}
 
 type RequiredIfValue = str | int | float | bool
 
@@ -59,7 +70,7 @@ class FieldDefinitionError(ValueError):
 def parse_field_definitions(raw_fields: object) -> list[FieldSpec]:
     """정의 JSON 을 검사해 FieldSpec 목록으로 바꾼다. 문제가 하나라도 있으면 FieldDefinitionError."""
     if not isinstance(raw_fields, list) or not raw_fields:
-        raise FieldDefinitionError(["필드 정의는 비어 있지 않은 배열이어야 합니다."])
+        raise FieldDefinitionError(["데이터 구조는 비어 있지 않은 배열이어야 합니다."])
 
     problems: list[str] = []
     specs: list[FieldSpec] = []
@@ -77,23 +88,24 @@ def parse_field_definitions(raw_fields: object) -> list[FieldSpec]:
 
 
 def _parse_one_field(raw_field: object, position: int, problems: list[str]) -> FieldSpec | None:
-    where = f"{position + 1}번째 필드"
+    where = f"{position + 1}번째 key"
     if not isinstance(raw_field, dict):
         problems.append(f"{where}: 객체여야 합니다.")
         return None
 
     name = raw_field.get("name")
     if not isinstance(name, str) or not NAME_PATTERN.match(name):
-        problems.append(f"{where}: name 은 영문 소문자·숫자·_ 로 된 문자열이어야 합니다.")
+        problems.append(f"{where}: 'name' 은 영문 소문자·숫자·_ 로 된 문자열이어야 합니다.")
         return None
-    where = f"필드 '{name}'"
+    where = f"key '{name}'"
     if name in RESERVED_FIELD_NAMES:
-        problems.append(f"{where}: 출처 칸 이름({', '.join(sorted(RESERVED_FIELD_NAMES))})은 필드 이름으로 쓸 수 없습니다.")
+        reserved = ", ".join(f"'{reserved_name}'" for reserved_name in sorted(RESERVED_FIELD_NAMES))
+        problems.append(f"{where}: 출처 key({reserved})는 데이터 구조의 key 로 쓸 수 없습니다.")
         return None
 
     raw_type = raw_field.get("type")
     if not isinstance(raw_type, str) or raw_type not in FieldType:
-        problems.append(f"{where}: type 은 {', '.join(FieldType)} 중 하나여야 합니다.")
+        problems.append(f"{where}: 'type' 은 {', '.join(FieldType)} 중 하나여야 합니다.")
         return None
     field_type = FieldType(raw_type)
 
@@ -101,17 +113,17 @@ def _parse_one_field(raw_field: object, position: int, problems: list[str]) -> F
     allowed = COMMON_ATTRIBUTES | TYPE_SPECIFIC_ATTRIBUTES[field_type]
     for attribute in raw_field:
         if attribute not in allowed:
-            problems.append(f"{where}: {field_type} 타입에는 '{attribute}' 속성을 쓸 수 없습니다.")
+            problems.append(f"{where}: {_type_name(field_type)} 형식에는 '{attribute}' 를 쓸 수 없습니다.")
 
     label = _optional_string(raw_field, "label", where, problems)
     required = _optional_bool(raw_field, "required", where, problems)
     key = _optional_bool(raw_field, "key", where, problems)
     if key and field_type in KEY_DISALLOWED_TYPES:
-        problems.append(f"{where}: {field_type} 타입은 key 로 쓸 수 없습니다.")
+        problems.append(f"{where}: {_type_name(field_type)} 형식은 구분 칸('key': true)으로 쓸 수 없습니다.")
     bound_min = _optional_bound(raw_field, "min", field_type, where, problems)
     bound_max = _optional_bound(raw_field, "max", field_type, where, problems)
     if bound_min is not None and bound_max is not None and bound_min > bound_max:
-        problems.append(f"{where}: min 이 max 보다 클 수 없습니다.")
+        problems.append(f"{where}: 'min' 이 'max' 보다 클 수 없습니다.")
     max_length = _optional_max_length(raw_field, where, problems)
     unit = _optional_string(raw_field, "unit", where, problems)
     options = _options(raw_field, field_type, where, problems)
@@ -139,7 +151,7 @@ def _optional_string(raw_field: dict[str, Any], attribute: str, where: str, prob
     if value is None:
         return None
     if not isinstance(value, str) or not value.strip():
-        problems.append(f"{where}: {attribute} 는 비어 있지 않은 문자열이어야 합니다.")
+        problems.append(f"{where}: '{attribute}' 는 비어 있지 않은 문자열이어야 합니다.")
         return None
     return value
 
@@ -147,7 +159,7 @@ def _optional_string(raw_field: dict[str, Any], attribute: str, where: str, prob
 def _optional_bool(raw_field: dict[str, Any], attribute: str, where: str, problems: list[str]) -> bool:
     value = raw_field.get(attribute, False)
     if not isinstance(value, bool):
-        problems.append(f"{where}: {attribute} 는 true/false 여야 합니다.")
+        problems.append(f"{where}: '{attribute}' 는 true/false 여야 합니다.")
         return False
     return value
 
@@ -160,11 +172,11 @@ def _optional_bound(
         return None
     if field_type in INTEGER_BOUND_TYPES:
         if isinstance(value, bool) or not isinstance(value, int):
-            problems.append(f"{where}: {attribute} 는 정수여야 합니다.")
+            problems.append(f"{where}: '{attribute}' 는 정수여야 합니다.")
             return None
         return value
     if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
-        problems.append(f"{where}: {attribute} 는 숫자여야 합니다.")
+        problems.append(f"{where}: '{attribute}' 는 숫자여야 합니다.")
         return None
     return value
 
@@ -174,7 +186,7 @@ def _optional_max_length(raw_field: dict[str, Any], where: str, problems: list[s
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-        problems.append(f"{where}: max_length 는 1 이상의 정수여야 합니다.")
+        problems.append(f"{where}: 'max_length' 는 1 이상의 정수여야 합니다.")
         return None
     return value
 
@@ -184,17 +196,17 @@ def _options(raw_field: dict[str, Any], field_type: FieldType, where: str, probl
         return ()
     value = raw_field.get("options")
     if value is None:
-        problems.append(f"{where}: category 타입은 options 가 필요합니다.")
+        problems.append(f"{where}: {_type_name(FieldType.CATEGORY)} 형식은 'options' 가 필요합니다.")
         return ()
     if (
         not isinstance(value, list)
         or not value
         or not all(isinstance(option, str) and option.strip() for option in value)
     ):
-        problems.append(f"{where}: options 는 비어 있지 않은 문자열 배열이어야 합니다.")
+        problems.append(f"{where}: 'options' 는 비어 있지 않은 문자열 배열이어야 합니다.")
         return ()
     if len(set(value)) != len(value):
-        problems.append(f"{where}: options 에 중복 값이 있습니다.")
+        problems.append(f"{where}: 'options' 에 중복 값이 있습니다.")
         return ()
     return tuple(value)
 
@@ -206,11 +218,11 @@ def _required_if(
     if value is None:
         return {}
     if not isinstance(value, dict) or not value:
-        problems.append(f"{where}: required_if 는 {{\"다른필드\": 값}} 형태의 비어 있지 않은 객체여야 합니다.")
+        problems.append(f"{where}: 'required_if' 는 {{\"다른 key\": 값}} 형태의 비어 있지 않은 객체여야 합니다.")
         return {}
     for condition_value in value.values():
         if not isinstance(condition_value, str | int | float | bool):
-            problems.append(f"{where}: required_if 의 값은 문자열·숫자·true/false 여야 합니다.")
+            problems.append(f"{where}: 'required_if' 의 값은 문자열·숫자·true/false 여야 합니다.")
             return {}
     return dict(value)
 
@@ -220,22 +232,22 @@ def _check_across_fields(specs: list[FieldSpec]) -> list[str]:
     names = [spec.name for spec in specs]
     duplicated = sorted({name for name in names if names.count(name) > 1})
     for name in duplicated:
-        problems.append(f"필드 '{name}': name 이 정의 안에서 중복됩니다.")
+        problems.append(f"key '{name}': 'name' 이 데이터 구조 안에서 중복됩니다.")
 
     specs_by_name = {spec.name: spec for spec in specs}
     for spec in specs:
         for referenced, condition_value in spec.required_if.items():
             if referenced == spec.name:
-                problems.append(f"필드 '{spec.name}': required_if 가 자기 자신을 가리킬 수 없습니다.")
+                problems.append(f"key '{spec.name}': 'required_if' 가 자기 자신을 가리킬 수 없습니다.")
             elif referenced not in specs_by_name:
-                problems.append(f"필드 '{spec.name}': required_if 가 없는 필드 '{referenced}' 를 가리킵니다.")
+                problems.append(f"key '{spec.name}': 'required_if' 가 데이터 구조에 없는 key '{referenced}' 를 가리킵니다.")
             else:
                 problem = _check_condition_value(spec.name, specs_by_name[referenced], referenced, condition_value)
                 if problem is not None:
                     problems.append(problem)
 
     if not any(spec.key for spec in specs):
-        problems.append("key 필드가 1개 이상 있어야 합니다.")
+        problems.append("구분 칸('key': true)이 1개 이상 있어야 합니다.")
     return problems
 
 
@@ -243,15 +255,19 @@ def _check_condition_value(
     owner_name: str, target: FieldSpec, referenced: str, condition_value: RequiredIfValue
 ) -> str | None:
     # 조건 비교는 행 검사에서 정규화된 값과 == 로 하므로, 타입이 다르면 조건이 영영 맞지 않는다(조용한 무효화 방지).
-    where = f"필드 '{owner_name}'"
+    where = f"key '{owner_name}'"
     if target.type is FieldType.CATEGORY:
         if isinstance(condition_value, str) and condition_value in target.options:
             return None
         options = ", ".join(target.options)
-        return f"{where}: required_if 의 '{referenced}' 조건 값은 options({options}) 중 하나여야 합니다."
+        return f"{where}: 'required_if' 의 '{referenced}' 조건 값은 'options'({options}) 중 하나여야 합니다."
     if _matches_normalized_type(target.type, condition_value):
         return None
-    return f"{where}: required_if 의 '{referenced}' 조건 값이 {target.type} 타입과 맞지 않습니다."
+    return f"{where}: 'required_if' 의 '{referenced}' 조건 값이 {_type_name(target.type)} 형식과 맞지 않습니다."
+
+
+def _type_name(field_type: FieldType) -> str:
+    return f"{FIELD_TYPE_LABELS[field_type]}({field_type})"
 
 
 def _matches_normalized_type(field_type: FieldType, value: RequiredIfValue) -> bool:

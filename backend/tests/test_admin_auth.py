@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import logging
+import re
 from collections.abc import Callable, Iterator, Sequence
 
 import httpx
@@ -734,11 +735,57 @@ def test_every_admin_route_except_login_requires_session() -> None:
         "POST /api/admin/logout",
         "GET /api/admin/me",
         "GET /api/admin/datasets",
-        "POST /api/admin/datasets",
         "GET /api/admin/datasets/{slug}",
-        "POST /api/admin/datasets/{slug}/schemas",
+        "POST /api/admin/imports/preview",
+        "POST /api/admin/imports",
+        "GET /api/admin/datasets/{slug}/rows",
+        "POST /api/admin/datasets/{slug}/rows/approve-kind",
+        "POST /api/admin/datasets/{slug}/exclusions",
+        "DELETE /api/admin/datasets/{slug}/exclusions",
     } <= set(checked)
     assert violations == []
+
+
+STATE_CHANGING_METHODS = frozenset({"POST", "DELETE", "PUT", "PATCH"})
+PATH_PARAMETER_PATTERN = re.compile(r"\{[^}]+\}")
+# 경로 매개변수 자리에 넣는 더미 값. slug · 줄 id 형식을 모두 통과해 Origin 검사까지 가게 한다.
+DUMMY_PATH_VALUE = "1"
+
+
+def state_changing_admin_routes(routes: Sequence[BaseRoute]) -> list[tuple[str, str]]:
+    """관리자 경로의 상태 변경 (메서드, 경로) 전부. 포함 · 중첩 라우터는 iter_route_contexts 로 펼친다."""
+    found: list[tuple[str, str]] = []
+    for route_context in iter_route_contexts(routes):
+        path = route_context.path
+        if path is None or not path.startswith(ADMIN_PREFIX):
+            continue
+        for method in sorted((route_context.methods or set()) & STATE_CHANGING_METHODS):
+            found.append((method, path))
+    return found
+
+
+def test_every_state_changing_admin_route_requires_origin(client: TestClient) -> None:
+    routes = state_changing_admin_routes(app.routes)
+    # 세션은 유효하게 두고 Origin 만 뺀다. 거절 이유가 세션이 아니라 Origin 검사임을 분리한다.
+    headers = session_cookie_header(issue_session_token(make_settings()))
+
+    statuses = {
+        route_label({method}, path): client.request(
+            method, PATH_PARAMETER_PATTERN.sub(DUMMY_PATH_VALUE, path), json={}, headers=headers
+        ).status_code
+        for method, path in routes
+    }
+
+    # 순회가 실제 라우트를 보고 있는지(0건 통과 방지) 알려진 상태 변경 라우트로 확인한다.
+    assert {
+        LOGIN_ROUTE_LABEL,
+        "POST /api/admin/logout",
+        "POST /api/admin/imports",
+        "POST /api/admin/datasets/{slug}/rows/{row_id}/reject",
+        "DELETE /api/admin/datasets/{slug}/exclusions",
+        "POST /api/admin/datasets/{slug}/versions",
+    } <= set(statuses)
+    assert {label: code for label, code in statuses.items() if code != 403} == {}
 
 
 def test_admin_route_inspection_detects_unguarded_routes() -> None:

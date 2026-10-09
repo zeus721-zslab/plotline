@@ -16,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     text,
@@ -23,10 +24,12 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.data_core.enums import ImportSourceType, RowStatus, SourceKind
+from app.data_core.enums import ChangeKind, ImportSourceType, RowStatus, SourceKind
 from app.db import Base
 
 SLUG_MAX_LENGTH = 64
+# 주소 이름(slug) 형식. 묶음 머리(bundle)와 요청 검증이 같은 규칙을 쓴다.
+SLUG_PATTERN = r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
 TITLE_MAX_LENGTH = 200
 URL_MAX_LENGTH = 2048
 # 옛 COMPACT 행 형식의 인덱스 키 한도(767바이트 / utf8mb4 4바이트)까지 고려한 보수적 길이. 운영 공유 DB 설정과 무관하게 인덱스 생성이 되도록 한다.
@@ -144,7 +147,7 @@ class DatasetRow(Base):
         _enum_column_type(RowStatus, "row_status"),
         nullable=False,
         server_default=RowStatus.PENDING.value,
-        comment="검토 상태: pending | approved | rejected",
+        comment="검토 상태: pending | approved | rejected | superseded",
     )
     errors: Mapped[list[dict[str, str | None]] | None] = mapped_column(
         JSON, nullable=True, comment="검사 오류 목록 [{code, field, message}]"
@@ -153,6 +156,37 @@ class DatasetRow(Base):
         String(REJECT_REASON_MAX_LENGTH), nullable=True, comment="반려 사유"
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, comment="검토 시각(UTC)")
+    # NULL: 이 규칙(D-28) 이전에 들어온 줄 · 구분 칸이 없는 오류 줄 · 승인 줄과 같은데 오류가 있는 줄.
+    change_kind: Mapped[ChangeKind | None] = mapped_column(
+        _enum_column_type(ChangeKind, "row_change_kind"),
+        nullable=True,
+        comment="같은 구분 칸 승인 줄과 비교한 변화: new | changed | as_of_only | carried",
+    )
+    prev_row_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("dataset_rows.id", name="fk_dataset_rows_prev_row_id"),
+        nullable=True,
+        comment="비교 상대였던 줄(이전 값 표시 · 이월 원본)",
+    )
+    created_at: Mapped[datetime] = _created_at_column()
+
+
+class DatasetKeyExclusion(Base):
+    """구분 칸 단위 공개 제외(D-28). 줄을 지우지 않고 기록본 후보에서만 뺀다."""
+
+    __tablename__ = "dataset_key_exclusions"
+    __table_args__ = (
+        PrimaryKeyConstraint("dataset_id", "row_key", name="pk_dataset_key_exclusions"),
+        {**TABLE_OPTIONS, "comment": "기록본에서 빼는 구분 칸"},
+    )
+
+    dataset_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("datasets.id"), nullable=False, comment="소속 데이터 묶음"
+    )
+    # dataset_rows.row_key 와 같은 길이 · 콜레이션이어야 같은 값끼리 비교된다.
+    row_key: Mapped[str] = mapped_column(
+        String(ROW_KEY_MAX_LENGTH, collation="utf8mb4_bin"), nullable=False, comment="공개에서 뺄 구분 칸 값"
+    )
     created_at: Mapped[datetime] = _created_at_column()
 
 

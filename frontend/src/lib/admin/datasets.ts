@@ -1,4 +1,5 @@
-// 데이터셋·필드 정의 관리자 API 호출. 응답은 타입 가드로 확인하고, 네트워크 오류와 예상 밖 응답을 구분해 돌려준다.
+// 데이터 묶음 목록 · 상세 관리자 API 호출. 응답은 타입 가드로 확인하고, 네트워크 오류와 예상 밖 응답을 구분해 돌려준다.
+// 묶음 만들기는 붙여넣기 저장(imports.ts)이 맡는다(D-28).
 
 import { readJson, request } from './api.ts';
 
@@ -9,7 +10,11 @@ export type DatasetSummary = {
 	slug: string;
 	title: string;
 	created_at: string;
-	schema_version: number | null;
+	latest_version_no: number | null;
+	/** 검토할 줄(대기 줄 전부, 오류 줄 포함) */
+	pending_count: number;
+	/** 기록본 후보가 있고 최신 기록본과 구성이 다름 */
+	has_unpublished_changes: boolean;
 };
 
 export type SchemaVersion = {
@@ -18,11 +23,29 @@ export type SchemaVersion = {
 	created_at: string;
 };
 
+/** 탭별 줄 수. pending = pending_error + pending_new + pending_changed + pending_as_of_only. */
+export type RowCounts = {
+	pending: number;
+	/** 오류 있는 대기 줄 전부(구조 이월 실패 포함) */
+	pending_error: number;
+	pending_carry_failed: number;
+	pending_new: number;
+	pending_changed: number;
+	pending_as_of_only: number;
+	approved: number;
+	rejected: number;
+	superseded: number;
+	excluded_keys: number;
+};
+
 export type DatasetDetail = {
 	slug: string;
 	title: string;
 	created_at: string;
+	latest_version_no: number | null;
+	has_unpublished_changes: boolean;
 	schema: SchemaVersion | null;
+	counts: RowCounts;
 };
 
 /** 모든 호출에 공통인 실패. unauthorized 는 api.ts 가 로그인 화면 전환을 이미 알린 상태다. */
@@ -33,27 +56,29 @@ export type CommonFailure =
 	| { kind: 'unexpected' };
 
 export type ListDatasetsResult = { kind: 'ok'; datasets: DatasetSummary[] } | CommonFailure;
-export type CreateDatasetResult =
-	| { kind: 'ok'; dataset: DatasetSummary }
-	| { kind: 'slug_taken' }
-	| { kind: 'invalid_input' }
-	| CommonFailure;
 export type FetchDatasetResult =
 	{ kind: 'ok'; dataset: DatasetDetail } | { kind: 'not_found' } | CommonFailure;
-export type SaveSchemaResult =
-	| { kind: 'ok'; schema: SchemaVersion }
-	| { kind: 'not_found' }
-	| { kind: 'invalid_fields'; problems: string[] }
-	| { kind: 'invalid_input' }
-	| { kind: 'unchanged' }
-	| { kind: 'version_conflict' }
-	| CommonFailure;
 
 const DATASETS_PATH = '/datasets';
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const ROW_COUNT_KEYS = [
+	'pending',
+	'pending_error',
+	'pending_carry_failed',
+	'pending_new',
+	'pending_changed',
+	'pending_as_of_only',
+	'approved',
+	'rejected',
+	'superseded',
+	'excluded_keys'
+] as const satisfies readonly (keyof RowCounts)[];
 
-function isObject(value: unknown): value is Record<string, unknown> {
+export function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNullableNumber(value: unknown): value is number | null {
+	return value === null || typeof value === 'number';
 }
 
 function isDatasetSummary(value: unknown): value is DatasetSummary {
@@ -62,7 +87,9 @@ function isDatasetSummary(value: unknown): value is DatasetSummary {
 		typeof value.slug === 'string' &&
 		typeof value.title === 'string' &&
 		typeof value.created_at === 'string' &&
-		(value.schema_version === null || typeof value.schema_version === 'number')
+		isNullableNumber(value.latest_version_no) &&
+		typeof value.pending_count === 'number' &&
+		typeof value.has_unpublished_changes === 'boolean'
 	);
 }
 
@@ -76,20 +103,27 @@ function isSchemaVersion(value: unknown): value is SchemaVersion {
 	);
 }
 
+function isRowCounts(value: unknown): value is RowCounts {
+	return isObject(value) && ROW_COUNT_KEYS.every((key) => typeof value[key] === 'number');
+}
+
 function isDatasetDetail(value: unknown): value is DatasetDetail {
 	return (
 		isObject(value) &&
 		typeof value.slug === 'string' &&
 		typeof value.title === 'string' &&
 		typeof value.created_at === 'string' &&
-		(value.schema === null || isSchemaVersion(value.schema))
+		isNullableNumber(value.latest_version_no) &&
+		typeof value.has_unpublished_changes === 'boolean' &&
+		(value.schema === null || isSchemaVersion(value.schema)) &&
+		isRowCounts(value.counts)
 	);
 }
 
 type ErrorDetail = { code: string; problems: string[] | null };
 
 /** 도메인 오류 응답 {"detail": {"code", "message", "problems"?}} 에서 code·problems 를 꺼낸다. */
-async function readErrorDetail(response: Response): Promise<ErrorDetail | null> {
+export async function readErrorDetail(response: Response): Promise<ErrorDetail | null> {
 	const parsed = await readJson(response);
 	if (parsed.kind === 'invalid_json' || !isObject(parsed.body)) return null;
 	const detail = parsed.body.detail;
@@ -101,14 +135,14 @@ async function readErrorDetail(response: Response): Promise<ErrorDetail | null> 
 	return { code: detail.code, problems: null };
 }
 
-function commonFailure(response: Response | null): CommonFailure {
+export function commonFailure(response: Response | null): CommonFailure {
 	if (response === null) return { kind: 'network_error' };
 	if (response.status === 401) return { kind: 'unauthorized' };
 	if (response.status === 403) return { kind: 'forbidden' };
 	return { kind: 'unexpected' };
 }
 
-async function readBody<T>(response: Response, guard: (value: unknown) => value is T) {
+export async function readBody<T>(response: Response, guard: (value: unknown) => value is T) {
 	const parsed = await readJson(response);
 	if (parsed.kind === 'invalid_json' || !guard(parsed.body)) return null;
 	return parsed.body;
@@ -123,26 +157,6 @@ export async function listDatasets(): Promise<ListDatasetsResult> {
 	return datasets === null ? { kind: 'unexpected' } : { kind: 'ok', datasets };
 }
 
-export async function createDataset(slug: string, title: string): Promise<CreateDatasetResult> {
-	const response = await request(DATASETS_PATH, {
-		method: 'POST',
-		headers: JSON_HEADERS,
-		body: JSON.stringify({ slug, title })
-	});
-	if (response === null) return commonFailure(response);
-	if (response.status === 201) {
-		const dataset = await readBody(response, isDatasetSummary);
-		return dataset === null ? { kind: 'unexpected' } : { kind: 'ok', dataset };
-	}
-	if (response.status === 409) {
-		const detail = await readErrorDetail(response);
-		if (detail !== null && detail.code === 'dataset_slug_taken') return { kind: 'slug_taken' };
-		return { kind: 'unexpected' };
-	}
-	if (response.status === 422) return { kind: 'invalid_input' };
-	return commonFailure(response);
-}
-
 export async function fetchDataset(slug: string): Promise<FetchDatasetResult> {
 	const response = await request(`${DATASETS_PATH}/${encodeURIComponent(slug)}`);
 	if (response === null) return commonFailure(response);
@@ -151,33 +165,5 @@ export async function fetchDataset(slug: string): Promise<FetchDatasetResult> {
 		return dataset === null ? { kind: 'unexpected' } : { kind: 'ok', dataset };
 	}
 	if (response.status === 404) return { kind: 'not_found' };
-	return commonFailure(response);
-}
-
-export async function saveSchema(slug: string, fields: StoredField[]): Promise<SaveSchemaResult> {
-	const response = await request(`${DATASETS_PATH}/${encodeURIComponent(slug)}/schemas`, {
-		method: 'POST',
-		headers: JSON_HEADERS,
-		body: JSON.stringify({ fields })
-	});
-	if (response === null) return commonFailure(response);
-	if (response.status === 201) {
-		const schema = await readBody(response, isSchemaVersion);
-		return schema === null ? { kind: 'unexpected' } : { kind: 'ok', schema };
-	}
-	if (response.status === 404) return { kind: 'not_found' };
-	if (response.status === 409 || response.status === 422) {
-		const detail = await readErrorDetail(response);
-		// 형식 검증(필드 개수 등) 422 는 도메인 오류 형식이 아니라 detail 이 배열이다.
-		if (detail === null) {
-			return response.status === 422 ? { kind: 'invalid_input' } : { kind: 'unexpected' };
-		}
-		if (detail.code === 'invalid_fields' && detail.problems !== null) {
-			return { kind: 'invalid_fields', problems: detail.problems };
-		}
-		if (detail.code === 'schema_unchanged') return { kind: 'unchanged' };
-		if (detail.code === 'schema_version_conflict') return { kind: 'version_conflict' };
-		return { kind: 'unexpected' };
-	}
 	return commonFailure(response);
 }
