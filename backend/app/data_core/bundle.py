@@ -14,6 +14,8 @@ from app.data_core.row_validation import RowInput
 
 MAX_PAYLOAD_LENGTH = 2_000_000
 MAX_ROW_COUNT = 2000
+# json.loads 의 재귀 한도는 환경(스택 크기)마다 달라 결정적이지 않다. 해석 전에 직접 깊이를 세어 상한을 고정한다.
+MAX_JSON_DEPTH = 20
 # 객체가 아닌 행 번호를 문제 문장에 몇 개까지 적을지(수천 개가 한 문장에 늘어서지 않게).
 MAX_LISTED_POSITIONS = 10
 DATASET_KEY = "dataset"
@@ -61,12 +63,14 @@ def parse_bundle(payload: str) -> Bundle:
         raise BundleError([f"붙여넣은 내용이 {MAX_PAYLOAD_LENGTH:,}자를 넘습니다."])
 
     text = _strip_code_fence(payload.strip())
+    if _json_depth_exceeds(text, MAX_JSON_DEPTH):
+        raise BundleError([f"JSON 중첩이 너무 깊습니다(최대 {MAX_JSON_DEPTH}단계)."])
     try:
         document = json.loads(text)
     except json.JSONDecodeError as error:
         raise BundleError([f"JSON 으로 읽을 수 없습니다({error.lineno}번째 줄 {error.colno}번째 글자)."]) from error
     except (ValueError, RecursionError) as error:
-        # JSONDecodeError 가 아닌 해석 실패: 정수 자릿수 상한(4300자리) 초과 · 지나치게 깊은 중첩.
+        # JSONDecodeError 가 아닌 해석 실패: 정수 자릿수 상한(4300자리) 초과 · 위 깊이 검사를 피한 그 밖의 과도한 중첩(방어).
         raise BundleError(["JSON 으로 읽을 수 없습니다(너무 긴 숫자 또는 너무 깊은 중첩)."]) from error
     if not isinstance(document, dict):
         raise BundleError(['묶음은 {"dataset": {...}, "fields": [...], "rows": [...]} 형태의 JSON 객체여야 합니다.'])
@@ -81,6 +85,31 @@ def parse_bundle(payload: str) -> Bundle:
     if problems:
         raise BundleError(problems)
     return Bundle(dataset=dataset, fields_given=FIELDS_KEY in document, fields=document.get(FIELDS_KEY), rows=rows)
+
+
+def _json_depth_exceeds(text: str, limit: int) -> bool:
+    """문자열 리터럴 안의 { [ } ] 는 세지 않고 중첩 깊이의 최대값이 limit 을 넘는지만 본다."""
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character in "{[":
+            depth += 1
+            if depth > limit:
+                return True
+        elif character in "}]":
+            depth -= 1
+    return False
 
 
 def _strip_code_fence(text: str) -> str:

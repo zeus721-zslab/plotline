@@ -5,6 +5,7 @@ import pytest
 
 from app.data_core.bundle import (
     AS_OF_DATE_NAME,
+    MAX_JSON_DEPTH,
     MAX_PAYLOAD_LENGTH,
     MAX_ROW_COUNT,
     SOURCE_KIND_NAME,
@@ -131,15 +132,34 @@ def test_invalid_json_is_reported() -> None:
     assert problems[0].startswith("JSON 으로 읽을 수 없습니다")
 
 
-@pytest.mark.parametrize(
-    "payload",
-    [
-        pytest.param('{"rows": [{"year": ' + "1" * 5000 + "}]}", id="too-many-digits"),
-        pytest.param("[" * 100_000 + "]" * 100_000, id="too-deep"),
-    ],
-)
-def test_unparseable_json_beyond_decoder_limits_is_reported(payload: str) -> None:
+def test_unparseable_json_beyond_decoder_limits_is_reported() -> None:
+    payload = '{"rows": [{"year": ' + "1" * 5000 + "}]}"
+
     assert _problems_of(payload) == ["JSON 으로 읽을 수 없습니다(너무 긴 숫자 또는 너무 깊은 중첩)."]
+
+
+@pytest.mark.parametrize("depth", [MAX_JSON_DEPTH + 1, 100_000], ids=["just-over-limit", "very-deep"])
+def test_json_nesting_beyond_limit_is_reported(depth: int) -> None:
+    payload = "[" * depth + "]" * depth
+
+    assert _problems_of(payload) == [f"JSON 중첩이 너무 깊습니다(최대 {MAX_JSON_DEPTH}단계)."]
+
+
+def test_json_nesting_at_limit_is_not_reported_as_too_deep() -> None:
+    # 깊이 자체는 상한 안이라 형식 검사(최상위는 객체여야 함)로 넘어간다.
+    payload = "[" * MAX_JSON_DEPTH + "]" * MAX_JSON_DEPTH
+
+    problems = _problems_of(payload)
+
+    assert problems == ['묶음은 {"dataset": {...}, "fields": [...], "rows": [...]} 형태의 JSON 객체여야 합니다.']
+
+
+def test_brackets_inside_string_values_do_not_count_toward_depth() -> None:
+    row = dict(ROW, symbol="[[[[" * 50)
+
+    bundle = parse_bundle(json.dumps({"rows": [row]}))
+
+    assert bundle.rows[0].values["symbol"] == "[[[[" * 50
 
 
 def test_payload_length_limit() -> None:
