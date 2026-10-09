@@ -68,6 +68,8 @@ def test_routes_require_session(admin_client: TestClient, path: str) -> None:
         pytest.param("POST", f"{DATASETS_PATH}/elements/schemas", id="save-schema"),
         pytest.param("POST", f"{DATASETS_PATH}/elements/imports", id="create-import"),
         pytest.param("GET", f"{DATASETS_PATH}/elements/imports", id="list-imports"),
+        # D-29 에서 발행(publish)이 흡수한 기록본만 만들기
+        pytest.param("POST", f"{DATASETS_PATH}/elements/versions", id="create-version"),
     ],
 )
 def test_removed_routes_are_gone(
@@ -89,7 +91,7 @@ def test_list_and_detail_show_review_and_publish_state(
     paste(admin_client, admin_headers, "empty-set", [self_row("Fe")])
     approve_new(admin_client, admin_headers, "progress-set")
     approved_state = {item["slug"]: item for item in admin_client.get(DATASETS_PATH, headers=admin_headers).json()}
-    assert admin_client.post(f"{DATASETS_PATH}/progress-set/versions", json={}, headers=admin_headers).status_code == 201
+    assert admin_client.post(f"{DATASETS_PATH}/progress-set/publish", headers=admin_headers).status_code == 201
     paste(admin_client, admin_headers, "progress-set", [self_row("Fe", 1801), self_row("Ag", "오래전")], create=False)
 
     listed = {item["slug"]: item for item in admin_client.get(DATASETS_PATH, headers=admin_headers).json()}
@@ -100,6 +102,8 @@ def test_list_and_detail_show_review_and_publish_state(
     assert approved_state["empty-set"]["has_unpublished_changes"] is False
     progress = listed["progress-set"]
     assert (progress["latest_version_no"], progress["pending_count"], progress["has_unpublished_changes"]) == (1, 2, False)
+    # 발행 파일까지 쓴(done) 판
+    assert (progress["latest_published_version_no"], detail["latest_published_version_no"]) == (1, 1)
     assert UTC_ISO_PATTERN.match(progress["created_at"])
     assert detail["schema"]["version"] == 1
     assert detail["schema"]["fields"] == FIELDS
@@ -135,6 +139,7 @@ def test_list_is_ordered_by_created_at_desc(
     assert created["newer"] == "2026-02-01T00:00:00Z"
     newer = next(item for item in listed if item["slug"] == "newer")
     assert (newer["latest_version_no"], newer["pending_count"], newer["has_unpublished_changes"]) == (None, 0, False)
+    assert newer["latest_published_version_no"] is None
 
 
 def test_unknown_dataset_detail_returns_404(admin_client: TestClient, admin_headers: dict[str, str]) -> None:

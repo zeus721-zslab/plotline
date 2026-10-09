@@ -3,13 +3,14 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import PasteBox from '#lib/admin/PasteBox.svelte';
+	import PublishBar from '#lib/admin/PublishBar.svelte';
 	import RowsPanel from '#lib/admin/RowsPanel.svelte';
 	import StructureView from '#lib/admin/StructureView.svelte';
 	import { fetchDataset, type DatasetDetail } from '#lib/admin/datasets.ts';
 	import { formatLocalDateTime } from '#lib/admin/format.ts';
 	import { COMMON_ERROR_MESSAGES, TERMS } from '#lib/admin/terms.ts';
 
-	// 데이터 묶음 작업 페이지(D-28): 위 → 아래로 ① 붙여넣기 ② 줄 검토, 맨 아래 접는 칸 "구조 보기".
+	// 데이터 묶음 작업 페이지(D-28 · D-29): 위 → 아래로 ① 붙여넣기 ② 줄 검토, 접는 칸 "구조 보기", 맨 아래 ③ 발행 바.
 
 	type DetailState =
 		| { kind: 'loading' }
@@ -122,6 +123,8 @@
 					<StructureView slug={dataset.slug} schema={dataset.schema} />
 				</div>
 			</details>
+			<!-- 상세를 다시 읽을 때마다 dataset 객체가 바뀌어 발행 바가 수 · 이력을 다시 읽는다. -->
+			<PublishBar slug={dataset.slug} reloadKey={dataset} onPublished={refresh} />
 		</div>
 	{/key}
 {/if}

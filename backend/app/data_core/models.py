@@ -8,6 +8,7 @@ from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import (
+    CHAR,
     JSON,
     BigInteger,
     Date,
@@ -24,7 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.data_core.enums import ChangeKind, ImportSourceType, RowStatus, SourceKind
+from app.data_core.enums import ChangeKind, ImportSourceType, PublishStatus, RowStatus, SourceKind
 from app.db import Base
 
 SLUG_MAX_LENGTH = 64
@@ -36,6 +37,8 @@ URL_MAX_LENGTH = 2048
 ROW_KEY_MAX_LENGTH = 191
 NOTE_MAX_LENGTH = 500
 REJECT_REASON_MAX_LENGTH = 500
+FILE_SHA256_LENGTH = 64
+PUBLISH_ERROR_MAX_LENGTH = 64
 
 TABLE_OPTIONS = {
     "mysql_engine": "InnoDB",
@@ -206,6 +209,21 @@ class DatasetVersion(Base):
     )
     version_no: Mapped[int] = mapped_column(Integer, nullable=False, comment="버전 번호(묶음 안에서 증가)")
     note: Mapped[str | None] = mapped_column(String(NOTE_MAX_LENGTH), nullable=True, comment="버전 메모")
+    publish_status: Mapped[PublishStatus] = mapped_column(
+        _enum_column_type(PublishStatus, "publish_status"),
+        nullable=False,
+        server_default=PublishStatus.PENDING.value,
+        comment="발행 파일 상태: pending | done | failed | abandoned",
+    )
+    file_sha256: Mapped[str | None] = mapped_column(
+        CHAR(FILE_SHA256_LENGTH), nullable=True, comment="발행 파일 바이트의 SHA-256(16진수)"
+    )
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, comment="발행 파일 쓰기 완료 시각(UTC)"
+    )
+    publish_error: Mapped[str | None] = mapped_column(
+        String(PUBLISH_ERROR_MAX_LENGTH), nullable=True, comment="발행 실패 오류 코드(경로 · 예외 문장 저장 금지)"
+    )
     created_at: Mapped[datetime] = _created_at_column()
 
 

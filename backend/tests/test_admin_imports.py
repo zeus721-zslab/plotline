@@ -894,24 +894,31 @@ def test_version_preview_matches_created_version(
     admin_client: TestClient, admin_headers: dict[str, str], db_session: Session
 ) -> None:
     start_dataset(admin_client, admin_headers, [row("Fe"), row("Cu")])
-    versions_path = f"{DATASETS_PATH}/{SLUG}/versions"
+    publish_path = f"{DATASETS_PATH}/{SLUG}/publish"
 
-    first = admin_client.post(versions_path, json={"note": "  첫 기록본 "}, headers=admin_headers)
-    unchanged = admin_client.post(versions_path, json={}, headers=admin_headers)
+    first = admin_client.post(publish_path, headers=admin_headers)
+    unchanged = admin_client.post(publish_path, headers=admin_headers)
     save_ok(admin_client, admin_headers, bundle([row("Fe", 1801), row("Ag")]))
     approve_ids(admin_client, admin_headers, [item["id"] for item in rows_in(admin_client, admin_headers, "pending")])
     previewed = next_version(admin_client, admin_headers)
-    second = admin_client.post(versions_path, json={}, headers=admin_headers)
+    second = admin_client.post(publish_path, headers=admin_headers)
 
     assert first.status_code == 201, first.text
-    assert (first.json()["version_no"], first.json()["row_count"], first.json()["note"]) == (1, 2, "첫 기록본")
-    assert unchanged.json()["detail"]["code"] == "version_unchanged"
-    # v1 = {Fe, Cu}. 다음 = {Fe(1801), Cu, Ag}: Cu 이어짐 · Fe·Ag 새로 · 옛 Fe 대체.
+    assert (first.json()["version_no"], first.json()["row_count"]) == (1, 2)
+    assert unchanged.json()["detail"]["code"] == "publish_unchanged"
+    # v1 = {Fe, Cu}. 다음 = {Fe(1801), Cu, Ag}: Cu 이어짐 · Fe·Ag 새로 · 옛 Fe 대체 · 빠지는 줄 없음.
     assert previewed == {
-        "next_version_no": 2, "row_count": 3, "carried": 1, "added": 2, "replaced": 1, "excluded": 0, "unchanged": False
+        "next_version_no": 2,
+        "row_count": 3,
+        "carried": 1,
+        "added": 2,
+        "replaced": 1,
+        "excluded": 0,
+        "removed": 0,
+        "unchanged": False,
     }
     assert (second.json()["version_no"], second.json()["row_count"]) == (2, 3)
-    listed = admin_client.get(versions_path, headers=admin_headers).json()
+    listed = admin_client.get(f"{DATASETS_PATH}/{SLUG}/versions", headers=admin_headers).json()["versions"]
     assert [(item["version_no"], item["row_count"]) for item in listed] == [(2, 3), (1, 2)]
     assert_row_invariant(db_session)
 

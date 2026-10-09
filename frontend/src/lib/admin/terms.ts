@@ -4,6 +4,7 @@
 
 import type { FieldType } from './fieldRows.ts';
 import type { RowView, SourceKind, SourceType } from './imports.ts';
+import type { PublishError, PublishStatus } from './publish.ts';
 
 /** 공통 낱말. */
 export const TERMS = {
@@ -23,6 +24,9 @@ export const TERMS = {
 	exclude: '공개 제외',
 	restore: '복원',
 	version: '기록본',
+	publish: '발행',
+	publishedVersion: '공개 판',
+	story: '이야기',
 	sourceUrl: '출처 링크',
 	asOfDate: '확인한 날',
 	slug: '주소 이름'
@@ -40,6 +44,7 @@ export const TERM_HELP = {
 	constraints: '최솟값 · 최댓값, 글자 수, 고를 수 있는 값',
 	row: '표의 한 줄(JSON 객체 하나)',
 	version: '승인한 줄을 묶어 고정한 판. 이야기는 기록본을 씁니다',
+	publish: '승인한 줄로 새 판을 만들고 공개 파일을 씁니다. 한 번 쓴 파일은 바뀌지 않습니다',
 	exclude: '줄은 남겨 두고 기록본에서만 뺍니다. 복원하면 다시 들어갑니다',
 	asOfDate: '출처에서 값을 확인한 날짜',
 	slug: '주소와 파일 이름에 쓰는 영문 이름'
@@ -78,6 +83,30 @@ export const ROW_VIEW_LABELS: Record<RowView, string> = {
 	rejected: '제외',
 	superseded: '대체됨',
 	excluded: '공개 제외'
+};
+
+/** 판의 공개 파일 상태. */
+export const PUBLISH_STATUS_LABELS: Record<PublishStatus, string> = {
+	pending: '끝나지 않음',
+	done: '공개됨',
+	failed: '실패',
+	abandoned: '폐기됨'
+};
+
+/** 판의 실패 이유(서버 오류 코드 대신 보이는 문장). */
+export const PUBLISH_ERROR_MESSAGES: Record<PublishError, string> = {
+	file_write_failed: '저장 공간 · 권한 문제로 파일을 못 썼습니다. 다시 시도하세요',
+	file_conflict: '같은 이름의 다른 파일이 이미 있습니다. 폐기하고 다시 발행하세요',
+	content_invalid: '공개 형식과 맞지 않는 값이 있습니다. 폐기한 뒤 고쳐서 다시 발행하세요',
+	content_changed: '처음 만든 내용과 달라졌습니다. 폐기하고 다시 발행하세요'
+};
+
+/** 판 · 이야기 참조의 파일 경고(조회 시점의 파일 존재 · 판 상태, D-30). */
+export const PUBLISH_FILE_WARNINGS = {
+	abandonedFilePresent: '폐기했지만 이 판의 파일은 공개되어 있습니다(삭제는 서버 작업)',
+	doneFileMissing: '파일이 없습니다. 다시 시도로 복구합니다',
+	storyOnUnpublished: (versionNo: number) =>
+		`${TERMS.story}가 공개되지 않은 판(v${versionNo})을 가리킵니다`
 };
 
 /** 여러 화면이 같이 쓰는 오류 문장. */

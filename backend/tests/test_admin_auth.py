@@ -783,7 +783,9 @@ def test_every_state_changing_admin_route_requires_origin(client: TestClient) ->
         "POST /api/admin/imports",
         "POST /api/admin/datasets/{slug}/rows/{row_id}/reject",
         "DELETE /api/admin/datasets/{slug}/exclusions",
-        "POST /api/admin/datasets/{slug}/versions",
+        "POST /api/admin/datasets/{slug}/publish",
+        "POST /api/admin/datasets/{slug}/versions/{version_no}/publish",
+        "POST /api/admin/datasets/{slug}/versions/{version_no}/abandon",
     } <= set(statuses)
     assert {label: code for label, code in statuses.items() if code != 403} == {}
 
