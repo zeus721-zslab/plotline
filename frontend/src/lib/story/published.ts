@@ -1,6 +1,6 @@
 // 공개 데이터 형식(발행 계약). 관리자 발행 기능도 이 형식으로 /data/ 아래에 쓴다.
 // static/data 는 발행 기능 전까지 쓰는 개발용 데이터다. 운영 web 은 /data/ 를 발행 볼륨으로 서빙하므로 이 파일들은 운영에서 보이지 않는다(D-14).
-// question 은 선택 항목, 없으면 화면은 title 을 쓴다.
+// question 은 쓰지 않는다(D-35). 옛 파일에 있어도 무시한다.
 
 export const FIELD_TYPES = [
 	'text',
@@ -51,7 +51,6 @@ export type StoryDatasetReference = { version: number; path: string };
 export type PublishedStory = {
 	story: string;
 	title: string;
-	question?: string;
 	published_at: string;
 	datasets: Record<string, StoryDatasetReference>;
 };
@@ -59,7 +58,6 @@ export type PublishedStory = {
 export type StoryIndexEntry = {
 	story: string;
 	title: string;
-	question?: string;
 	summary: string;
 	published_at: string;
 };
@@ -160,7 +158,6 @@ export function isPublishedStory(value: unknown): value is PublishedStory {
 		isRecord(value) &&
 		isString(value.story) &&
 		isString(value.title) &&
-		(value.question === undefined || isString(value.question)) &&
 		isUtcTimestamp(value.published_at) &&
 		isRecord(value.datasets) &&
 		Object.values(value.datasets).every(isStoryDatasetReference)
@@ -172,7 +169,6 @@ function isStoryIndexEntry(value: unknown): value is StoryIndexEntry {
 		isRecord(value) &&
 		isString(value.story) &&
 		isString(value.title) &&
-		(value.question === undefined || isString(value.question)) &&
 		isString(value.summary) &&
 		isUtcTimestamp(value.published_at)
 	);

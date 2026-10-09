@@ -1,17 +1,11 @@
 <script lang="ts">
-	// 5장 가까운 별 연도 되감기: 별마다 빛이 떠난 해. 출생 연도를 넣으면 "당신이 N살 때" · "태어나기 N년 전"을 잇는다.
-	import BirthYearInput from '../../story/BirthYearInput.svelte';
-	import { birthRelation, departureYear, distanceText, yearLabel } from './lightTime.ts';
+	// 5장 가까운 별 연도 되감기: 별마다 빛이 떠난 해를 계산된 연도 문구로 보여 준다.
+	import { departureYear, distanceText, yearLabel } from './lightTime.ts';
 	import type { SkyObject } from './skyData.ts';
 
 	type Props = { stars: SkyObject[]; currentYear: number };
 
 	let { stars, currentYear }: Props = $props();
-
-	// 1편 출생 연도 입력과 같은 하한
-	const MIN_BIRTH_YEAR = 1900;
-
-	let birthYear = $state<number | null>(null);
 </script>
 
 <ol class="stars">
@@ -21,16 +15,9 @@
 			<span class="name">{star.nameKo}</span>
 			<span class="distance">{distanceText(star)}</span>
 			<span class="left">{yearLabel(leftYear)}에 떠난 빛</span>
-			{#if birthYear !== null}
-				<span class="relation">{birthRelation(leftYear, birthYear)}</span>
-			{/if}
 		</li>
 	{/each}
 </ol>
-
-<div class="birth">
-	<BirthYearInput minYear={MIN_BIRTH_YEAR} onresult={(year) => (birthYear = year)} />
-</div>
 
 <style>
 	.stars {
@@ -65,14 +52,5 @@
 		color: var(--story-cell-on);
 		font-variant-numeric: tabular-nums;
 		font-weight: 600;
-	}
-
-	.relation {
-		flex-basis: 100%;
-		color: var(--story-text);
-	}
-
-	.birth {
-		margin-top: 1.25rem;
 	}
 </style>

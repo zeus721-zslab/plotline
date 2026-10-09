@@ -219,10 +219,3 @@ export function storyToday(now: Date): string {
 export function storyYear(now: Date): number {
 	return Number(storyToday(now).slice(0, 4));
 }
-
-/** 출생 연도와 빛이 떠난 해 잇기: "당신이 N살 때" · "당신이 태어난 해" · "태어나기 N년 전". */
-export function birthRelation(leftYear: number, birthYear: number): string {
-	if (leftYear === birthYear) return '당신이 태어난 해';
-	if (leftYear > birthYear) return `당신이 ${leftYear - birthYear}살 때`;
-	return `태어나기 ${birthYear - leftYear}년 전`;
-}

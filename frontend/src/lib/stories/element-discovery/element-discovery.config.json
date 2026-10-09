@@ -86,11 +86,6 @@
 			"url": "https://www.sciencealert.com/these-personal-effects-of-marie-curie-will-be-radioactive-for-another-1-500-years"
 		}
 	],
-	"quiz": {
-		"question": "원소 118개, 처음부터 알던 건 몇 개였을까?",
-		"choices": [3, 13, 30],
-		"answer": "{ancient}개. 나머지 {dated}개는 발견한 해가 기록되어 있습니다."
-	},
 	"steps": [
 		{
 			"id": "ancient",
@@ -271,10 +266,5 @@
 	"bars": {
 		"title": "가장 바빴던 50년",
 		"body": "{bin}년 사이에만 {n}개가 발견됐습니다."
-	},
-	"birthYear": {
-		"title": "내가 태어난 해에는?",
-		"minYear": 1900,
-		"result": "{year}년까지 알려진 원소는 {known}개, 그 뒤로 {after}개가 더 발견됐습니다."
 	}
 }
