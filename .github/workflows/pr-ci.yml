@@ -44,6 +44,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Unit test
+        run: node --test "src/**/*.test.ts"
+
       - name: Build
         run: pnpm build
 
