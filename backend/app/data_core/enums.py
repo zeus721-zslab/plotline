@@ -20,6 +20,18 @@ class RowStatus(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+    # 같은 구분 칸의 더 새 줄이 들어오거나 승인되어 밀려난 줄(D-28). 기록본 후보 · 검토 대상에서 빠진다.
+    SUPERSEDED = "superseded"
+
+
+class ChangeKind(StrEnum):
+    """붙여넣은 줄이 같은 구분 칸의 현재 승인 줄과 비교해 어떤 변화인지(D-28). 저장하지 않는 "변화 없음"은 값으로 두지 않는다."""
+
+    NEW = "new"
+    CHANGED = "changed"
+    AS_OF_ONLY = "as_of_only"
+    # 구조가 바뀌어 승인 줄을 새 구조로 다시 검사해 만든 줄
+    CARRIED = "carried"
 
 
 class FieldType(StrEnum):

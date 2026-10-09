@@ -1,133 +1,127 @@
-"""데이터셋·필드 정의 관리자 API 의 흐름·경계 테스트(실제 MariaDB = db-test).
+"""데이터 묶음 목록 · 상세 관리자 API 의 흐름 · 경계 테스트(실제 MariaDB = db-test).
 
-정의 형식 규칙 자체는 test_field_definition.py(DB 없음)가 맡고, 여기서는 API 가 그 결과를 어떻게 돌려주는지만 본다.
+묶음 만들기는 붙여넣기 저장(test_admin_imports.py)이 맡는다. 여기서는 목록 · 상세가 줄 상태를 어떻게 세는지만 본다.
 """
 
+import json
 import re
 from datetime import datetime
 
-import httpx
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.admin_datasets import service as dataset_service
 from app.data_core.models import Dataset
-from conftest import ALLOWED_ORIGIN
+from conftest import ALLOWED_ORIGIN, assert_row_invariant
 
 pytestmark = pytest.mark.db
 
 DATASETS_PATH = "/api/admin/datasets"
-SLUG_MAX_LENGTH = 64
+IMPORTS_PATH = "/api/admin/imports"
 UTC_ISO_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 ISOLATION_SLUG = "rollback-isolation"
-
-VALID_FIELDS: list[dict[str, object]] = [
-    {"name": "symbol", "label": "기호", "type": "text", "key": True, "max_length": 3},
-    {"name": "mass", "type": "number", "min": 0, "unit": "u"},
-]
-OTHER_FIELDS: list[dict[str, object]] = [
+FIELDS: list[dict[str, object]] = [
     {"name": "symbol", "type": "text", "key": True},
-    {"name": "state", "type": "category", "options": ["gas", "solid"], "required": True},
+    {"name": "year", "type": "year"},
 ]
 
 
-def create_dataset(
-    client: TestClient, headers: dict[str, str], slug: str, title: str = "원소"
-) -> dict[str, object]:
-    response = client.post(DATASETS_PATH, json={"slug": slug, "title": title}, headers=headers)
-    assert response.status_code == 201, response.text
-    return response.json()
+def self_row(symbol: str, year: object = 1800) -> dict[str, object]:
+    return {"symbol": symbol, "year": year, "source_kind": "self"}
 
 
-def save_schema(
-    client: TestClient, headers: dict[str, str], slug: str, fields: list[dict[str, object]]
-) -> httpx.Response:
-    return client.post(f"{DATASETS_PATH}/{slug}/schemas", json={"fields": fields}, headers=headers)
+def paste(
+    client: TestClient, headers: dict[str, str], slug: str, rows: list[dict[str, object]], *, create: bool = True
+) -> None:
+    payload = json.dumps({"dataset": {"slug": slug, "title": "원소"}, "fields": FIELDS, "rows": rows})
+    response = client.post(
+        IMPORTS_PATH,
+        json={"payload": payload, "source_type": "upload", "create_dataset": create, "confirm_schema": True},
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+
+
+def approve_new(client: TestClient, headers: dict[str, str], slug: str) -> None:
+    response = client.post(f"{DATASETS_PATH}/{slug}/rows/approve-kind", json={"change_kind": "new"}, headers=headers)
+    assert response.status_code == 200, response.text
 
 
 # --- 인증 ---
 
 
 @pytest.mark.parametrize(
-    ("method", "path"),
-    [
-        pytest.param("GET", DATASETS_PATH, id="list"),
-        pytest.param("POST", DATASETS_PATH, id="create"),
-        pytest.param("GET", f"{DATASETS_PATH}/elements", id="detail"),
-        pytest.param("POST", f"{DATASETS_PATH}/elements/schemas", id="save-schema"),
-    ],
+    "path",
+    [pytest.param(DATASETS_PATH, id="list"), pytest.param(f"{DATASETS_PATH}/elements", id="detail")],
 )
-def test_routes_require_session(admin_client: TestClient, method: str, path: str) -> None:
-    response = admin_client.request(method, path, json={}, headers={"Origin": ALLOWED_ORIGIN})
+def test_routes_require_session(admin_client: TestClient, path: str) -> None:
+    response = admin_client.get(path, headers={"Origin": ALLOWED_ORIGIN})
 
     assert response.status_code == 401
     assert response.headers["cache-control"] == "no-store"
 
 
 @pytest.mark.parametrize(
-    "path",
+    ("method", "path"),
     [
-        pytest.param(DATASETS_PATH, id="create"),
-        pytest.param(f"{DATASETS_PATH}/elements/schemas", id="save-schema"),
+        pytest.param("POST", DATASETS_PATH, id="create-dataset"),
+        pytest.param("POST", f"{DATASETS_PATH}/elements/schemas", id="save-schema"),
+        pytest.param("POST", f"{DATASETS_PATH}/elements/imports", id="create-import"),
+        pytest.param("GET", f"{DATASETS_PATH}/elements/imports", id="list-imports"),
     ],
 )
-def test_post_routes_require_origin(
-    admin_client: TestClient, admin_headers: dict[str, str], path: str
+def test_removed_routes_are_gone(
+    admin_client: TestClient, admin_headers: dict[str, str], method: str, path: str
 ) -> None:
-    without_origin = {name: value for name, value in admin_headers.items() if name != "Origin"}
+    # D-28 에서 붙여넣기 저장으로 대체된 경로. 같은 경로의 GET 상세가 있으면 405, 없으면 404 다.
+    response = admin_client.request(method, path, json={}, headers=admin_headers)
 
-    response = admin_client.post(path, json={}, headers=without_origin)
-
-    assert response.status_code == 403
-
-
-# --- 데이터셋 ---
+    assert response.status_code in {404, 405}
 
 
-def test_created_dataset_appears_in_list_and_detail(
-    admin_client: TestClient, admin_headers: dict[str, str]
+# --- 목록 · 상세 ---
+
+
+def test_list_and_detail_show_review_and_publish_state(
+    admin_client: TestClient, admin_headers: dict[str, str], db_session: Session
 ) -> None:
-    created = create_dataset(admin_client, admin_headers, "elements", title="  원소 발견사  ")
+    paste(admin_client, admin_headers, "progress-set", [self_row("Fe"), self_row("Cu")])
+    paste(admin_client, admin_headers, "empty-set", [self_row("Fe")])
+    approve_new(admin_client, admin_headers, "progress-set")
+    approved_state = {item["slug"]: item for item in admin_client.get(DATASETS_PATH, headers=admin_headers).json()}
+    assert admin_client.post(f"{DATASETS_PATH}/progress-set/versions", json={}, headers=admin_headers).status_code == 201
+    paste(admin_client, admin_headers, "progress-set", [self_row("Fe", 1801), self_row("Ag", "오래전")], create=False)
 
-    assert created["slug"] == "elements"
-    assert created["title"] == "원소 발견사"
-    assert created["schema_version"] is None
-    assert UTC_ISO_PATTERN.match(str(created["created_at"]))
+    listed = {item["slug"]: item for item in admin_client.get(DATASETS_PATH, headers=admin_headers).json()}
+    detail = admin_client.get(f"{DATASETS_PATH}/progress-set", headers=admin_headers).json()
 
-    listed = admin_client.get(DATASETS_PATH, headers=admin_headers)
-    assert listed.status_code == 200
-    assert created in listed.json()
-
-    detail = admin_client.get(f"{DATASETS_PATH}/elements", headers=admin_headers)
-    assert detail.status_code == 200
-    assert detail.json() == {
-        "slug": "elements",
-        "title": "원소 발견사",
-        "created_at": created["created_at"],
-        "schema": None,
+    # 승인 줄이 있고 기록본이 없으면 공개 안 된 변경이 있다.
+    assert approved_state["progress-set"]["has_unpublished_changes"] is True
+    assert approved_state["empty-set"]["has_unpublished_changes"] is False
+    progress = listed["progress-set"]
+    assert (progress["latest_version_no"], progress["pending_count"], progress["has_unpublished_changes"]) == (1, 2, False)
+    assert UTC_ISO_PATTERN.match(progress["created_at"])
+    assert detail["schema"]["version"] == 1
+    assert detail["schema"]["fields"] == FIELDS
+    assert detail["counts"] == {
+        "pending": 2,
+        "pending_error": 1,
+        "pending_carry_failed": 0,
+        "pending_new": 0,
+        "pending_changed": 1,
+        "pending_as_of_only": 0,
+        "approved": 2,
+        "rejected": 0,
+        "superseded": 0,
+        "excluded_keys": 0,
     }
-
-
-def test_list_shows_latest_schema_version_per_dataset(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    create_dataset(admin_client, admin_headers, "first-set")
-    create_dataset(admin_client, admin_headers, "second-set")
-    assert save_schema(admin_client, admin_headers, "first-set", VALID_FIELDS).status_code == 201
-    assert save_schema(admin_client, admin_headers, "first-set", OTHER_FIELDS).status_code == 201
-
-    listed = admin_client.get(DATASETS_PATH, headers=admin_headers).json()
-
-    versions = {item["slug"]: item["schema_version"] for item in listed}
-    assert versions["first-set"] == 2
-    assert versions["second-set"] is None
+    assert_row_invariant(db_session)
 
 
 def test_list_is_ordered_by_created_at_desc(
     admin_client: TestClient, admin_headers: dict[str, str], db_session: Session
 ) -> None:
-    # 먼저 넣은 행(작은 id)을 더 늦은 시각으로 둔다. id 순서와 시각 순서가 반대여야 created_at 정렬을 실제로 확인한다.
+    # 먼저 넣은 줄(작은 id)을 더 늦은 시각으로 둔다. id 순서와 시각 순서가 반대여야 created_at 정렬을 실제로 확인한다.
     db_session.add(Dataset(slug="newer", title="나중", created_at=datetime(2026, 2, 1, 0, 0, 0)))
     db_session.flush()
     db_session.add(Dataset(slug="older", title="먼저", created_at=datetime(2026, 1, 1, 0, 0, 0)))
@@ -139,42 +133,11 @@ def test_list_is_ordered_by_created_at_desc(
     assert slugs.index("newer") < slugs.index("older")
     created = {item["slug"]: item["created_at"] for item in listed}
     assert created["newer"] == "2026-02-01T00:00:00Z"
+    newer = next(item for item in listed if item["slug"] == "newer")
+    assert (newer["latest_version_no"], newer["pending_count"], newer["has_unpublished_changes"]) == (None, 0, False)
 
 
-def test_duplicate_slug_returns_409(admin_client: TestClient, admin_headers: dict[str, str]) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-
-    response = admin_client.post(
-        DATASETS_PATH, json={"slug": "elements", "title": "다른 제목"}, headers=admin_headers
-    )
-
-    assert response.status_code == 409
-    assert response.json()["detail"]["code"] == "dataset_slug_taken"
-    assert "problems" not in response.json()["detail"]
-    assert response.headers["cache-control"] == "no-store"
-
-
-@pytest.mark.parametrize(
-    "slug",
-    [
-        pytest.param("Elements", id="uppercase"),
-        pytest.param("my elements", id="space"),
-        pytest.param("a" * (SLUG_MAX_LENGTH + 1), id="too-long"),
-    ],
-)
-def test_malformed_slug_returns_422(
-    admin_client: TestClient, admin_headers: dict[str, str], slug: str
-) -> None:
-    response = admin_client.post(
-        DATASETS_PATH, json={"slug": slug, "title": "원소"}, headers=admin_headers
-    )
-
-    assert response.status_code == 422
-
-
-def test_unknown_dataset_detail_returns_404(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
+def test_unknown_dataset_detail_returns_404(admin_client: TestClient, admin_headers: dict[str, str]) -> None:
     response = admin_client.get(f"{DATASETS_PATH}/missing", headers=admin_headers)
 
     assert response.status_code == 404
@@ -182,138 +145,26 @@ def test_unknown_dataset_detail_returns_404(
     assert response.headers["cache-control"] == "no-store"
 
 
-# --- 필드 정의 ---
-
-
-def test_schema_versions_increase_and_detail_returns_latest(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-
-    first = save_schema(admin_client, admin_headers, "elements", VALID_FIELDS)
-    second = save_schema(admin_client, admin_headers, "elements", OTHER_FIELDS)
-
-    assert first.status_code == 201
-    assert first.json()["version"] == 1
-    assert first.json()["fields"] == VALID_FIELDS
-    assert UTC_ISO_PATTERN.match(first.json()["created_at"])
-    assert second.status_code == 201
-    assert second.json()["version"] == 2
-    detail = admin_client.get(f"{DATASETS_PATH}/elements", headers=admin_headers).json()
-    assert detail["schema"] == second.json()
-
-
-def test_invalid_fields_return_422_with_problems(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-
-    response = save_schema(admin_client, admin_headers, "elements", [{"name": "title", "type": "text"}])
-
-    assert response.status_code == 422
-    detail = response.json()["detail"]
-    assert detail["code"] == "invalid_fields"
-    assert detail["problems"] == ["key 필드가 1개 이상 있어야 합니다."]
-    assert response.headers["cache-control"] == "no-store"
-    # 실패한 저장은 버전을 만들지 않는다.
-    assert admin_client.get(f"{DATASETS_PATH}/elements", headers=admin_headers).json()["schema"] is None
-
-
-def test_reserved_field_name_returns_422(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-
-    response = save_schema(
-        admin_client,
-        admin_headers,
-        "elements",
-        [*VALID_FIELDS, {"name": "source_url", "type": "url"}],
-    )
-
-    assert response.status_code == 422
-    assert response.json()["detail"]["code"] == "invalid_fields"
-    assert len(response.json()["detail"]["problems"]) == 1
-
-
-def test_same_schema_again_returns_409(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-    assert save_schema(admin_client, admin_headers, "elements", VALID_FIELDS).status_code == 201
-
-    response = save_schema(admin_client, admin_headers, "elements", VALID_FIELDS)
-
-    assert response.status_code == 409
-    assert response.json()["detail"]["code"] == "schema_unchanged"
-    detail = admin_client.get(f"{DATASETS_PATH}/elements", headers=admin_headers).json()
-    assert detail["schema"]["version"] == 1
-
-
-def test_schema_for_unknown_dataset_returns_404(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    response = save_schema(admin_client, admin_headers, "missing", VALID_FIELDS)
-
-    assert response.status_code == 404
-    assert response.json()["detail"]["code"] == "dataset_not_found"
-
-
-def test_schema_versions_are_independent_per_dataset(
-    admin_client: TestClient, admin_headers: dict[str, str]
-) -> None:
-    create_dataset(admin_client, admin_headers, "first-set")
-    create_dataset(admin_client, admin_headers, "second-set")
-    assert save_schema(admin_client, admin_headers, "first-set", VALID_FIELDS).status_code == 201
-    assert save_schema(admin_client, admin_headers, "first-set", OTHER_FIELDS).status_code == 201
-
-    response = save_schema(admin_client, admin_headers, "second-set", VALID_FIELDS)
-
-    assert response.status_code == 201
-    assert response.json()["version"] == 1
-
-
-# --- 유니크 제약 충돌(조회 뒤 다른 요청이 먼저 저장한 경우) ---
-# 동시 요청 대신 선조회가 "없음"을 돌려주게 바꿔, 저장 시점의 유니크 제약 충돌을 재현한다.
-
-
-def test_slug_unique_violation_returns_409(
-    admin_client: TestClient, admin_headers: dict[str, str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-    monkeypatch.setattr(dataset_service, "_find_dataset", lambda session, slug: None)
-
-    response = admin_client.post(
-        DATASETS_PATH, json={"slug": "elements", "title": "원소"}, headers=admin_headers
-    )
-
-    assert response.status_code == 409
-    assert response.json()["detail"]["code"] == "dataset_slug_taken"
-
-
-def test_schema_version_unique_violation_returns_409(
-    admin_client: TestClient, admin_headers: dict[str, str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    create_dataset(admin_client, admin_headers, "elements")
-    assert save_schema(admin_client, admin_headers, "elements", VALID_FIELDS).status_code == 201
-    with monkeypatch.context() as patch:
-        patch.setattr(dataset_service, "_latest_schema", lambda session, dataset_id: None)
-        response = save_schema(admin_client, admin_headers, "elements", OTHER_FIELDS)
-
-    assert response.status_code == 409
-    assert response.json()["detail"]["code"] == "schema_version_conflict"
-    # 충돌 뒤에도 같은 세션으로 계속 쓸 수 있고, 기존 버전은 그대로다.
-    detail = admin_client.get(f"{DATASETS_PATH}/elements", headers=admin_headers).json()
-    assert detail["schema"]["version"] == 1
-
-
 # --- 롤백 격리 ---
-# 두 테스트가 같은 slug 를 만든다. 테스트별 롤백이 안 되면 뒤에 도는 쪽이 409 로 실패한다.
+# 두 테스트가 같은 slug 를 만든다. 테스트별 롤백이 안 되면 뒤에 도는 쪽은 새 묶음이 아니라 기존 묶음이 된다.
 
 
-def test_rollback_isolation_first(admin_client: TestClient, admin_headers: dict[str, str]) -> None:
-    create_dataset(admin_client, admin_headers, ISOLATION_SLUG)
+def _isolated_dataset_is_new(client: TestClient, headers: dict[str, str]) -> bool:
+    payload = json.dumps({"dataset": {"slug": ISOLATION_SLUG, "title": "격리"}, "fields": FIELDS, "rows": [self_row("Fe")]})
+    previewed = client.post(f"{IMPORTS_PATH}/preview", json={"payload": payload, "source_type": "upload"}, headers=headers)
+    paste(client, headers, ISOLATION_SLUG, [self_row("Fe")])
+    return previewed.json()["target"]["is_new"]
 
 
-def test_rollback_isolation_second(admin_client: TestClient, admin_headers: dict[str, str]) -> None:
-    create_dataset(admin_client, admin_headers, ISOLATION_SLUG)
+def test_rollback_isolation_first(
+    admin_client: TestClient, admin_headers: dict[str, str], db_session: Session
+) -> None:
+    assert _isolated_dataset_is_new(admin_client, admin_headers)
+    assert_row_invariant(db_session)
+
+
+def test_rollback_isolation_second(
+    admin_client: TestClient, admin_headers: dict[str, str], db_session: Session
+) -> None:
+    assert _isolated_dataset_is_new(admin_client, admin_headers)
+    assert_row_invariant(db_session)

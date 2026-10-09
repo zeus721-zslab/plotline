@@ -1,0 +1,380 @@
+/* 관리자 화면 디자인 토큰 · 부품. 모든 규칙을 .admin 아래로 한정해 공개 스토리 화면에 영향을 주지 않는다.
+   크기 단계는 13 / 14 / 15 / 17 / 22 / 36px 만 쓴다(시안이 따로 정한 레일 이름 16px · 표 제목 18px 제외). */
+
+.admin {
+	--ground: #eff1f4;
+	--surface: #ffffff;
+	--sunk: #f5f6f8;
+	--ink: #1a1f2b;
+	--muted: #586072;
+	--line: #d7dbe2;
+	--accent: #3346d3;
+	--on-accent: #ffffff;
+	--accent-soft: #e7eafd;
+	--ok: #0a7255;
+	--ok-soft: #dff2ea;
+	--warn: #8f4f00;
+	--warn-soft: #fceed6;
+	--bad: #ae241c;
+	--bad-soft: #fbe3e1;
+	--shadow-float: 0 12px 32px rgb(16 19 26 / 0.22);
+	--font-sans: 'IBM Plex Sans KR', system-ui, sans-serif;
+	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+	min-height: 100vh;
+	background: var(--ground);
+	color: var(--ink);
+	font-family: var(--font-sans);
+	font-size: 15px;
+	line-height: 1.55;
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	.admin {
+		--ground: #10131a;
+		--surface: #181c25;
+		--sunk: #141821;
+		--ink: #e5e8ee;
+		--muted: #9aa2b2;
+		--line: #2a303c;
+		--accent: #8f9cff;
+		--on-accent: #10142b;
+		--accent-soft: #242b55;
+		--ok: #56cba4;
+		--ok-soft: #133129;
+		--warn: #f2a64e;
+		--warn-soft: #382811;
+		--bad: #ff847b;
+		--bad-soft: #3b1b19;
+		--shadow-float: 0 12px 32px rgb(0 0 0 / 0.5);
+		color-scheme: dark;
+	}
+}
+
+.admin *,
+.admin *::before,
+.admin *::after {
+	box-sizing: border-box;
+}
+
+.admin h1 {
+	margin: 0;
+	font-size: 36px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+}
+
+.admin h2 {
+	margin: 0;
+	font-size: 22px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.admin h3 {
+	margin: 0;
+	font-size: 17px;
+	font-weight: 600;
+}
+
+.admin p {
+	margin: 0;
+}
+
+.admin a {
+	color: var(--accent);
+}
+
+.admin :focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.admin .mono {
+	font-family: var(--font-mono);
+	font-size: 0.92em;
+}
+
+.admin .muted {
+	color: var(--muted);
+}
+
+.admin .small {
+	font-size: 13px;
+}
+
+.admin .visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+/* --- 버튼 --- */
+
+.admin .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 40px;
+	padding: 0 16px;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	font-size: 15px;
+	font-weight: 500;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		background-color 0.15s,
+		color 0.15s,
+		transform 0.1s;
+}
+
+.admin .btn:hover:not(:disabled) {
+	border-color: var(--ink);
+}
+
+.admin .btn:active:not(:disabled) {
+	transform: scale(0.97);
+}
+
+.admin .btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.admin .btn.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--on-accent);
+}
+
+.admin .btn.primary:hover:not(:disabled) {
+	background: var(--ink);
+	border-color: var(--ink);
+	color: var(--surface);
+}
+
+.admin .btn.quiet {
+	background: transparent;
+	border-color: transparent;
+	color: var(--muted);
+}
+
+.admin .btn.quiet:hover:not(:disabled) {
+	background: var(--sunk);
+	border-color: transparent;
+	color: var(--ink);
+}
+
+.admin .btn.danger {
+	background: var(--bad);
+	border-color: var(--bad);
+	color: #fff;
+}
+
+.admin .btn.small {
+	height: 32px;
+	padding: 0 12px;
+	border-radius: 8px;
+	font-size: 14px;
+}
+
+.admin .btn.icon {
+	width: 32px;
+	padding: 0;
+}
+
+/* --- 입력 --- */
+
+.admin .field {
+	height: 40px;
+	padding: 8px 12px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	font-size: 15px;
+	transition: border-color 0.15s;
+}
+
+.admin .field:hover:not(:disabled) {
+	border-color: var(--muted);
+}
+
+.admin textarea.field {
+	height: auto;
+	resize: vertical;
+}
+
+.admin .field.mono {
+	font-family: var(--font-mono);
+	font-size: 14px;
+}
+
+.admin .label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.admin input[type='checkbox'] {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--accent);
+}
+
+/* --- 칩 --- */
+
+.admin .chip {
+	display: inline-flex;
+	align-items: center;
+	height: 26px;
+	padding: 0 10px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.admin .chip.ok {
+	background: var(--ok-soft);
+	color: var(--ok);
+}
+
+.admin .chip.warn {
+	background: var(--warn-soft);
+	color: var(--warn);
+}
+
+.admin .chip.bad {
+	background: var(--bad-soft);
+	color: var(--bad);
+}
+
+.admin .chip.accent {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.admin .chip.quiet {
+	background: var(--sunk);
+	color: var(--muted);
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* --- 패널 · 알림 --- */
+
+.admin .panel {
+	padding: 22px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: var(--surface);
+}
+
+.admin .alert {
+	padding: 14px 16px;
+	border-radius: 10px;
+	background: var(--bad-soft);
+	color: var(--bad);
+	font-size: 14px;
+}
+
+.admin .alert ul {
+	margin: 6px 0 0;
+	padding-left: 18px;
+}
+
+.admin .status-ok {
+	color: var(--ok);
+}
+
+.admin .status-bad {
+	color: var(--bad);
+}
+
+/* 가로로 넘치는 표는 이 상자 안에서만 스크롤한다(본문은 넘치지 않음). */
+.admin .scroll-box {
+	overflow-x: auto;
+}
+
+/* --- 모션 --- */
+
+@keyframes admin-fill {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@keyframes admin-settle {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes admin-pop {
+	0% {
+		transform: scale(0.8);
+	}
+	60% {
+		transform: scale(1.08);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+@keyframes admin-rise {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.admin .settle {
+	animation: admin-settle 0.3s ease-out;
+}
+
+.admin .pop {
+	animation: admin-pop 0.3s ease-out;
+}
+
+.admin .fill {
+	transform-origin: left center;
+	animation: admin-fill 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.admin *,
+	.admin *::before,
+	.admin *::after {
+		animation: none !important;
+		transition: none !important;
+	}
+}

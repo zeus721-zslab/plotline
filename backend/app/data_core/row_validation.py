@@ -79,6 +79,18 @@ def validate_rows(
     return results
 
 
+def validate_rows_by_source(
+    fields: Sequence[FieldSpec], rows: Sequence[tuple[RowInput, ImportSourceType]]
+) -> list[RowResult]:
+    """줄마다 입력 경로가 다른 목록을 검사한다(구조 이월: 줄마다 원래 입력의 경로로 출처 규칙을 적용).
+
+    출처 URL 은 줄에 있는 값을 그대로 쓰므로 기본 출처 URL 은 없다. 구분 칸 겹침은 목록 전체에서 본다.
+    """
+    results = [_validate_row(fields, row, source_type, None) for row, source_type in rows]
+    _mark_duplicate_keys(results)
+    return results
+
+
 def is_approvable(errors: Sequence[object] | None, status: RowStatus | str) -> bool:
     """승인 가능 판정: 검사 오류가 없고 반려 상태가 아니어야 한다."""
     # != 비교: DB 원시 문자열("rejected")이 넘어와도 StrEnum 과 같게 판정된다.
@@ -95,7 +107,7 @@ def _validate_row(
     known_names = {spec.name for spec in fields}
     for name in row.values:
         if name not in known_names:
-            errors.append(RowError(RowErrorCode.UNKNOWN_FIELD, name, f"정의에 없는 칸 '{name}' 입니다."))
+            errors.append(RowError(RowErrorCode.UNKNOWN_FIELD, name, f"데이터 구조에 없는 key '{name}' 입니다."))
 
     data: dict[str, CellValue | None] = {}
     for spec in fields:
@@ -230,7 +242,7 @@ def _check_constraints(spec: FieldSpec, value: CellValue) -> RowError | None:
         if spec.max_length is not None and len(value) > spec.max_length:
             return RowError(RowErrorCode.MAX_LENGTH, spec.name, f"{spec.max_length}자 이하여야 합니다.")
         if spec.type is FieldType.CATEGORY and value not in spec.options:
-            return RowError(RowErrorCode.OPTION, spec.name, f"선택지({', '.join(spec.options)}) 중 하나여야 합니다.")
+            return RowError(RowErrorCode.OPTION, spec.name, f"고를 수 있는 값({', '.join(spec.options)}) 중 하나여야 합니다.")
     return None
 
 
@@ -274,7 +286,7 @@ def _build_row_key(
         # 구분자가 값 안에 있으면 ("a|b", "c") 와 ("a", "b|c") 가 같은 row_key 가 되어 서로 다른 행이 겹친다.
         if ROW_KEY_SEPARATOR in part:
             errors.append(
-                RowError(RowErrorCode.KEY_SEPARATOR, spec.name, f"key 값에는 '{ROW_KEY_SEPARATOR}' 를 쓸 수 없습니다.")
+                RowError(RowErrorCode.KEY_SEPARATOR, spec.name, f"구분 칸 값에는 '{ROW_KEY_SEPARATOR}' 를 쓸 수 없습니다.")
             )
             has_unusable_part = True
             continue
@@ -286,7 +298,7 @@ def _build_row_key(
     row_key = ROW_KEY_SEPARATOR.join(parts)
     if len(row_key) > ROW_KEY_MAX_LENGTH:
         errors.append(
-            RowError(RowErrorCode.KEY_TOO_LONG, None, f"key 값을 합친 길이가 {ROW_KEY_MAX_LENGTH}자를 넘습니다.")
+            RowError(RowErrorCode.KEY_TOO_LONG, None, f"구분 칸 값을 합친 길이가 {ROW_KEY_MAX_LENGTH}자를 넘습니다.")
         )
         return None
     return row_key
@@ -305,7 +317,7 @@ def _check_source(
     kind = _parse_source_kind(row.source_kind, errors)
     if kind is SourceKind.SELF and import_source_type is ImportSourceType.CLAUDE:
         errors.append(
-            RowError(RowErrorCode.SELF_NOT_ALLOWED, "source_kind", "Claude 데이터화 행은 external 만 허용됩니다.")
+            RowError(RowErrorCode.SELF_NOT_ALLOWED, "source_kind", "Claude 조사 항목은 외부 자료만 받습니다.")
         )
 
     # 기본 출처 URL 은 외부 출처 행에만 채운다(직접 작성 행에 외부 URL 이 붙지 않게).
@@ -319,12 +331,12 @@ def _check_source(
 
 def _parse_source_kind(raw: object, errors: list[RowError]) -> SourceKind | None:
     if _is_blank(raw):
-        errors.append(RowError(RowErrorCode.SOURCE_KIND_MISSING, "source_kind", "출처 유형이 없습니다."))
+        errors.append(RowError(RowErrorCode.SOURCE_KIND_MISSING, "source_kind", "출처 유형('source_kind')이 없습니다."))
         return None
     text = raw.strip() if isinstance(raw, str) else raw
     if not isinstance(text, str) or text not in SourceKind:
         errors.append(
-            RowError(RowErrorCode.SOURCE_KIND_INVALID, "source_kind", "출처 유형은 external 또는 self 여야 합니다.")
+            RowError(RowErrorCode.SOURCE_KIND_INVALID, "source_kind", "출처 유형('source_kind')은 \"external\"(외부 자료) 또는 \"self\"(직접 작성)여야 합니다.")
         )
         return None
     return SourceKind(text)
@@ -333,7 +345,7 @@ def _parse_source_kind(raw: object, errors: list[RowError]) -> SourceKind | None
 def _parse_source_url(raw: object, kind: SourceKind | None, errors: list[RowError]) -> str | None:
     if _is_blank(raw):
         if kind is SourceKind.EXTERNAL:
-            errors.append(RowError(RowErrorCode.SOURCE_URL_MISSING, "source_url", "외부 출처는 URL 이 필요합니다."))
+            errors.append(RowError(RowErrorCode.SOURCE_URL_MISSING, "source_url", "외부 자료는 출처 링크가 필요합니다."))
         return None
     url = raw.strip() if isinstance(raw, str) else ""
     if not _is_http_url(url) or len(url) > URL_MAX_LENGTH:
@@ -341,7 +353,7 @@ def _parse_source_url(raw: object, kind: SourceKind | None, errors: list[RowErro
             RowError(
                 RowErrorCode.SOURCE_URL_INVALID,
                 "source_url",
-                f"출처 URL 은 {URL_MAX_LENGTH}자 이하의 http/https URL 이어야 합니다.",
+                f"출처 링크는 {URL_MAX_LENGTH}자 이하의 http/https 주소여야 합니다.",
             )
         )
         return None
@@ -352,7 +364,7 @@ def _parse_as_of_date(raw: object, kind: SourceKind | None, errors: list[RowErro
     if _is_blank(raw):
         if kind is SourceKind.EXTERNAL:
             errors.append(
-                RowError(RowErrorCode.AS_OF_DATE_MISSING, "as_of_date", "외부 출처는 기준 날짜가 필요합니다.")
+                RowError(RowErrorCode.AS_OF_DATE_MISSING, "as_of_date", "외부 자료는 확인한 날이 필요합니다.")
             )
         return None
     try:
@@ -375,5 +387,5 @@ def _mark_duplicate_keys(results: list[RowResult]) -> None:
         row_numbers = ", ".join(str(position + 1) for position in positions)
         for position in positions:
             results[position].errors.append(
-                RowError(RowErrorCode.DUPLICATE_KEY, None, f"key '{row_key}' 가 {row_numbers}번째 행에서 겹칩니다.")
+                RowError(RowErrorCode.DUPLICATE_KEY, None, f"구분 칸 값 '{row_key}' 가 {row_numbers}번째 항목에서 겹칩니다.")
             )

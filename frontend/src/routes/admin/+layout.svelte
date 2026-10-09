@@ -1,7 +1,14 @@
 <script lang="ts">
+	// 관리자 화면 전용 서체 · 토큰. 본문 서체 400·600·700 은 공개 레이아웃이 이미 불러오고, 500 과 고정폭은 여기서만 부른다.
+	import '@fontsource/ibm-plex-sans-kr/500.css';
+	import '@fontsource/ibm-plex-mono/400.css';
+	import '@fontsource/ibm-plex-mono/500.css';
+	import '#lib/admin/admin.css';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import LoginForm from '#lib/admin/LoginForm.svelte';
+	import { TERMS } from '#lib/admin/terms.ts';
 	import {
 		fetchSession,
 		logout,
@@ -31,6 +38,8 @@
 	let view = $state<ViewState>({ kind: 'checking' });
 	let loggingOut = $state(false);
 	let logoutError = $state('');
+	// 메뉴는 데이터셋 하나뿐이라 관리자 화면 어디서든 현재 메뉴다.
+	const datasetsCurrent = $derived(page.route.id?.startsWith('/admin') === true);
 
 	async function checkSession() {
 		view = { kind: 'checking' };
@@ -84,138 +93,182 @@
 
 <div class="admin">
 	{#if view.kind === 'checking'}
-		<main>
-			<p>로그인 상태를 확인하는 중…</p>
+		<main class="center">
+			<p class="muted">로그인 상태를 확인하는 중…</p>
 		</main>
 	{:else if view.kind === 'error'}
-		<main>
-			<p role="alert">{view.message}</p>
-			<button type="button" onclick={checkSession}>다시 시도</button>
+		<main class="center">
+			<div class="panel gate">
+				<p class="status-bad" role="alert">{view.message}</p>
+				<button type="button" class="btn" onclick={checkSession}>다시 시도</button>
+			</div>
 		</main>
 	{:else if view.kind === 'anonymous'}
-		<main>
-			<h1>관리자 로그인</h1>
-			<LoginForm onSuccess={checkSession} />
+		<main class="center">
+			<div class="panel gate">
+				<h1 class="gate-title">관리자 로그인</h1>
+				<LoginForm onSuccess={checkSession} />
+			</div>
 		</main>
 	{:else}
-		<header class="admin-bar">
-			<strong>Plotline 관리자</strong>
-			<nav>
-				<a href={resolve('/admin')}>데이터셋</a>
-			</nav>
-			<span class="admin-user">{view.username}</span>
-			<button type="button" onclick={handleLogout} disabled={loggingOut}>
-				{loggingOut ? '로그아웃 중…' : '로그아웃'}
-			</button>
+		<header class="bar">
+			<div class="bar-inner">
+				<a class="brand" href={resolve('/admin')}>
+					<svg class="logo" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+						<rect width="28" height="28" rx="7" fill="var(--ink)" />
+						<polyline
+							points="6,19 11,13 15,16 21,8"
+							fill="none"
+							stroke="var(--accent)"
+							stroke-width="2.2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+						<circle cx="21" cy="8" r="2.6" fill="var(--accent)" />
+					</svg>
+					<span class="brand-name">Plotline</span>
+					<span class="brand-role">관리자</span>
+				</a>
+				<nav aria-label="관리자 메뉴">
+					<a
+						class="menu"
+						href={resolve('/admin')}
+						aria-current={datasetsCurrent ? 'page' : undefined}>{TERMS.dataset}</a
+					>
+				</nav>
+				<span class="user">{view.username}</span>
+				<button type="button" class="btn quiet small" onclick={handleLogout} disabled={loggingOut}>
+					{loggingOut ? '로그아웃 중…' : '로그아웃'}
+				</button>
+			</div>
 		</header>
 		{#if logoutError}
-			<p role="alert" class="admin-bar-alert">{logoutError}</p>
+			<p role="alert" class="alert bar-alert">{logoutError}</p>
 		{/if}
-		<main>
+		<main class="content">
 			{@render children()}
 		</main>
 	{/if}
 </div>
 
 <style>
-	/* 관리자 화면 전용 최소 스타일. 모두 .admin 아래로 한정해 공개 페이지에 영향을 주지 않는다. */
-	.admin {
-		--admin-border: #c8ccd2;
-		--admin-muted: #5b6270;
-		--admin-accent: #1f5fbf;
-		--admin-error: #b42318;
-		--admin-success: #1a7f37;
-		font-family: system-ui, sans-serif;
-		line-height: 1.5;
-		color: #1d2330;
+	/* 브라우저 기본 body 여백과 흰 바탕이 관리자 화면 가장자리에 보이지 않게 한다. 색은 admin.css 의 --ground 와 같다
+	   (토큰은 .admin 안에서만 정의되어 body 에서는 읽을 수 없다). */
+	:global(body:has(.admin)) {
+		margin: 0;
+		background: #eff1f4;
 	}
 
-	.admin main {
-		max-width: 64rem;
-		margin: 0 auto;
-		padding: 1rem;
+	@media (prefers-color-scheme: dark) {
+		:global(body:has(.admin)) {
+			background: #10131a;
+		}
 	}
 
-	.admin-bar {
+	.bar {
+		background: var(--surface);
+		border-bottom: 1px solid var(--line);
+	}
+
+	.bar-inner {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		padding: 0.5rem 1rem;
-		border-bottom: 1px solid var(--admin-border);
+		gap: 24px;
+		max-width: 1200px;
+		height: 60px;
+		margin: 0 auto;
+		padding: 0 32px;
 	}
 
-	.admin-bar nav {
+	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--ink);
+		text-decoration: none;
+	}
+
+	.logo {
+		flex: none;
+	}
+
+	.brand-name {
+		font-size: 17px;
+		font-weight: 700;
+	}
+
+	.brand-role {
+		font-size: 14px;
+		color: var(--muted);
+	}
+
+	nav {
 		flex: 1;
 	}
 
-	.admin-user {
-		color: var(--admin-muted);
-	}
-
-	.admin-bar-alert {
-		margin: 0.5rem 1rem;
-	}
-
-	.admin :global(a) {
-		color: var(--admin-accent);
-	}
-
-	.admin :global(input),
-	.admin :global(select),
-	.admin :global(textarea),
-	.admin :global(button) {
-		font: inherit;
-		padding: 0.25rem 0.5rem;
-		border: 1px solid var(--admin-border);
-		border-radius: 4px;
-		box-sizing: border-box;
-	}
-
-	.admin :global(button) {
-		background: #f4f5f7;
-		cursor: pointer;
-	}
-
-	.admin :global(button:disabled) {
-		cursor: not-allowed;
-		opacity: 0.6;
-	}
-
-	.admin :global(table) {
-		width: 100%;
-		border-collapse: collapse;
-	}
-
-	.admin :global(th),
-	.admin :global(td) {
-		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--admin-border);
-		text-align: left;
-		vertical-align: top;
-	}
-
-	.admin :global([role='alert']) {
-		color: var(--admin-error);
-	}
-
-	.admin :global(.admin-success) {
-		color: var(--admin-success);
-	}
-
-	.admin :global(.admin-muted) {
-		color: var(--admin-muted);
-	}
-
-	.admin :global(form label) {
+	.menu {
 		display: inline-flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		margin-right: 0.75rem;
+		align-items: center;
+		height: 36px;
+		padding: 0 12px;
+		border-radius: 8px;
+		color: var(--muted);
+		font-weight: 500;
+		text-decoration: none;
 	}
 
-	.admin :global(form label.admin-check) {
-		flex-direction: row;
-		align-items: center;
-		margin-right: 0;
+	.menu:hover,
+	.menu[aria-current='page'] {
+		background: var(--sunk);
+		color: var(--ink);
+	}
+
+	.user {
+		font-size: 14px;
+		color: var(--muted);
+	}
+
+	.bar-alert {
+		max-width: 1200px;
+		margin: 16px auto 0;
+	}
+
+	.content {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 36px 32px 96px;
+	}
+
+	.center {
+		display: grid;
+		place-items: center;
+		min-height: 100vh;
+		padding: 32px 16px;
+	}
+
+	.gate {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		width: min(100%, 400px);
+	}
+
+	.gate-title {
+		font-size: 22px;
+	}
+
+	@media (max-width: 640px) {
+		.bar-inner {
+			gap: 12px;
+			padding: 0 16px;
+		}
+
+		.brand-role {
+			display: none;
+		}
+
+		.content {
+			padding: 24px 16px 96px;
+		}
 	}
 </style>

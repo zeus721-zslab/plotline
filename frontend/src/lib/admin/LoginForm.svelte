@@ -37,14 +37,15 @@
 	}
 </script>
 
-<form onsubmit={handleSubmit}>
-	<label>
+<form class="login" onsubmit={handleSubmit}>
+	<label class="label">
 		아이디
-		<input bind:value={username} name="username" autocomplete="username" required />
+		<input class="field" bind:value={username} name="username" autocomplete="username" required />
 	</label>
-	<label>
+	<label class="label">
 		비밀번호
 		<input
+			class="field"
 			bind:value={password}
 			name="password"
 			type="password"
@@ -52,8 +53,18 @@
 			required
 		/>
 	</label>
-	<button type="submit" disabled={submitting}>{submitting ? '로그인 중…' : '로그인'}</button>
+	<button type="submit" class="btn primary" disabled={submitting}
+		>{submitting ? '로그인 중…' : '로그인'}</button
+	>
 	{#if errorMessage}
-		<p role="alert">{errorMessage}</p>
+		<p class="alert" role="alert">{errorMessage}</p>
 	{/if}
 </form>
+
+<style>
+	.login {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+</style>
