@@ -3,6 +3,7 @@
 	import ImageViewer from './ImageViewer.svelte';
 	import {
 		creditLine,
+		requiresFullCredit,
 		LARGE_IMAGE_WIDTH_PX,
 		SMALL_IMAGE_WIDTH_PX,
 		type StoryImage
@@ -48,7 +49,7 @@
 			decoding="async"
 		/>
 		<span class="credit">
-			<span class="credit-text">{creditLine(image)}</span>
+			<span class="credit-text" class:full={requiresFullCredit(image)}>{creditLine(image)}</span>
 			<span class="hint">크게 보기</span>
 		</span>
 	</button>
@@ -93,7 +94,7 @@
 		object-position: top;
 	}
 
-	/* 크레디트는 한 줄로 두고, 넘치면 말줄임(전체는 크게 보기와 출처 절에 있다). */
+	/* 퍼블릭 도메인 · CC0 크레디트는 한 줄로 두고, 넘치면 말줄임(전체는 크게 보기와 출처 절에 있다). */
 	.credit {
 		display: flex;
 		align-items: center;
@@ -109,6 +110,13 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	/* CC BY 4.0 은 저작자 표시가 이용 조건이라 잘라 보이지 않고 줄바꿈해 전부 보인다(D-32). */
+	.credit-text.full {
+		overflow: visible;
+		overflow-wrap: anywhere;
+		white-space: normal;
 	}
 
 	.hint {

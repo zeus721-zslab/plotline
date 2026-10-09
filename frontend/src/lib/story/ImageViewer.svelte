@@ -1,5 +1,5 @@
 <script lang="ts">
-	// 그림 크게 보기(dialog): 960 이미지 · 전체 크레디트 · 커먼즈 링크. Esc·바깥 누름·닫기 버튼으로 닫히고 onclose 로 알린다.
+	// 그림 크게 보기(dialog): 960 이미지 · 전체 크레디트 · 출처 링크. Esc·바깥 누름·닫기 버튼으로 닫히고 onclose 로 알린다.
 	import type { StoryImage } from './storyMedia.ts';
 
 	type Props = { image: StoryImage; open: boolean; onclose: () => void };
@@ -60,7 +60,7 @@
 				</div>
 			</dl>
 			<a href={image.sourceUrl} target="_blank" rel="noopener noreferrer"
-				>위키미디어 커먼즈에서 보기</a
+				>{image.sourceName}에서 보기</a
 			>
 			<button type="button" class="close" onclick={() => dialog.close()}>닫기</button>
 		</div>

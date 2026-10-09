@@ -1,0 +1,15 @@
+{
+  "story": "light-age",
+  "title": "밤하늘은 과거다",
+  "published_at": "2026-10-09T10:27:00Z",
+  "datasets": {
+    "sky_objects": {
+      "version": 2,
+      "path": "/data/datasets/sky_objects/v2.json"
+    },
+    "earth_moments": {
+      "version": 2,
+      "path": "/data/datasets/earth_moments/v2.json"
+    }
+  }
+}

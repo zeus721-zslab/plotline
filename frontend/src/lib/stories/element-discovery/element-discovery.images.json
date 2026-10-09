@@ -7,6 +7,7 @@
 		"holder": "Derby Museum and Art Gallery",
 		"license": "Public domain",
 		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Joseph_Wright_of_Derby_The_Alchemist.jpg",
+		"sourceName": "위키미디어 커먼즈",
 		"files": {
 			"480": "/stories/element-discovery/images/alchemist-480.webp",
 			"960": "/stories/element-discovery/images/alchemist-960.webp"
@@ -24,6 +25,7 @@
 		"holder": "National Portrait Gallery, London",
 		"license": "Public domain",
 		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Sir_Humphry_Davy,_Bt_by_Sir_Thomas_Lawrence.jpg",
+		"sourceName": "위키미디어 커먼즈",
 		"files": {
 			"480": "/stories/element-discovery/images/davy-480.webp",
 			"960": "/stories/element-discovery/images/davy-960.webp"
@@ -41,6 +43,7 @@
 		"holder": "State Tretyakov Gallery",
 		"license": "Public domain",
 		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Medeleeff_by_repin.jpg",
+		"sourceName": "위키미디어 커먼즈",
 		"files": {
 			"480": "/stories/element-discovery/images/mendeleev-480.webp",
 			"960": "/stories/element-discovery/images/mendeleev-960.webp"

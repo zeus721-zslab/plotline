@@ -1,6 +1,6 @@
 <script lang="ts">
 	// 스토리 출처 세 묶음: 데이터셋 출처 "제목: URL (기준 날짜)" · 직접 작성은 "직접 작성"(C3) / 화면에 쓴 문구의 출처
-	// / 이미지 출처(제목 · 작가 · 연도 · 라이선스 · 커먼즈 링크, D-25).
+	// / 이미지 출처(제목 · 작가 · 연도 · 라이선스 · 출처 링크, D-32).
 	// 목록이 길어 스토리 끝이 늘어지지 않도록 기본은 접어 두고 누르면 펼친다.
 	import type { SourceView } from './sourceViews.ts';
 	import type { CopySource } from './storyConfig.ts';
@@ -56,7 +56,7 @@
 				<li>
 					{image.title} · {image.creator} · {image.date} · {image.license}
 					<br />
-					<a href={image.sourceUrl} target="_blank" rel="noopener noreferrer">위키미디어 커먼즈</a>
+					<a href={image.sourceUrl} target="_blank" rel="noopener noreferrer">{image.sourceName}</a>
 				</li>
 			{/each}
 		</ul>

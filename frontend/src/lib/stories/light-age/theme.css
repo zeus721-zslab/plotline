@@ -1,0 +1,16 @@
+/* 빛의 나이 스토리 테마. 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1편과 같게 둔다.
+   대비(바탕 #070B16 기준): 본문 약 17.4:1 · 보조 약 9.1:1 · 강조색 약 14.5:1 · 강조색 위 바탕색 글자 약 14.5:1 */
+.light-age-theme {
+	--story-bg: #070b16;
+	--story-cell-off: #18213a;
+	--story-cell-on: #ffd98a;
+	--story-cell-dim: #a28043;
+	--story-cell-bright: #ffe7b3;
+	--story-text: #eef1f8;
+	--story-muted: #a3b1d1;
+	--story-legend: #f0a882;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}

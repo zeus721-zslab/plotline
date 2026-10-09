@@ -1,18 +1,20 @@
 <script lang="ts">
-	// 첫 화면 스토리 표지 1장: 질문 문장(없으면 제목) · 요약 · 작은 주기율표 미리보기.
-	import PeriodicPreview from '../stories/element-discovery/PeriodicPreview.svelte';
+	// 첫 화면 스토리 표지 1장: 질문 문장(없으면 제목) · 요약 · 스토리별 미리보기 그림.
+	// 테마 클래스와 그림은 스토리마다 다르므로 부르는 쪽이 넘긴다.
+	import type { Component } from 'svelte';
 	import type { StoryIndexEntry } from './published.ts';
-	import '../stories/element-discovery/theme.css';
 
-	type Props = { entry: StoryIndexEntry };
+	type Props = { entry: StoryIndexEntry; themeClass: string; preview: Component | null };
 
-	let { entry }: Props = $props();
+	let { entry, themeClass, preview: Preview }: Props = $props();
 </script>
 
-<a class="cover story-theme" href="/stories/{entry.story}">
+<a class="cover {themeClass}" href="/stories/{entry.story}">
 	<span class="question">{entry.question === undefined ? entry.title : entry.question}</span>
 	<span class="summary">{entry.summary}</span>
-	<span class="preview"><PeriodicPreview /></span>
+	{#if Preview !== null}
+		<span class="preview"><Preview /></span>
+	{/if}
 </a>
 
 <style>

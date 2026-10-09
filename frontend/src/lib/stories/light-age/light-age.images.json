@@ -1,0 +1,87 @@
+[
+	{
+		"id": "voyager-launch",
+		"title": "Voyager 1 Launch (1977)",
+		"creator": "NASA/KSC",
+		"date": "1977",
+		"license": "Public domain",
+		"sourceUrl": "https://science.nasa.gov/photojournal/voyager-1-launch-1977",
+		"sourceName": "NASA",
+		"files": {
+			"480": "/stories/light-age/images/voyager-launch-480.webp",
+			"960": "/stories/light-age/images/voyager-launch-960.webp"
+		},
+		"width": 754,
+		"height": 960,
+		"portrait": false,
+		"alt": "1977년 9월 5일, 보이저 1호를 실은 로켓이 흰 연기 기둥을 내뿜으며 발사대에서 솟아오르는 흑백 사진."
+	},
+	{
+		"id": "pleiades",
+		"title": "Hubble Refines Distance to the Pleiades Star Cluster",
+		"creator": "NASA, ESA and AURA/Caltech",
+		"date": "2004",
+		"license": "CC BY 4.0",
+		"sourceUrl": "https://esahubble.org/images/opo0420a/",
+		"sourceName": "ESA/Hubble",
+		"files": {
+			"480": "/stories/light-age/images/pleiades-480.webp",
+			"960": "/stories/light-age/images/pleiades-960.webp"
+		},
+		"width": 960,
+		"height": 720,
+		"portrait": false,
+		"alt": "푸른 성운 기운에 싸인 플레이아데스 성단의 밝은 별 여러 개가 십자 모양 빛을 내며 흩어져 있는 사진의 일부."
+	},
+	{
+		"id": "orion-nebula",
+		"title": "Hubble's sharpest view of the Orion Nebula",
+		"creator": "NASA, ESA, M. Robberto (Space Telescope Science Institute/ESA) and the Hubble Space Telescope Orion Treasury Project Team",
+		"date": "2006",
+		"license": "CC BY 4.0",
+		"sourceUrl": "https://esahubble.org/images/heic0601a/",
+		"sourceName": "ESA/Hubble",
+		"files": {
+			"480": "/stories/light-age/images/orion-nebula-480.webp",
+			"960": "/stories/light-age/images/orion-nebula-960.webp"
+		},
+		"width": 960,
+		"height": 960,
+		"portrait": false,
+		"alt": "붉은색과 분홍색 가스 구름이 겹겹이 소용돌이치고 그 사이에 별들이 박혀 있는 오리온 대성운 사진."
+	},
+	{
+		"id": "crab-nebula",
+		"title": "Most detailed image of the Crab Nebula",
+		"creator": "NASA, ESA and Allison Loll/Jeff Hester (Arizona State University). Acknowledgement: Davide De Martin (ESA/Hubble)",
+		"date": "2005",
+		"license": "CC BY 4.0",
+		"sourceUrl": "https://esahubble.org/images/heic0515a/",
+		"sourceName": "ESA/Hubble",
+		"files": {
+			"480": "/stories/light-age/images/crab-nebula-480.webp",
+			"960": "/stories/light-age/images/crab-nebula-960.webp"
+		},
+		"width": 960,
+		"height": 960,
+		"portrait": false,
+		"alt": "주황색 실 같은 가닥이 그물처럼 얽혀 둘러싸고 가운데는 푸르스름하게 빛나는 게성운 사진."
+	},
+	{
+		"id": "andromeda",
+		"title": "Hubble’s panoramic view of the Andromeda Galaxy",
+		"creator": "NASA, ESA, B. Williams (University of Washington)",
+		"date": "2025",
+		"license": "CC BY 4.0",
+		"sourceUrl": "https://esahubble.org/images/heic2501a/",
+		"sourceName": "ESA/Hubble",
+		"files": {
+			"480": "/stories/light-age/images/andromeda-480.webp",
+			"960": "/stories/light-age/images/andromeda-960.webp"
+		},
+		"width": 960,
+		"height": 224,
+		"portrait": false,
+		"alt": "비스듬히 누운 안드로메다은하가 가운데 노랗게 빛나는 중심과 갈색 먼지 띠를 두르고 가로로 길게 펼쳐진 모자이크 사진."
+	}
+]

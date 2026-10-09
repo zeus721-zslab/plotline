@@ -1,4 +1,4 @@
-// 스토리 이미지 해석(순수 함수): 이미지 목록(위키미디어 커먼즈 퍼블릭 도메인, D-25).
+// 스토리 이미지 해석(순수 함수): 이미지 목록(퍼블릭 도메인 · CC0 · CC BY 4.0, D-32).
 
 // 휴대폰용(480)·크게 보기용(960) 두 크기. 숫자는 긴 변 픽셀.
 export type ImageFiles = { small: string; large: string };
@@ -11,8 +11,10 @@ export type StoryImage = {
 	// 소장처. 모르면 null.
 	holder: string | null;
 	license: string;
-	// 커먼즈 파일 페이지
+	// 출처 페이지(커먼즈 파일 페이지 · NASA 이미지 페이지 등)
 	sourceUrl: string;
+	// 출처 링크 이름("위키미디어 커먼즈" · "NASA")
+	sourceName: string;
 	files: ImageFiles;
 	// 960 파일의 가로·세로(화면이 자리를 미리 잡아 레이아웃이 흔들리지 않게 한다)
 	width: number;
@@ -54,6 +56,7 @@ function parseImage(raw: unknown): StoryImage {
 		holder: raw.holder === undefined ? null : requireString(raw.holder, 'holder'),
 		license: requireString(raw.license, 'license'),
 		sourceUrl: requireString(raw.sourceUrl, 'sourceUrl'),
+		sourceName: requireString(raw.sourceName, 'sourceName'),
 		files: {
 			small: requireString(raw.files[SMALL_FILE_KEY], `files.${SMALL_FILE_KEY}`),
 			large: requireString(raw.files[LARGE_FILE_KEY], `files.${LARGE_FILE_KEY}`)
@@ -69,6 +72,14 @@ function parseImage(raw: unknown): StoryImage {
 export function parseStoryImages(raw: unknown): StoryImage[] {
 	if (!Array.isArray(raw)) throw new Error('story images must be a list');
 	return raw.map(parseImage);
+}
+
+// 저작자 표시가 이용 조건인 라이선스(D-32). 이 라이선스의 크레디트는 말줄임 없이 전부 보인다.
+const ATTRIBUTION_REQUIRED_LICENSE = 'CC BY 4.0';
+
+/** 크레디트를 잘라 보이면 안 되는 이미지인가(CC BY 4.0) */
+export function requiresFullCredit(image: StoryImage): boolean {
+	return image.license === ATTRIBUTION_REQUIRED_LICENSE;
 }
 
 /** 그림 아래 한 줄 크레디트: "작가, 연도, 라이선스" */
