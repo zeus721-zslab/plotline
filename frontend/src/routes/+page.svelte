@@ -5,6 +5,7 @@
 	import LoadStatus from '#lib/story/LoadStatus.svelte';
 	import type { StoryIndexEntry } from '#lib/story/published.ts';
 	import StoryCoverCard from '#lib/story/StoryCoverCard.svelte';
+	import { storyCover } from '#lib/stories/covers.ts';
 
 	type ViewState =
 		{ kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; stories: StoryIndexEntry[] };
@@ -41,7 +42,10 @@
 			{:else}
 				<ul class="stories">
 					{#each view.stories as entry (entry.story)}
-						<li><StoryCoverCard {entry} /></li>
+						{@const cover = storyCover(entry.story)}
+						<li>
+							<StoryCoverCard {entry} themeClass={cover.themeClass} preview={cover.preview} />
+						</li>
 					{/each}
 				</ul>
 			{/if}
