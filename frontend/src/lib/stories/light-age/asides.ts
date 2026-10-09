@@ -122,7 +122,7 @@ export const CHAPTER_ASIDES: ChapterAside[] = [
 		id: 'jomsaengi-bogi',
 		chapterId: 'pleiades',
 		kind: 'legend',
-		text: '음력 2월 6일 저녁, 달과 좀생이별 사이를 보고 한 해 농사를 점쳤습니다. 나란히 가면 풍년, 멀리 떨어지면 흉년이라 여겼습니다(좀생이보기).',
+		text: '음력 2월 6일 저녁, 달과 플레이아데스 성단(좀생이별) 사이를 보고 한 해 농사를 점쳤습니다. 나란히 가면 풍년, 멀리 떨어지면 흉년이라 여겼습니다(좀생이보기).',
 		sourceName: '한국민족문화대백과사전 「좀생이보기」',
 		sourceUrl: 'https://encykorea.aks.ac.kr/Article/E0052883',
 		claim: null
@@ -141,7 +141,7 @@ export const CHAPTER_ASIDES: ChapterAside[] = [
 		id: 'guest-star-daylight',
 		chapterId: 'crab',
 		kind: 'fact',
-		text: "송나라 기록에 따르면 1054년의 '객성'은 23일 동안 낮에도 보였습니다.",
+		text: "송나라 기록에 따르면 1054년의 '객성'(갑자기 나타난 별)은 23일 동안 낮에도 보였습니다.",
 		sourceName: 'NASA',
 		sourceUrl:
 			'https://imagine.gsfc.nasa.gov/educators/programs/fermi/classroom/docs/supernova_poster_back.pdf',

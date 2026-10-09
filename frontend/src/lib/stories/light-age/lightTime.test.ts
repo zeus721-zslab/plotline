@@ -8,7 +8,6 @@ import { parseStoryImages } from '../../story/storyMedia.ts';
 import { CHAPTER_ASIDES } from './asides.ts';
 import { CHAPTERS, chapterSlots } from './chapters.ts';
 import {
-	departureText,
 	distanceText,
 	koreanNumber,
 	matchMoment,
@@ -23,9 +22,12 @@ import {
 	type EarthMoment,
 	type SkyObject
 } from './skyData.ts';
-import { asideTarget, findLightAgeMismatches, momentTarget } from './storyChecks.ts';
-
-const CURRENT_YEAR = 2026;
+import {
+	asideTarget,
+	findLightAgeMismatches,
+	momentTarget,
+	paragraph2Target
+} from './storyChecks.ts';
 
 function sky(id: string, distanceValue: number, distanceUnit: DistanceUnit, showExact = false) {
 	const object: SkyObject = {
@@ -108,23 +110,6 @@ describe('거리 표기', () => {
 	});
 });
 
-describe('빛이 떠난 때', () => {
-	test('1년 미만은 시간 전', () => {
-		assert.equal(departureText(sky('moon', 384_400, 'km'), CURRENT_YEAR), '약 1.3초 전');
-	});
-
-	test('1만 년 이하는 연도(현재 연도 − 광년 반올림)', () => {
-		assert.equal(departureText(sky('proxima', 4.2, '광년'), CURRENT_YEAR), '2022년');
-		assert.equal(departureText(sky('pleiades', 445, '광년'), CURRENT_YEAR), '1581년');
-		assert.equal(departureText(sky('crab', 6500, '광년'), CURRENT_YEAR), '기원전 4475년');
-		assert.equal(departureText(sky('edge', 10_000, '광년'), CURRENT_YEAR), '기원전 7975년');
-	});
-
-	test('1만 년 넘으면 약 N년 전 무렵', () => {
-		assert.equal(departureText(sky('sgr', 27_000, '광년'), CURRENT_YEAR), '약 2만 7천 년 전 무렵');
-	});
-});
-
 describe('사건 대조', () => {
 	const pleiades = sky('pleiades', 445, '광년');
 
@@ -200,7 +185,7 @@ describe('문구-데이터 대조(개발용 데이터)', () => {
 		);
 	});
 
-	test('사건 연도가 어긋나면 그 줄만 숨김 대상', () => {
+	test('사건 연도가 어긋나면 그 줄만 숨김 대상(13장 둘째 문단도 같은 사건을 써서 함께 숨김)', () => {
 		const shifted = new Map(moments);
 		shifted.set(
 			'pleiades_imjin',
@@ -215,7 +200,10 @@ describe('문구-데이터 대조(개발용 데이터)', () => {
 			images,
 			2026
 		).map((mismatch) => mismatch.target);
-		assert.deepEqual(targets, [momentTarget('pleiades', 'pleiades_imjin')]);
+		assert.deepEqual(targets, [
+			momentTarget('pleiades', 'pleiades_imjin'),
+			paragraph2Target('end')
+		]);
 	});
 
 	test('사실 문구가 데이터와 어긋나면 장 숨김 대상', () => {

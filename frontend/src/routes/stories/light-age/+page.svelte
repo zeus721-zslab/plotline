@@ -17,7 +17,14 @@
 		CHAPTER_ASIDES,
 		type ChapterAside
 	} from '#lib/stories/light-age/asides.ts';
-	import { CHAPTERS, chapterSlots, LIGHT_AGE_SUBTITLE } from '#lib/stories/light-age/chapters.ts';
+	import {
+		CHAPTERS,
+		chapterSlots,
+		END_PARAGRAPH_2,
+		END_PARAGRAPH_3,
+		END_PARAGRAPH_4,
+		LIGHT_AGE_SUBTITLE
+	} from '#lib/stories/light-age/chapters.ts';
 	import Gauge from '#lib/stories/light-age/Gauge.svelte';
 	import {
 		hiddenLightAgeTargets,
@@ -26,8 +33,8 @@
 		type LightAgeData
 	} from '#lib/stories/light-age/lightAge.ts';
 	import {
-		departureText,
 		distanceText,
+		gaugeYearLabel,
 		storyYear,
 		travelTime,
 		type TimeUnit
@@ -37,7 +44,11 @@
 	import type { SceneId } from '#lib/stories/light-age/scenes.ts';
 	import type { EarthMoment, SkyObject } from '#lib/stories/light-age/skyData.ts';
 	import SkyBackground from '#lib/stories/light-age/SkyBackground.svelte';
-	import { asideTarget, momentTarget } from '#lib/stories/light-age/storyChecks.ts';
+	import {
+		asideTarget,
+		momentTarget,
+		paragraph2Target
+	} from '#lib/stories/light-age/storyChecks.ts';
 	import '#lib/stories/light-age/theme.css';
 
 	type Ready = {
@@ -195,7 +206,7 @@
 			{#if gaugeObject !== undefined}
 				<Gauge
 					travel={travelTime(gaugeObject).text}
-					departure={departureText(gaugeObject, ready.currentYear)}
+					departure={gaugeYearLabel(gaugeObject, ready.currentYear)}
 					changeCount={unitChangeCount}
 				/>
 			{/if}
@@ -241,6 +252,14 @@
 								/>
 							{/if}
 							<MomentList moments={shownMoments(ready, chapter.id, chapter.moments)} />
+							{#if chapter.id === 'end'}
+								<!-- 13장 둘째 문단: 두 사건 대조를 통과했을 때만 보인다. 나머지 문단은 항상 보인다. -->
+								{#if !ready.hiddenTargets.has(paragraph2Target(chapter.id))}
+									<p class="body">{END_PARAGRAPH_2}</p>
+								{/if}
+								<p class="body">{END_PARAGRAPH_3}</p>
+								<p class="body">{END_PARAGRAPH_4}</p>
+							{/if}
 							<!-- 곁들임 카드는 1편처럼 장 문구가 대조를 통과했을 때만 보인다. -->
 							{#if !ready.hiddenTargets.has(chapter.id)}
 								{#each shownAsides(ready, chapter.id) as aside (aside.id)}
@@ -362,6 +381,11 @@
 	.card {
 		max-width: 560px;
 		margin: 0 auto;
+	}
+
+	/* 13장 둘째 문단 이후: StoryCard 안 본문과 같은 간격(StoryCard.svelte .body 와 같은 값, 이 블록은 부모 쪽에서 그려 따로 둔다). */
+	.body {
+		margin: 0.625rem 0 0;
 	}
 
 	.exact {
