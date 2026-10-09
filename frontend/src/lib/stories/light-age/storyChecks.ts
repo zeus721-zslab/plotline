@@ -1,5 +1,6 @@
 // 빛의 나이 문구-데이터 대조(순수 함수). 1편 storyChecks 와 같은 방식: 불일치가 있는 대상은 화면에서 숨긴다.
-// 대상(target): 장 id(장 문구 전체) · momentTarget(장 id, 사건 id)(그때 지구 한 줄) · asideTarget(장 id, 카드 id)(곁들임 카드 1장).
+// 대상(target): 장 id(장 문구 전체) · momentTarget(장 id, 사건 id)(그때 지구 한 줄) · asideTarget(장 id, 카드 id)(곁들임 카드 1장)
+// · paragraph2Target(장 id)(13장 둘째 문단 1개).
 import type { StoryImage } from '../../story/storyMedia.ts';
 import { templateParts } from '../../story/storyConfig.ts';
 import type { AsideClaim, ChapterAside } from './asides.ts';
@@ -26,6 +27,10 @@ export function momentTarget(chapterId: string, momentId: string): string {
 
 export function asideTarget(chapterId: string, asideId: string): string {
 	return `${chapterId}/aside/${asideId}`;
+}
+
+export function paragraph2Target(chapterId: string): string {
+	return `${chapterId}/paragraph-2`;
 }
 
 function nearestLightYearStar(objects: Map<string, SkyObject>): SkyObject | null {
@@ -134,6 +139,28 @@ function checkAsideClaim(
 	}
 }
 
+/** 13장 둘째 문단 대조: 사건 중 하나라도 어긋나면 그 문단만 숨긴다("그때 지구" 목록으로는 보이지 않는 사건). */
+function checkParagraph2(
+	momentIds: string[],
+	objects: Map<string, SkyObject>,
+	moments: Map<string, EarthMoment>,
+	currentYear: number
+): string | null {
+	for (const momentId of momentIds) {
+		const moment = moments.get(momentId);
+		if (moment === undefined) return `paragraph2 moment ${momentId}: not in data`;
+		const object = objects.get(moment.objectId);
+		if (object === undefined) {
+			return `paragraph2 moment ${momentId}: object ${moment.objectId} not in data`;
+		}
+		const match = matchMoment(object, moment, currentYear);
+		if (match.kind === 'compared' && !match.matches) {
+			return `paragraph2 moment ${momentId}: difference ${match.difference} > tolerance ${match.tolerance}`;
+		}
+	}
+	return null;
+}
+
 function checkAside(
 	aside: ChapterAside,
 	chapterIds: Set<string>,
@@ -164,6 +191,12 @@ export function findLightAgeMismatches(
 			const message = checkMoment(chapter, momentId, objects, moments, currentYear);
 			if (message !== null) {
 				mismatches.push({ target: momentTarget(chapter.id, momentId), message });
+			}
+		}
+		if (chapter.paragraph2Moments.length > 0) {
+			const message = checkParagraph2(chapter.paragraph2Moments, objects, moments, currentYear);
+			if (message !== null) {
+				mismatches.push({ target: paragraph2Target(chapter.id), message });
 			}
 		}
 	}

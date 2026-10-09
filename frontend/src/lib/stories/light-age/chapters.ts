@@ -46,9 +46,19 @@ export type Chapter = {
 	nearStars: boolean;
 	// 4장: 정확한 거리 한 줄
 	exactDistance: boolean;
+	// 13장: 둘째 문단이 기대는 사건(그때 지구 목록에는 안 보임). 하나라도 대조에 실패하면 그 문단만 숨긴다.
+	paragraph2Moments: string[];
 };
 
 const PROXIMA = 'proxima';
+
+// 13장 둘째 문단은 두 사건(그때 지구 목록에는 보이지 않고, 대조로만 쓴다) 대조를 통과했을 때만 보인다.
+export const END_PARAGRAPH_2_MOMENTS = ['pleiades_imjin', 'sgr_ice_age'];
+export const END_PARAGRAPH_2 =
+	'달도 해도, 우리 눈에 보이는 건 늘 조금 지난 모습입니다. 그 사이에는 임진왜란 무렵 출발한 별빛도, 빙하기에 은하 한가운데를 떠난 빛도 섞여 있습니다.';
+export const END_PARAGRAPH_3 =
+	'저마다 다른 시대에 출발한 빛이 먼 길을 건너와, 오늘 밤 한 하늘에 모여 있는 셈입니다.';
+export const END_PARAGRAPH_4 = '그리고 그 끝에는, 빛조차 돌아오지 못하는 곳이 있습니다.';
 
 export const CHAPTERS: Chapter[] = [
 	{
@@ -63,13 +73,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'moon',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'sun',
 		label: '2장',
 		title: '태양',
-		body: '햇빛은 {time_sun} 전에 태양을 떠났습니다. 태양이 지금 사라져도 우리는 {plain_sun} 동안 알지 못합니다.',
+		body: '우리가 보는 태양은 {time_sun} 전의 모습입니다. 태양이 지금 사라져도 우리는 {plain_sun} 동안 알지 못합니다.',
 		objects: ['sun'],
 		gaugeObject: 'sun',
 		moments: [],
@@ -77,13 +88,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'sun',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'planets',
 		label: '3장',
 		title: '목성 · 해왕성',
-		body: '목성의 빛은 {time_jupiter}, 해왕성의 빛은 {time_neptune}. 태양계 끝자락까지도 빛으로는 반나절이 걸리지 않습니다.',
+		body: '우리가 보는 목성은 {time_jupiter} 전, 해왕성은 {time_neptune} 전의 모습입니다. 태양계 끝자락까지도 빛으로는 반나절이 걸리지 않습니다.',
 		objects: ['jupiter', 'neptune'],
 		gaugeObject: 'neptune',
 		moments: [],
@@ -91,7 +103,8 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'planets',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'voyager',
@@ -105,13 +118,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'voyager',
 		photo: 'voyager-launch',
 		nearStars: false,
-		exactDistance: true
+		exactDistance: true,
+		paragraph2Moments: []
 	},
 	{
 		id: 'near-stars',
 		label: '5장',
 		title: '가까운 별',
-		body: '가장 가까운 별 프록시마의 빛은 {left_proxima}에 떠났습니다.',
+		body: '태양 다음으로 가까운 별, 프록시마 센타우리도 {time_proxima} 전의 모습입니다.',
 		objects: [PROXIMA, 'sirius', 'vega'],
 		gaugeObject: PROXIMA,
 		moments: [],
@@ -119,13 +133,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'near-stars',
 		photo: null,
 		nearStars: true,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'pleiades',
 		label: '6장',
-		title: '플레이아데스',
-		body: '좀생이별의 빛은 {time_pleiades} 전에 떠났습니다.',
+		title: '플레이아데스 성단',
+		body: '우리가 보는 플레이아데스 성단은 {time_pleiades} 전의 모습입니다.',
 		objects: ['pleiades'],
 		gaugeObject: 'pleiades',
 		moments: ['pleiades_imjin'],
@@ -133,13 +148,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'pleiades',
 		photo: 'pleiades',
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'orion',
 		label: '7장',
 		title: '오리온 대성운',
-		body: '오리온 대성운의 빛은 {time_orion_nebula} 전에 떠났습니다.',
+		body: '우리가 보는 오리온 대성운은 {time_orion_nebula} 전의 모습입니다.',
 		objects: ['orion_nebula'],
 		gaugeObject: 'orion_nebula',
 		moments: ['orion_bulguksa'],
@@ -147,13 +163,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'orion',
 		photo: 'orion-nebula',
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'crab',
 		label: '8장',
 		title: '게성운',
-		body: '게성운의 빛은 {time_crab_nebula} 전에 떠났습니다.',
+		body: '우리가 보는 게성운은 {time_crab_nebula} 전의 모습입니다.',
 		objects: ['crab_nebula'],
 		gaugeObject: 'crab_nebula',
 		moments: ['crab_neolithic', 'crab_guest_star'],
@@ -161,13 +178,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'crab',
 		photo: 'crab-nebula',
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'sgr-a',
 		label: '9장',
 		title: '궁수자리 A*',
-		body: '우리 은하 한가운데 쪽의 빛은 {time_sgr_a_star} 전에 떠났습니다. 그 중심에는 빛조차 빠져나오지 못하는 것이 있습니다. 끝에서 다시 만납니다.',
+		body: '우리 은하 한가운데에서 오는 빛은 {time_sgr_a_star} 전에 출발했습니다. 그 중심에는 빛조차 빠져나오지 못하는 블랙홀, 궁수자리 A*가 있습니다.',
 		objects: ['sgr_a_star'],
 		gaugeObject: 'sgr_a_star',
 		moments: ['sgr_ice_age'],
@@ -175,13 +193,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'sgr-a',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'lmc',
 		label: '10장',
 		title: '대마젤란은하',
-		body: '이웃 은하의 빛은 {time_lmc} 전에 떠났습니다.',
+		body: '우리가 보는 대마젤란은하는 {time_lmc} 전의 모습입니다.',
 		objects: ['lmc'],
 		gaugeObject: 'lmc',
 		moments: ['lmc_shellfish'],
@@ -189,13 +208,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'lmc',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'andromeda',
 		label: '11장',
-		title: '안드로메다',
-		body: '맨눈으로도 보이는 안드로메다은하의 빛은 {time_andromeda} 전에 떠났습니다.',
+		title: '안드로메다은하',
+		body: '맨눈으로도 보이는 안드로메다은하는 {time_andromeda} 전의 모습입니다.',
 		objects: ['andromeda'],
 		gaugeObject: 'andromeda',
 		moments: ['andromeda_tools'],
@@ -203,13 +223,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'andromeda',
 		photo: 'andromeda',
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'm87',
 		label: '12장',
 		title: 'M87',
-		body: '{time_m87} 전에 떠난 빛. 그 한가운데에는 빛조차 빠져나오지 못하는 블랙홀이 있습니다.',
+		body: '우리가 보는 M87 은하는 {time_m87} 전의 모습입니다. 그 한가운데에는 빛조차 빠져나오지 못하는 블랙홀이 있습니다.',
 		objects: ['m87'],
 		gaugeObject: 'm87',
 		moments: ['m87_hothouse'],
@@ -217,13 +238,14 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'm87',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: []
 	},
 	{
 		id: 'end',
 		label: '13장',
 		title: '끝',
-		body: '밤하늘을 올려다볼 때 우리는 과거를 봅니다. 그리고 그 끝에는 빛이 돌아오지 못하는 곳이 있습니다.',
+		body: '밤하늘을 올려다보면, 우리는 사실 과거를 보고 있습니다.',
 		objects: [],
 		gaugeObject: 'm87',
 		moments: [],
@@ -231,7 +253,8 @@ export const CHAPTERS: Chapter[] = [
 		scene: 'end',
 		photo: null,
 		nearStars: false,
-		exactDistance: false
+		exactDistance: false,
+		paragraph2Moments: END_PARAGRAPH_2_MOMENTS
 	}
 ];
 

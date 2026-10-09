@@ -1,6 +1,7 @@
 <script lang="ts">
-	// 상단 계기판 한 줄: "빛으로 {빛 이동 시간} · {빛이 떠난 때}". 단위 단계가 바뀔 때만(changeCount 증가) 강조한다.
-	type Props = { travel: string; departure: string; changeCount: number };
+	// 상단 계기판 한 줄: "{빛 이동 시간} 전의 모습[ · {연도} 무렵]". 연도는 1년~1만 년일 때만 붙는다(null 이면 생략).
+	// 단위 단계가 바뀔 때만(changeCount 증가) 강조한다.
+	type Props = { travel: string; departure: string | null; changeCount: number };
 
 	let { travel, departure, changeCount }: Props = $props();
 </script>
@@ -8,10 +9,13 @@
 <div class="gauge">
 	<p class="line">
 		{#key changeCount}
-			<span class="travel" class:changed={changeCount > 0}>빛으로 {travel}</span>
+			<span class="travel" class:changed={changeCount > 0}>{travel}</span>
 		{/key}
-		<span class="separator" aria-hidden="true">·</span>
-		<span class="departure">{departure}</span>
+		<span class="suffix">전의 모습</span>
+		{#if departure !== null}
+			<span class="separator" aria-hidden="true">·</span>
+			<span class="departure">{departure} 무렵</span>
+		{/if}
 	</p>
 </div>
 
@@ -49,6 +53,11 @@
 
 	.travel.changed {
 		animation: unit-change 1.2s ease-out;
+	}
+
+	.suffix {
+		margin-left: 0.25rem;
+		color: var(--story-text);
 	}
 
 	.separator {

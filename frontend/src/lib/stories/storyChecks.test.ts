@@ -15,7 +15,7 @@ import { CHAPTER_ASIDES } from './light-age/asides.ts';
 import { CHAPTERS, chapterSlots } from './light-age/chapters.ts';
 import { storyYear } from './light-age/lightTime.ts';
 import { buildEarthMoments, buildSkyObjects } from './light-age/skyData.ts';
-import { findLightAgeMismatches } from './light-age/storyChecks.ts';
+import { findLightAgeMismatches, paragraph2Target } from './light-age/storyChecks.ts';
 
 const ELEMENT_DISCOVERY_STEP_COUNTS = [13, 14, 35, 48, 62, 64, 64, 75, 81, 81, 81, 89, 118];
 const LIGHT_AGE_ASIDE_COUNT = 18;
@@ -111,5 +111,32 @@ describe('2편 빛의 나이 — 문구-데이터 대조', () => {
 			year
 		);
 		assert.ok(mismatches.length >= 1, '데이터를 바꿨는데 불일치가 없음(false-green)');
+	});
+
+	test('플레이아데스 거리가 어긋나 임진왜란 대조가 실패하면 13장 둘째 문단이 숨김 대상', () => {
+		// aside "jomsaengi-bogi"/장 6 와 같은 사건(pleiades_imjin)을 13장 둘째 문단도 함께 쓴다.
+		// pleiades 거리를 1년 전후로 바꿔 빛이 떠난 해를 1592년에서 멀어지게 한다(허용 범위 max(5%, 2년) 초과).
+		const shifted = clone(objectsRaw);
+		const row = shifted.rows.find((candidate) => candidate.key === 'pleiades');
+		assert.ok(row !== undefined);
+		row.values.distance_value = 1;
+		row.values.distance_unit = '광년';
+		const objects = buildSkyObjects(shifted);
+		const moments = buildEarthMoments(momentsRaw);
+		assert.ok(objects !== null && moments !== null);
+		const slots = chapterSlots(objects, now);
+		const mismatches = findLightAgeMismatches(
+			CHAPTERS,
+			CHAPTER_ASIDES,
+			objects,
+			moments,
+			slots,
+			images,
+			year
+		).map((mismatch) => mismatch.target);
+		assert.ok(
+			mismatches.includes(paragraph2Target('end')),
+			'13장 둘째 문단(end/paragraph-2)이 숨김 대상에 없음'
+		);
 	});
 });

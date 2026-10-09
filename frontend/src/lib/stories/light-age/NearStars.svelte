@@ -14,7 +14,7 @@
 		<li>
 			<span class="name">{star.nameKo}</span>
 			<span class="distance">{distanceText(star)}</span>
-			<span class="left">{yearLabel(leftYear)}에 떠난 빛</span>
+			<span class="left">{yearLabel(leftYear)}의 모습</span>
 		</li>
 	{/each}
 </ol>

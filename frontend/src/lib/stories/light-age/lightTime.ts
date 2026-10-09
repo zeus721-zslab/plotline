@@ -163,11 +163,10 @@ export function yearLabel(year: number): string {
 	return year > 0 ? `${year}년` : `기원전 ${1 - year}년`;
 }
 
-/** 빛이 떠난 때: 1년 미만 "약 8분 전" · 1만 년 이하 "1581년" · 넘으면 "약 2만 7천 년 전 무렵". */
-export function departureText(object: SkyObject, currentYear: number): string {
+/** 계기판 보조 연도: 1년 이상 1만 년 이하일 때만 "1581년" 같은 연도 글자, 그 밖은 없음(null). */
+export function gaugeYearLabel(object: SkyObject, currentYear: number): string | null {
 	const years = travelYears(object);
-	if (years < 1) return `${travelTime(object).text} 전`;
-	if (years > DEPARTURE_YEAR_LIMIT) return `약 ${yearsText(years)} 전 무렵`;
+	if (years < 1 || years > DEPARTURE_YEAR_LIMIT) return null;
 	return yearLabel(departureYear(object, currentYear));
 }
 
