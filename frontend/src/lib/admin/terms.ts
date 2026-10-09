@@ -5,6 +5,7 @@
 import type { FieldType } from './fieldRows.ts';
 import type { RowView, SourceKind, SourceType } from './imports.ts';
 import type { PublishError, PublishStatus } from './publish.ts';
+import type { DatasetContentProblem, PublicFileStatus, StoryPublishError } from './stories.ts';
 
 /** 공통 낱말. */
 export const TERMS = {
@@ -27,6 +28,7 @@ export const TERMS = {
 	publish: '발행',
 	publishedVersion: '공개 판',
 	story: '이야기',
+	preview: '미리보기',
 	sourceUrl: '출처 링크',
 	asOfDate: '확인한 날',
 	slug: '주소 이름'
@@ -100,6 +102,33 @@ export const PUBLISH_ERROR_MESSAGES: Record<PublishError, string> = {
 	content_invalid: '공개 형식과 맞지 않는 값이 있습니다. 폐기한 뒤 고쳐서 다시 발행하세요',
 	content_changed: '처음 만든 내용과 달라졌습니다. 폐기하고 다시 발행하세요'
 };
+
+/** 이야기 판의 실패 이유(서버 오류 코드 대신 보이는 문장, D-37). */
+export const STORY_PUBLISH_ERROR_MESSAGES: Record<StoryPublishError, string> = {
+	publish_dir_missing: '공개 폴더가 없습니다. 서버의 저장 공간 연결을 확인하세요',
+	unsafe_path: '공개 폴더 안 이야기 경로가 바뀌어 있습니다(링크 등). 서버에서 확인하세요',
+	story_file_write_failed: '이야기 파일을 못 썼습니다. 저장 공간 · 권한을 확인하고 다시 시도하세요',
+	index_write_failed: '이야기 파일은 바뀌었지만 목록을 못 썼습니다. 다시 시도하세요'
+};
+
+/** 공개 이야기 파일이 최신 공개 판과 맞지 않을 때의 경고(조회 시점, D-37). ok 는 경고하지 않는다. */
+export const PUBLIC_FILE_WARNINGS: Record<Exclude<PublicFileStatus, 'ok'>, string> = {
+	missing: '공개 이야기 파일이 없습니다',
+	mismatch: '공개 이야기 파일이 지금 공개 판과 다릅니다',
+	unreadable: '공개 이야기 파일을 읽을 수 없습니다(링크 · 일반 파일 아님 · 크기 초과 등)'
+};
+
+/** 판 내용 API 가 내용을 주지 못한 이유(문구 대조 · 미리보기, D-37). */
+export const DATASET_CONTENT_PROBLEM_MESSAGES: Record<DatasetContentProblem, string> = {
+	content_invalid: '이 판의 내용을 만들 수 없습니다 — 데이터 이상',
+	version_not_done: '공개된 판이 아닙니다',
+	dataset_not_found: '프론트와 서버의 묶음 이름이 맞지 않습니다',
+	version_not_found: '없는 판입니다'
+};
+
+/** 발행 · 되돌리기 · 다시 시도 · 다시 쓰기 요청의 결과를 알 수 없을 때(500 · 네트워크 오류). */
+export const STORY_RESULT_UNKNOWN_MESSAGE =
+	'결과를 확인하지 못했습니다. 공개 파일이 바뀌었을 수 있으니 새로 고쳐 상태를 확인하세요';
 
 /** 판 · 이야기 참조의 파일 경고(조회 시점의 파일 존재 · 판 상태, D-30). */
 export const PUBLISH_FILE_WARNINGS = {

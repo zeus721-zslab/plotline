@@ -11,6 +11,7 @@ from sqlalchemy import (
     CHAR,
     JSON,
     BigInteger,
+    CheckConstraint,
     Date,
     DateTime,
     Enum,
@@ -39,6 +40,10 @@ NOTE_MAX_LENGTH = 500
 REJECT_REASON_MAX_LENGTH = 500
 FILE_SHA256_LENGTH = 64
 PUBLISH_ERROR_MAX_LENGTH = 64
+STORY_TITLE_MAX_LENGTH = 60
+STORY_SUMMARY_MAX_LENGTH = 200
+STORY_PUBLISH_LOCK_ID = 1
+STORY_PUBLISH_STATUS_CHECK = "publish_status IN ('pending', 'done', 'failed')"
 
 TABLE_OPTIONS = {
     "mysql_engine": "InnoDB",
@@ -225,6 +230,70 @@ class DatasetVersion(Base):
         String(PUBLISH_ERROR_MAX_LENGTH), nullable=True, comment="발행 실패 오류 코드(경로 · 예외 문장 저장 금지)"
     )
     created_at: Mapped[datetime] = _created_at_column()
+
+
+class Story(Base):
+    """이야기 1편(D-37). 등록 가능한 이야기는 admin_stories/registry.py 상수가 정하고, 처음 발행할 때 행이 생긴다."""
+
+    __tablename__ = "stories"
+    __table_args__ = {**TABLE_OPTIONS, "comment": "발행하는 이야기"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    slug: Mapped[str] = mapped_column(
+        String(SLUG_MAX_LENGTH), nullable=False, unique=True, comment="이야기 주소 이름(stories/{slug}.json)"
+    )
+    # 목록(index.json) 순서 · published_at 기준. 처음 done 이 될 때만 정하고 이후 바꾸지 않는다.
+    first_published_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, comment="처음 공개된 시각(UTC)"
+    )
+    created_at: Mapped[datetime] = _created_at_column()
+
+
+class StoryVersion(Base):
+    __tablename__ = "story_versions"
+    __table_args__ = (
+        UniqueConstraint("story_id", "version_no", name="uq_story_versions_story_version_no"),
+        # 공용 PublishStatus ENUM 중 이야기가 쓰는 값만 받는다(폐기 abandoned 없음).
+        CheckConstraint(STORY_PUBLISH_STATUS_CHECK, name="ck_story_versions_publish_status"),
+        {**TABLE_OPTIONS, "comment": "이야기 발행 판(제목 · 요약 · 묶음 판)"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    story_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("stories.id"), nullable=False, comment="소속 이야기"
+    )
+    version_no: Mapped[int] = mapped_column(Integer, nullable=False, comment="판 번호(이야기 안에서 증가)")
+    title: Mapped[str] = mapped_column(String(STORY_TITLE_MAX_LENGTH), nullable=False, comment="이야기 제목")
+    summary: Mapped[str] = mapped_column(String(STORY_SUMMARY_MAX_LENGTH), nullable=False, comment="목록 요약")
+    datasets: Mapped[dict[str, int]] = mapped_column(
+        JSON, nullable=False, comment="묶음 주소 이름 → 데이터 판 번호"
+    )
+    # PublishStatus 를 그대로 쓴다. 이야기는 pending · done · failed 만 쓴다(rename 교체라 폐기가 없음).
+    publish_status: Mapped[PublishStatus] = mapped_column(
+        _enum_column_type(PublishStatus, "publish_status"),
+        nullable=False,
+        server_default=PublishStatus.PENDING.value,
+        comment="이야기 파일 상태: pending | done | failed",
+    )
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, comment="이야기 파일 · 목록 교체 완료 시각(UTC)"
+    )
+    publish_error: Mapped[str | None] = mapped_column(
+        String(PUBLISH_ERROR_MAX_LENGTH), nullable=True, comment="발행 실패 오류 코드(경로 · 예외 문장 저장 금지)"
+    )
+    created_at: Mapped[datetime] = _created_at_column()
+
+
+class StoryPublishLock(Base):
+    """이야기 발행 전역 잠금 행(id 1, 마이그레이션이 시드). 목록(index.json)은 이야기 전체로 만들므로 발행끼리 줄 세운다."""
+
+    __tablename__ = "story_publish_lock"
+    __table_args__ = (
+        CheckConstraint(f"id = {STORY_PUBLISH_LOCK_ID}", name="ck_story_publish_lock_single_row"),
+        {**TABLE_OPTIONS, "comment": "이야기 발행 전역 잠금(1행)"},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
 
 
 class DatasetVersionRow(Base):

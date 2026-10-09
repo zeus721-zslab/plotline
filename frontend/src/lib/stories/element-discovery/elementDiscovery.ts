@@ -1,22 +1,21 @@
-// 원소 발견사 스토리 데이터 불러오기: 스토리 파일 → 두 데이터셋 → 원소 목록.
-import {
-	loadDataset,
-	loadStory,
-	loadStoryIndex,
-	type LoadResult
-} from '../../story/fetchPublished.ts';
+// 원소 발견사 스토리 데이터 불러오기: 출처(공개 파일 또는 관리자 미리보기) → 두 데이터셋 → 원소 목록.
+import type { LoadResult } from '../../story/fetchPublished.ts';
 import { datasetSourceViews, type SourceView } from '../../story/sourceViews.ts';
 import type { CopySource } from '../../story/storyConfig.ts';
+import type { LoadStorySource } from '../../story/storySource.ts';
 import { parseStoryImages, type StoryImage } from '../../story/storyMedia.ts';
 import { parseStoryConfig, type StoryConfig } from './config.ts';
-import config from './element-discovery.config.json';
-import images from './element-discovery.images.json';
+// node:test 가 registry.ts 를 거쳐 이 모듈을 읽으므로 JSON 모듈 속성을 밝힌다.
+import config from './element-discovery.config.json' with { type: 'json' };
+import images from './element-discovery.images.json' with { type: 'json' };
 import { buildElements, type StoryElement } from './elements.ts';
 import { findStoryMismatches } from './storyChecks.ts';
 
 export const ELEMENT_DISCOVERY_STORY = 'element-discovery';
-const NAMES_DATASET = 'elements_ko';
-const DISCOVERIES_DATASET = 'element_discoveries';
+export const NAMES_DATASET = 'elements_ko';
+export const DISCOVERIES_DATASET = 'element_discoveries';
+/** 이 이야기가 쓰는 데이터 묶음(백엔드 admin_stories/registry.py 와 같은 순서). */
+export const ELEMENT_DISCOVERY_DATASETS = [NAMES_DATASET, DISCOVERIES_DATASET] as const;
 
 export const ELEMENT_DISCOVERY_CONFIG: StoryConfig = parseStoryConfig(config);
 
@@ -56,21 +55,14 @@ export type ElementDiscoveryData = {
 	sources: SourceView[];
 };
 
-export async function loadElementDiscovery(): Promise<LoadResult<ElementDiscoveryData>> {
-	// 요약 문장은 스토리 목록(index.json)에만 있어 함께 읽는다.
-	const [story, index] = await Promise.all([loadStory(ELEMENT_DISCOVERY_STORY), loadStoryIndex()]);
-	if (story.kind === 'error') return story;
-	if (index.kind === 'error') return index;
-	const indexEntry = index.data.stories.find((entry) => entry.story === ELEMENT_DISCOVERY_STORY);
-	const namesReference = story.data.datasets[NAMES_DATASET];
-	const discoveriesReference = story.data.datasets[DISCOVERIES_DATASET];
-	if (namesReference === undefined || discoveriesReference === undefined) {
-		console.warn('story is missing a dataset reference', ELEMENT_DISCOVERY_STORY);
-		return { kind: 'error', reason: 'format' };
-	}
+export async function loadElementDiscovery(
+	loadSource: LoadStorySource
+): Promise<LoadResult<ElementDiscoveryData>> {
+	const source = await loadSource();
+	if (source.kind === 'error') return source;
 	const [names, discoveries] = await Promise.all([
-		loadDataset(namesReference.path),
-		loadDataset(discoveriesReference.path)
+		source.data.loadDataset(NAMES_DATASET),
+		source.data.loadDataset(DISCOVERIES_DATASET)
 	]);
 	if (names.kind === 'error') return names;
 	if (discoveries.kind === 'error') return discoveries;
@@ -83,8 +75,8 @@ export async function loadElementDiscovery(): Promise<LoadResult<ElementDiscover
 	return {
 		kind: 'ok',
 		data: {
-			title: story.data.title,
-			summary: indexEntry === undefined ? null : indexEntry.summary,
+			title: source.data.title,
+			summary: source.data.summary,
 			elements,
 			sources: [...datasetSourceViews(names.data), ...datasetSourceViews(discoveries.data)]
 		}
