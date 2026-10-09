@@ -53,8 +53,8 @@
 		unchanged: '지금 공개된 판과 제목 · 요약 · 데이터 판이 같아 발행하지 않았습니다.',
 		incomplete: '끝나지 않은 발행이 있습니다. 다시 불러온 뒤 시도하세요.',
 		datasets_mismatch: `이 ${TERMS.story}가 쓰는 ${TERMS.dataset}과 고른 묶음이 다릅니다.`,
-		dataset_version_not_done: '공개되지 않은 데이터 판이 있습니다.',
-		dataset_file_missing: `데이터 판의 공개 파일이 없습니다. ${TERMS.dataset}에서 다시 시도로 복구하세요.`,
+		dataset_version_not_done: '확정되지 않은 데이터 판이 있습니다.',
+		dataset_file_missing: `데이터 판 파일이 없습니다. ${TERMS.dataset}에서 다시 시도로 복구하세요.`,
 		not_retryable: '가장 최근의 실패한 판만 다시 시도할 수 있습니다.',
 		not_restorable: '지금 공개된 판이 아닌, 공개됐던 판으로만 되돌릴 수 있습니다.',
 		not_rewritable: '가장 최근 판이 공개된 판일 때만 공개 파일을 다시 쓸 수 있습니다.',
@@ -242,12 +242,12 @@
 		switch (result.kind) {
 			case 'ok':
 				return result.outcome.status === 'done'
-					? { tone: 'ok', text: `v${result.outcome.version_no} 을 ${TERMS.publish}했습니다.` }
+					? { tone: 'ok', text: `v${result.outcome.version_no} 을 ${TERMS.storyPublish}했습니다.` }
 					: {
 							tone: 'bad',
 							text:
 								result.outcome.publish_error === null
-									? `v${result.outcome.version_no} ${TERMS.publish}이 끝나지 않았습니다.`
+									? `v${result.outcome.version_no} ${TERMS.storyPublish}이 끝나지 않았습니다.`
 									: `v${result.outcome.version_no} 실패: ${STORY_PUBLISH_ERROR_MESSAGES[result.outcome.publish_error]}`
 						};
 			case 'blocked':
@@ -399,7 +399,7 @@
 				<span class="mono">{dataset.name}</span>
 				{#if dataset.done_versions.length === 0}
 					<span class="status-bad small"
-						>공개된 판이 없습니다. {TERMS.dataset}에서 먼저 발행하세요</span
+						>확정된 판이 없습니다. {TERMS.dataset}에서 먼저 판을 확정하세요</span
 					>
 				{:else}
 					<select class="field" bind:value={selection[dataset.name]}>
@@ -454,7 +454,7 @@
 			type="button"
 			class="btn primary"
 			disabled={busy || !formReady || unchanged}
-			onclick={handlePublish}>{busy ? `${TERMS.publish} 중…` : TERMS.publish}</button
+			onclick={handlePublish}>{busy ? `${TERMS.storyPublish} 중…` : TERMS.storyPublish}</button
 		>
 		{#if unchanged}
 			<span class="muted small">지금 공개된 판과 같습니다</span>
