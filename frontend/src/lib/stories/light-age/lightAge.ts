@@ -1,21 +1,20 @@
-// 빛의 나이 스토리 데이터 불러오기: 스토리 파일 → 두 데이터셋 → 천체 · 사건 목록, 그리고 문구 대조 결과.
-import {
-	loadDataset,
-	loadStory,
-	loadStoryIndex,
-	type LoadResult
-} from '../../story/fetchPublished.ts';
+// 빛의 나이 스토리 데이터 불러오기: 출처(공개 파일 또는 관리자 미리보기) → 두 데이터셋 → 천체 · 사건 목록, 그리고 문구 대조 결과.
+import type { LoadResult } from '../../story/fetchPublished.ts';
 import { datasetSourceViews, type SourceView } from '../../story/sourceViews.ts';
+import type { LoadStorySource, NextStory } from '../../story/storySource.ts';
 import { parseStoryImages, type StoryImage } from '../../story/storyMedia.ts';
 import { CHAPTER_ASIDES } from './asides.ts';
 import { CHAPTERS } from './chapters.ts';
-import images from './light-age.images.json';
+// node:test 가 registry.ts 를 거쳐 이 모듈을 읽으므로 JSON 모듈 속성을 밝힌다.
+import images from './light-age.images.json' with { type: 'json' };
 import { buildEarthMoments, buildSkyObjects, type EarthMoment, type SkyObject } from './skyData.ts';
 import { findLightAgeMismatches } from './storyChecks.ts';
 
 export const LIGHT_AGE_STORY = 'light-age';
-const OBJECTS_DATASET = 'sky_objects';
-const MOMENTS_DATASET = 'earth_moments';
+export const OBJECTS_DATASET = 'sky_objects';
+export const MOMENTS_DATASET = 'earth_moments';
+/** 이 이야기가 쓰는 데이터 묶음(백엔드 admin_stories/registry.py 와 같은 순서). */
+export const LIGHT_AGE_DATASETS = [OBJECTS_DATASET, MOMENTS_DATASET] as const;
 
 export const LIGHT_AGE_IMAGES: StoryImage[] = parseStoryImages(images);
 
@@ -44,8 +43,6 @@ export function hiddenLightAgeTargets(
 	return new Set(mismatches.map((mismatch) => mismatch.target));
 }
 
-export type NextStory = { story: string; title: string };
-
 export type LightAgeData = {
 	title: string;
 	objects: Map<string, SkyObject>;
@@ -55,20 +52,12 @@ export type LightAgeData = {
 	next: NextStory | null;
 };
 
-export async function loadLightAge(): Promise<LoadResult<LightAgeData>> {
-	// 다음 이야기 링크는 스토리 목록(index.json)에서 찾는다.
-	const [story, index] = await Promise.all([loadStory(LIGHT_AGE_STORY), loadStoryIndex()]);
-	if (story.kind === 'error') return story;
-	if (index.kind === 'error') return index;
-	const objectsReference = story.data.datasets[OBJECTS_DATASET];
-	const momentsReference = story.data.datasets[MOMENTS_DATASET];
-	if (objectsReference === undefined || momentsReference === undefined) {
-		console.warn('story is missing a dataset reference', LIGHT_AGE_STORY);
-		return { kind: 'error', reason: 'format' };
-	}
+export async function loadLightAge(loadSource: LoadStorySource): Promise<LoadResult<LightAgeData>> {
+	const source = await loadSource();
+	if (source.kind === 'error') return source;
 	const [objectsDataset, momentsDataset] = await Promise.all([
-		loadDataset(objectsReference.path),
-		loadDataset(momentsReference.path)
+		source.data.loadDataset(OBJECTS_DATASET),
+		source.data.loadDataset(MOMENTS_DATASET)
 	]);
 	if (objectsDataset.kind === 'error') return objectsDataset;
 	if (momentsDataset.kind === 'error') return momentsDataset;
@@ -79,20 +68,17 @@ export async function loadLightAge(): Promise<LoadResult<LightAgeData>> {
 		console.warn('story dataset values do not match', LIGHT_AGE_STORY);
 		return { kind: 'error', reason: 'format' };
 	}
-	const stories = index.data.stories;
-	const position = stories.findIndex((entry) => entry.story === LIGHT_AGE_STORY);
-	const nextEntry = position === -1 ? undefined : stories[position + 1];
 	return {
 		kind: 'ok',
 		data: {
-			title: story.data.title,
+			title: source.data.title,
 			objects,
 			moments,
 			sources: [
 				...datasetSourceViews(objectsDataset.data),
 				...datasetSourceViews(momentsDataset.data)
 			],
-			next: nextEntry === undefined ? null : { story: nextEntry.story, title: nextEntry.title }
+			next: source.data.next
 		}
 	};
 }

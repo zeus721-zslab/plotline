@@ -261,7 +261,7 @@ def test_retry_after_stop_between_commit_and_status_is_done(
 
     # 저장한 해시와 같은 파일이 있으면 바이트를 다시 만들지 않고 done 으로 끝내는지(지름길) 본다.
     with monkeypatch.context() as patch:
-        patch.setattr(publish, "_build_content", must_not_rebuild)
+        patch.setattr(publish, "build_version_content", must_not_rebuild)
         response = retry(admin_client, admin_headers, 1)
 
     assert response.status_code == 200, response.text

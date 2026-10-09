@@ -143,7 +143,7 @@ def publish_dataset(session: Session, slug: str, published_dir: Path) -> Publish
     # created_at 은 DB 기본값(UTC_TIMESTAMP())이라 파일에 싣기 전에 읽어 온다.
     session.refresh(version)
     try:
-        content = _build_content(session, dataset, schema, version)
+        content = build_version_content(session, dataset, schema, version)
     except ContentInvalid as error:
         # 커밋 전이라 기록본 · 기록본 줄을 남기지 않는다.
         session.rollback()
@@ -182,7 +182,7 @@ def retry_publish(session: Session, slug: str, version_no: int, published_dir: P
         return _result(session, dataset_slug, version_id, published_dir)
 
     try:
-        content = _build_content(session, dataset, _version_schema(session, version), version)
+        content = build_version_content(session, dataset, _version_schema(session, version), version)
     except ContentInvalid:
         logger.warning("publish retry content invalid: dataset=%s version_id=%s", dataset_slug, version_id)
         return _finish_without_write(session, dataset_slug, version_id, CONTENT_INVALID_ERROR, published_dir)
@@ -269,7 +269,7 @@ def _restore_done_file(
         _sync_dirs(published_dir, file_path)
         return _result(session, dataset_slug, version_id, published_dir)
     try:
-        content: bytes | None = _build_content(session, dataset, _version_schema(session, version), version)
+        content: bytes | None = build_version_content(session, dataset, _version_schema(session, version), version)
     except ContentInvalid:
         # 공개했던 바이트는 형식 검사를 통과했으므로 지금 형식에 어긋나면 내용이 달라진 것이다.
         content = None
@@ -392,7 +392,7 @@ def _has_incomplete_version(session: Session, dataset_id: int) -> bool:
     return bool(count)
 
 
-def _build_content(session: Session, dataset: Dataset, schema: DatasetSchema, version: DatasetVersion) -> bytes:
+def build_version_content(session: Session, dataset: Dataset, schema: DatasetSchema, version: DatasetVersion) -> bytes:
     """기록본에 든 줄로 발행 파일 바이트를 만든다. 기록본 · 구조 · 줄은 고치지 않으므로 다시 만들어도 바이트가 같다."""
     rows: list[PublishRow] = []
     for row_key, data, source_kind, source_url, as_of_date in session.execute(

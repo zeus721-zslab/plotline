@@ -38,8 +38,14 @@
 	let view = $state<ViewState>({ kind: 'checking' });
 	let loggingOut = $state(false);
 	let logoutError = $state('');
-	// 메뉴는 데이터셋 하나뿐이라 관리자 화면 어디서든 현재 메뉴다.
-	const datasetsCurrent = $derived(page.route.id?.startsWith('/admin') === true);
+	// 이야기 메뉴(/admin/stories 이하) 밖의 관리자 화면은 전부 데이터 묶음 메뉴다.
+	const STORIES_ROUTE_PREFIX = '/admin/stories';
+	// 미리보기는 공개 페이지와 같은 화면만 보이게 관리자 상단 바 · 틀 없이 그린다(로그인 확인은 같음).
+	const PREVIEW_ROUTE_ID = '/admin/stories/[story]/preview';
+	const routeId = $derived(page.route.id === null ? '' : page.route.id);
+	const storiesCurrent = $derived(routeId.startsWith(STORIES_ROUTE_PREFIX));
+	const datasetsCurrent = $derived(routeId.startsWith('/admin') && !storiesCurrent);
+	const previewing = $derived(routeId === PREVIEW_ROUTE_ID);
 
 	async function checkSession() {
 		view = { kind: 'checking' };
@@ -91,65 +97,79 @@
 	<title>Plotline 관리자</title>
 </svelte:head>
 
-<div class="admin">
-	{#if view.kind === 'checking'}
-		<main class="center">
-			<p class="muted">로그인 상태를 확인하는 중…</p>
-		</main>
-	{:else if view.kind === 'error'}
-		<main class="center">
-			<div class="panel gate">
-				<p class="status-bad" role="alert">{view.message}</p>
-				<button type="button" class="btn" onclick={checkSession}>다시 시도</button>
-			</div>
-		</main>
-	{:else if view.kind === 'anonymous'}
-		<main class="center">
-			<div class="panel gate">
-				<h1 class="gate-title">관리자 로그인</h1>
-				<LoginForm onSuccess={checkSession} />
-			</div>
-		</main>
-	{:else}
-		<header class="bar">
-			<div class="bar-inner">
-				<a class="brand" href={resolve('/admin')}>
-					<svg class="logo" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
-						<rect width="28" height="28" rx="7" fill="var(--ink)" />
-						<polyline
-							points="6,19 11,13 15,16 21,8"
-							fill="none"
-							stroke="var(--accent)"
-							stroke-width="2.2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-						<circle cx="21" cy="8" r="2.6" fill="var(--accent)" />
-					</svg>
-					<span class="brand-name">Plotline</span>
-					<span class="brand-role">관리자</span>
-				</a>
-				<nav aria-label="관리자 메뉴">
-					<a
-						class="menu"
-						href={resolve('/admin')}
-						aria-current={datasetsCurrent ? 'page' : undefined}>{TERMS.dataset}</a
+{#if view.kind === 'authenticated' && previewing}
+	{@render children()}
+{:else}
+	<div class="admin">
+		{#if view.kind === 'checking'}
+			<main class="center">
+				<p class="muted">로그인 상태를 확인하는 중…</p>
+			</main>
+		{:else if view.kind === 'error'}
+			<main class="center">
+				<div class="panel gate">
+					<p class="status-bad" role="alert">{view.message}</p>
+					<button type="button" class="btn" onclick={checkSession}>다시 시도</button>
+				</div>
+			</main>
+		{:else if view.kind === 'anonymous'}
+			<main class="center">
+				<div class="panel gate">
+					<h1 class="gate-title">관리자 로그인</h1>
+					<LoginForm onSuccess={checkSession} />
+				</div>
+			</main>
+		{:else}
+			<header class="bar">
+				<div class="bar-inner">
+					<a class="brand" href={resolve('/admin')}>
+						<svg class="logo" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+							<rect width="28" height="28" rx="7" fill="var(--ink)" />
+							<polyline
+								points="6,19 11,13 15,16 21,8"
+								fill="none"
+								stroke="var(--accent)"
+								stroke-width="2.2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+							<circle cx="21" cy="8" r="2.6" fill="var(--accent)" />
+						</svg>
+						<span class="brand-name">Plotline</span>
+						<span class="brand-role">관리자</span>
+					</a>
+					<nav aria-label="관리자 메뉴">
+						<a
+							class="menu"
+							href={resolve('/admin')}
+							aria-current={datasetsCurrent ? 'page' : undefined}>{TERMS.dataset}</a
+						>
+						<a
+							class="menu"
+							href={resolve('/admin/stories')}
+							aria-current={storiesCurrent ? 'page' : undefined}>{TERMS.story}</a
+						>
+					</nav>
+					<span class="user">{view.username}</span>
+					<button
+						type="button"
+						class="btn quiet small"
+						onclick={handleLogout}
+						disabled={loggingOut}
 					>
-				</nav>
-				<span class="user">{view.username}</span>
-				<button type="button" class="btn quiet small" onclick={handleLogout} disabled={loggingOut}>
-					{loggingOut ? '로그아웃 중…' : '로그아웃'}
-				</button>
-			</div>
-		</header>
-		{#if logoutError}
-			<p role="alert" class="alert bar-alert">{logoutError}</p>
+						{loggingOut ? '로그아웃 중…' : '로그아웃'}
+					</button>
+				</div>
+			</header>
+			{#if logoutError}
+				<p role="alert" class="alert bar-alert">{logoutError}</p>
+			{/if}
+			<main class="content">
+				{@render children()}
+			</main>
 		{/if}
-		<main class="content">
-			{@render children()}
-		</main>
-	{/if}
-</div>
+	</div>
+{/if}
 
 <style>
 	/* 브라우저 기본 body 여백과 흰 바탕이 관리자 화면 가장자리에 보이지 않게 한다. 색은 admin.css 의 --ground 와 같다
