@@ -1,0 +1,53 @@
+[
+	{
+		"id": "m87-jet",
+		"title": "A cosmic searchlight",
+		"creator": "The Hubble Heritage Team (STScI/AURA) and NASA/ESA",
+		"date": "2000",
+		"license": "CC BY 4.0",
+		"sourceUrl": "https://esahubble.org/images/opo0020a/",
+		"sourceName": "ESA/Hubble",
+		"files": {
+			"480": "/stories/black-hole/images/m87-jet-480.webp",
+			"960": "/stories/black-hole/images/m87-jet-960.webp"
+		},
+		"width": 960,
+		"height": 1002,
+		"portrait": false,
+		"alt": "왼쪽 위 은하 중심의 밝은 노란 점에서 푸르스름한 빛줄기가 오른쪽 아래로 길게 뻗어 나가고, 주변에 희미한 별들이 흩어져 있는 허블 사진."
+	},
+	{
+		"id": "m87-shadow",
+		"title": "First Image of a Black Hole",
+		"creator": "EHT Collaboration",
+		"date": "2019",
+		"license": "CC BY 4.0",
+		"sourceUrl": "https://www.eso.org/public/images/eso1907a/",
+		"sourceName": "ESO",
+		"files": {
+			"480": "/stories/black-hole/images/m87-shadow-480.webp",
+			"960": "/stories/black-hole/images/m87-shadow-960.webp"
+		},
+		"width": 960,
+		"height": 559,
+		"portrait": false,
+		"alt": "검은 배경 한가운데 어두운 원형 그림자가 있고, 그 둘레를 주황빛 고리가 감싸며 아래쪽이 더 밝게 빛나는 M87 블랙홀 사진."
+	},
+	{
+		"id": "plunge",
+		"title": "Beyond the Brink: Tracking a Simulated Plunge into a Black Hole",
+		"creator": "NASA's Goddard Space Flight Center/J. Schnittman and B. Powell",
+		"date": "2024",
+		"license": "Public domain",
+		"sourceUrl": "https://svs.gsfc.nasa.gov/14585",
+		"sourceName": "NASA",
+		"files": {
+			"480": "/stories/black-hole/images/plunge-480.webp",
+			"960": "/stories/black-hole/images/plunge-960.webp"
+		},
+		"width": 960,
+		"height": 540,
+		"portrait": false,
+		"alt": "주황빛으로 타오르는 강착 원반이 화면 아래쪽에 U자 모양으로 휘어 있고, 그 위로 크게 휘어진 은하수 띠와 대·소 마젤란 은하가 보이는 컴퓨터 시각화 정지 화면."
+	}
+]

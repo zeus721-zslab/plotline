@@ -1,0 +1,17 @@
+/* 사건의 지평선 너머 스토리 테마. 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1 · 2편과 같게 둔다.
+   대비(바탕 #03040A 기준): 본문 약 18.1:1 · 보조 약 9.5:1 · 강조색 약 13.4:1 · 상상 표시 약 10.3:1 */
+.black-hole-theme {
+	--story-bg: #03040a;
+	--story-cell-off: #1c1f33;
+	--story-cell-on: #ffc878;
+	--story-cell-dim: #9a7440;
+	--story-cell-bright: #ffe2b8;
+	--story-text: #eef1f8;
+	--story-muted: #a8b0cc;
+	--story-legend: #f0a882;
+	--story-imagined: #c9a8ff;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}

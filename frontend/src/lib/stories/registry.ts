@@ -2,6 +2,21 @@
 // .svelte · css 를 import 하지 않는다(관리자 작업 페이지 · node:test 에서 읽음). 미리보기 페이지 컴포넌트 매핑은
 // 관리자 미리보기 route 에만 둔다.
 import { isPublishedDataset, type PublishedDataset } from '../story/published.ts';
+import { CHAPTER_ASIDES as BLACK_HOLE_ASIDES } from './black-hole/asides.ts';
+import {
+	BLACK_HOLE_DATASETS,
+	BLACK_HOLE_IMAGES,
+	BLACK_HOLE_STORY,
+	BOUNDARIES_DATASET,
+	buildFallData,
+	HOLES_DATASET
+} from './black-hole/blackHoleStory.ts';
+import {
+	BRANCH_CHAPTER,
+	CHAPTERS as BLACK_HOLE_CHAPTERS,
+	chapterSlots as blackHoleSlots
+} from './black-hole/chapters.ts';
+import { findBlackHoleMismatches } from './black-hole/storyChecks.ts';
 import {
 	DISCOVERIES_DATASET,
 	ELEMENT_DISCOVERY_CONFIG,
@@ -74,13 +89,32 @@ function lightAgeHidden(datasets: Record<string, unknown>, now: Date): Set<strin
 	);
 }
 
+function blackHoleHidden(datasets: Record<string, unknown>): Set<string> {
+	const data = buildFallData(
+		requireDataset(datasets, HOLES_DATASET),
+		requireDataset(datasets, BOUNDARIES_DATASET)
+	);
+	if (data === null) throw new StoryCheckError('black hole datasets do not match');
+	return targetsOf(
+		findBlackHoleMismatches(
+			BLACK_HOLE_CHAPTERS,
+			BLACK_HOLE_ASIDES,
+			data,
+			blackHoleSlots(data.holes),
+			BLACK_HOLE_IMAGES,
+			BRANCH_CHAPTER
+		)
+	);
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
 		datasetNames: ELEMENT_DISCOVERY_DATASETS,
 		checkHidden: elementDiscoveryHidden
 	},
-	{ story: LIGHT_AGE_STORY, datasetNames: LIGHT_AGE_DATASETS, checkHidden: lightAgeHidden }
+	{ story: LIGHT_AGE_STORY, datasetNames: LIGHT_AGE_DATASETS, checkHidden: lightAgeHidden },
+	{ story: BLACK_HOLE_STORY, datasetNames: BLACK_HOLE_DATASETS, checkHidden: blackHoleHidden }
 ] as const satisfies readonly StoryEntry[];
 
 export type RegisteredStory = (typeof STORY_ENTRIES)[number]['story'];

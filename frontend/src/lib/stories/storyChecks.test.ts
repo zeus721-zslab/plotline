@@ -7,6 +7,21 @@ import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { isPublishedDataset, isPublishedStory, type PublishedDataset } from '../story/published.ts';
 import { parseStoryImages } from '../story/storyMedia.ts';
+import { CHAPTER_ASIDES as BLACK_HOLE_ASIDES } from './black-hole/asides.ts';
+import { buildFallData } from './black-hole/blackHoleStory.ts';
+import {
+	BRANCH_CHAPTER,
+	CHAPTERS as BLACK_HOLE_CHAPTERS,
+	chapterSlots as blackHoleSlots
+} from './black-hole/chapters.ts';
+import { branchGaugeText } from './black-hole/fallMath.ts';
+import { CYGNUS_X1_HOLE } from './black-hole/holeData.ts';
+import {
+	branchGaugeTarget,
+	branchTarget,
+	findBlackHoleMismatches,
+	gaugeTarget
+} from './black-hole/storyChecks.ts';
 import { parseStoryConfig } from './element-discovery/config.ts';
 import { buildElements } from './element-discovery/elements.ts';
 import { summarizeSteps } from './element-discovery/steps.ts';
@@ -19,6 +34,7 @@ import { findLightAgeMismatches, paragraph2Target } from './light-age/storyCheck
 
 const ELEMENT_DISCOVERY_STEP_COUNTS = [13, 14, 35, 48, 62, 64, 64, 75, 81, 81, 81, 89, 118];
 const LIGHT_AGE_ASIDE_COUNT = 18;
+const BLACK_HOLE_ASIDE_COUNT = 7;
 
 function readJson(path: string): unknown {
 	return JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -138,5 +154,92 @@ describe('2편 빛의 나이 — 문구-데이터 대조', () => {
 			mismatches.includes(paragraph2Target('end')),
 			'13장 둘째 문단(end/paragraph-2)이 숨김 대상에 없음'
 		);
+	});
+});
+
+describe('3편 사건의 지평선 너머 — 문구-데이터 대조', () => {
+	const holesRaw = readDataset('black-hole.json', 'black_holes');
+	const boundariesRaw = readDataset('black-hole.json', 'bh_boundaries');
+	const images = parseStoryImages(readJson('./black-hole/black-hole.images.json'));
+
+	function targets(holes: PublishedDataset, boundaries: PublishedDataset): string[] {
+		const data = buildFallData(holes, boundaries);
+		assert.ok(data !== null);
+		return findBlackHoleMismatches(
+			BLACK_HOLE_CHAPTERS,
+			BLACK_HOLE_ASIDES,
+			data,
+			blackHoleSlots(data.holes),
+			images,
+			BRANCH_CHAPTER
+		).map((mismatch) => mismatch.target);
+	}
+
+	function changed(
+		dataset: PublishedDataset,
+		key: string,
+		field: string,
+		value: number | boolean
+	): PublishedDataset {
+		const copy = clone(dataset);
+		const row = copy.rows.find((candidate) => candidate.key === key);
+		assert.ok(row !== undefined, key);
+		row.values[field] = value;
+		return copy;
+	}
+
+	test('곁들임 7개 · 불일치 0', () => {
+		assert.equal(BLACK_HOLE_ASIDES.length, BLACK_HOLE_ASIDE_COUNT);
+		assert.deepEqual(targets(holesRaw, boundariesRaw), []);
+	});
+
+	test('그림자가 실제 경계로 바뀌면 4장 문구가 숨김 대상', () => {
+		const shifted = changed(boundariesRaw, 'shadow', 'physical', true);
+		assert.ok(targets(holesRaw, shifted).includes('shadow'), '4장(shadow)이 숨김 대상에 없음');
+	});
+
+	test('안정 궤도가 그림자보다 안쪽이면 바깥에서 안으로 지나는 순서가 깨져 4장이 숨김 대상', () => {
+		const shifted = changed(boundariesRaw, 'isco', 'radius_rs', 2);
+		assert.ok(targets(holesRaw, shifted).includes('shadow'), '4장(shadow)이 숨김 대상에 없음');
+	});
+
+	test('지평선 반지름이 1배가 아니면 7장 문구가 숨김 대상', () => {
+		const shifted = changed(boundariesRaw, 'horizon', 'radius_rs', 1.2);
+		assert.ok(targets(holesRaw, shifted).includes('horizon'), '7장(horizon)이 숨김 대상에 없음');
+	});
+
+	test('백조자리 X-1 이 지평선에서 버틸 만큼 무거우면 9장 분기가 숨김 대상', () => {
+		const shifted = changed(holesRaw, 'cyg_x1', 'mass_solar', 50_000);
+		assert.ok(
+			targets(shifted, boundariesRaw).includes(branchTarget(BRANCH_CHAPTER)),
+			'9장 분기가 숨김 대상에 없음'
+		);
+	});
+
+	test('9장 분기 계기판: 지평선 반지름 = 2.953 × 백조자리 X-1 질량(반올림 정수)', () => {
+		const data = buildFallData(holesRaw, boundariesRaw);
+		assert.ok(data !== null);
+		const cygnus = data.holes.get(CYGNUS_X1_HOLE);
+		assert.ok(cygnus !== undefined);
+		const expectedKm = Math.round(2.953 * cygnus.massSolar);
+		assert.equal(branchGaugeText(cygnus), `백조자리 X-1 · 지평선 반지름 약 ${expectedKm} km`);
+	});
+
+	test('백조자리 X-1 줄이 없으면 9장 분기 계기판이 숨김 대상', () => {
+		const removed = clone(holesRaw);
+		removed.rows = removed.rows.filter((row) => row.key !== CYGNUS_X1_HOLE);
+		assert.ok(
+			targets(removed, boundariesRaw).includes(branchGaugeTarget(BRANCH_CHAPTER)),
+			'9장 분기 계기판이 숨김 대상에 없음'
+		);
+	});
+
+	test('M87 질량 줄이 없으면 1장 문구 · 숫자 계기판 · 9장이 숨김 대상', () => {
+		const removed = clone(holesRaw);
+		removed.rows = removed.rows.filter((row) => row.key !== 'm87');
+		const hidden = targets(removed, boundariesRaw);
+		for (const target of ['far', gaugeTarget('isco'), gaugeTarget('horizon'), 'spaghetti']) {
+			assert.ok(hidden.includes(target), `${target} 이 숨김 대상에 없음`);
+		}
 	});
 });

@@ -1,12 +1,14 @@
 <script lang="ts">
 	// 상단 계기판 한 줄: "{빛 이동 시간} 전의 모습[ · {연도} 무렵]". 연도는 1년~1만 년일 때만 붙는다(null 이면 생략).
 	// 단위 단계가 바뀔 때만(changeCount 증가) 강조한다.
+	import GaugeBar from '#lib/story/GaugeBar.svelte';
+
 	type Props = { travel: string; departure: string | null; changeCount: number };
 
 	let { travel, departure, changeCount }: Props = $props();
 </script>
 
-<div class="gauge">
+<GaugeBar>
 	<p class="line">
 		{#key changeCount}
 			<span class="travel" class:changed={changeCount > 0}>{travel}</span>
@@ -17,26 +19,9 @@
 			<span class="departure">{departure} 무렵</span>
 		{/if}
 	</p>
-</div>
+</GaugeBar>
 
 <style>
-	.gauge {
-		position: fixed;
-		top: 0;
-		right: 0;
-		left: 0;
-		z-index: 2;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		/* 휴대폰 높이(844px)의 6% 안팎. 고정 영역은 이 한 줄뿐이다. */
-		height: 48px;
-		padding: 0 1rem;
-		box-sizing: border-box;
-		background: color-mix(in srgb, var(--story-bg) 82%, transparent);
-		border-bottom: 1px solid var(--story-cell-off);
-	}
-
 	.line {
 		margin: 0;
 		overflow: hidden;
