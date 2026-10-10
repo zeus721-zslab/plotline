@@ -15,8 +15,11 @@
 	async function load(): Promise<void> {
 		view = { kind: 'loading' };
 		const result = await loadStoryIndex();
+		// index.json 은 발행 순(오래된 것 먼저)이고 다음 이야기 링크가 그 순서를 따르므로, 화면에 그릴 때만 뒤집어 최신 발행을 맨 위에 둔다.
 		view =
-			result.kind === 'ok' ? { kind: 'ready', stories: result.data.stories } : { kind: 'error' };
+			result.kind === 'ok'
+				? { kind: 'ready', stories: [...result.data.stories].reverse() }
+				: { kind: 'error' };
 	}
 
 	onMount(() => {

@@ -1,0 +1,20 @@
+[
+	{
+		"id": "starry-night",
+		"title": "The Starry Night, Museum of Modern Art",
+		"creator": "Vincent van Gogh",
+		"date": "1889",
+		"holder": "Museum of Modern Art",
+		"license": "Public domain",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+		"sourceName": "위키미디어 커먼즈(Google Arts & Culture)",
+		"files": {
+			"480": "/stories/starry-night/textures/art-1200.webp",
+			"960": "/stories/starry-night/textures/art-1200.webp"
+		},
+		"width": 1200,
+		"height": 950,
+		"portrait": false,
+		"alt": "소용돌이치는 푸른 밤하늘에 노란 별 열한 개와 오른쪽 위 초승달이 빛나고, 왼쪽 앞에는 불꽃처럼 솟은 검은 사이프러스, 아래에는 첨탑이 선 작은 마을과 푸른 언덕이 있는 유화."
+	}
+]

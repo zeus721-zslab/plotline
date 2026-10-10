@@ -39,6 +39,14 @@ import {
 import { storyYear } from './light-age/lightTime.ts';
 import { buildEarthMoments, buildSkyObjects } from './light-age/skyData.ts';
 import { findLightAgeMismatches } from './light-age/storyChecks.ts';
+import { CHAPTERS as STARRY_CHAPTERS } from './starry-night/chapters.ts';
+import { buildStarryData } from './starry-night/starryData.ts';
+import {
+	EVENTS_DATASET,
+	STARRY_NIGHT_DATASETS,
+	STARRY_NIGHT_STORY
+} from './starry-night/starryStory.ts';
+import { findStarryMismatches } from './starry-night/storyChecks.ts';
 import { CHAPTER_ASIDES as SUNKEN_ASIDES } from './sunken-cities/asides.ts';
 import {
 	CHAPTERS as SUNKEN_CHAPTERS,
@@ -142,6 +150,12 @@ function sunkenCitiesHidden(datasets: Record<string, unknown>, now: Date): Set<s
 	);
 }
 
+function starryNightHidden(datasets: Record<string, unknown>): Set<string> {
+	const data = buildStarryData(requireDataset(datasets, EVENTS_DATASET));
+	if (data === null) throw new StoryCheckError('starry night dataset does not match');
+	return targetsOf(findStarryMismatches(STARRY_CHAPTERS, data));
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
@@ -154,6 +168,11 @@ export const STORY_ENTRIES = [
 		story: SUNKEN_CITIES_STORY,
 		datasetNames: SUNKEN_CITIES_DATASETS,
 		checkHidden: sunkenCitiesHidden
+	},
+	{
+		story: STARRY_NIGHT_STORY,
+		datasetNames: STARRY_NIGHT_DATASETS,
+		checkHidden: starryNightHidden
 	}
 ] as const satisfies readonly StoryEntry[];
 

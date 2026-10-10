@@ -31,6 +31,14 @@ import { CHAPTERS, chapterSlots } from './light-age/chapters.ts';
 import { storyYear } from './light-age/lightTime.ts';
 import { buildEarthMoments, buildSkyObjects } from './light-age/skyData.ts';
 import { findLightAgeMismatches, paragraph2Target } from './light-age/storyChecks.ts';
+import { ARTWORK_LABEL, CHAPTERS as STARRY_CHAPTERS } from './starry-night/chapters.ts';
+import { buildStarryData } from './starry-night/starryData.ts';
+import {
+	findLabelMismatches,
+	findStarryMismatches,
+	LABEL_DETAILS_TARGET,
+	timeMarkTarget
+} from './starry-night/storyChecks.ts';
 import { CHAPTER_ASIDES as SUNKEN_ASIDES } from './sunken-cities/asides.ts';
 import {
 	CHAPTERS as SUNKEN_CHAPTERS,
@@ -373,5 +381,107 @@ describe('4편 바다 밑의 도시들 — 문구-데이터 대조', () => {
 	test('장소 줄이 없으면 그 장이 숨김 대상', () => {
 		const hidden = targets(removed(placesRaw, 'pavlopetri'), measuresRaw);
 		assert.ok(hidden.includes('pavlopetri'), '4장이 숨김 대상에 없음');
+	});
+});
+
+describe('5편 그가 실패작이라 부른 밤 — 문구-데이터 대조', () => {
+	const eventsRaw = readDataset('starry-night.json', 'vangogh_starry_night');
+
+	function targets(events: PublishedDataset): string[] {
+		const data = buildStarryData(events);
+		assert.ok(data !== null);
+		return findStarryMismatches(STARRY_CHAPTERS, data).map((mismatch) => mismatch.target);
+	}
+
+	function changed(key: string, field: string, value: number): PublishedDataset {
+		const copy = clone(eventsRaw);
+		const row = copy.rows.find((candidate) => candidate.key === key);
+		assert.ok(row !== undefined, key);
+		row.values[field] = value;
+		return copy;
+	}
+
+	test('불일치 0(로컬 사본 vangogh_starry_night v1)', () => {
+		assert.deepEqual(targets(eventsRaw), []);
+	});
+
+	// [문구, 바꿀 줄, 칸, 값, 숨겨져야 할 대상]
+	for (const [claim, key, field, value, target] of [
+		['서른여섯 살(태어난 해)', 'born', 'year', 1852, 'museum'],
+		['서른일곱 살(세상을 떠난 달)', 'died', 'month', 2, 'end'],
+		['1888년 12월 23일', 'ear', 'day', 24, 'asylum'],
+		['이듬해 5월', 'admitted', 'month', 6, 'asylum'],
+		['1889년 6월(그린 때)', 'painted', 'month', 7, 'museum'],
+		['다섯 달 뒤', 'bernard_letter', 'month', 12, 'end'],
+		['1890년 7월 29일', 'died', 'day', 28, 'end'],
+		['여섯 달 뒤', 'theo_died', 'year', 1892, 'end'],
+		['2024년', 'turbulence_study', 'year', 2023, 'wind'],
+		['반세기 뒤', 'kolmogorov', 'year', 1930, 'wind'],
+		// 아래 둘은 그 문구 대조 하나만 걸리게 고른 값이다(같은 장의 다른 대조는 그대로 맞음).
+		['135년 뒤', 'painted', 'year', 1890, 'wind'],
+		['1941년', 'kolmogorov', 'year', 1940, 'wind'],
+		['시간 표지 1889년 10월', 'theo_reply', 'month', 11, timeMarkTarget('bars')],
+		[
+			'시간 표지 1889년 6월 · 새벽',
+			'morning_star_letter',
+			'month',
+			5,
+			timeMarkTarget('morning-star')
+		],
+		['시간 표지 1888년 12월 → 1889년 5월', 'ear', 'month', 11, timeMarkTarget('asylum')],
+		['시간 표지 1889년 6월(3장)', 'painted', 'year', 1890, timeMarkTarget('village')],
+		['시간 표지 1889년 11월 → 1890년 7월', 'bernard_letter', 'month', 10, timeMarkTarget('end')]
+	] as const) {
+		test(`${claim}: ${key}.${field} = ${value} 이면 ${target} 숨김`, () => {
+			assert.ok(
+				targets(changed(key, field, value)).includes(target),
+				`${target} 이 숨김 대상에 없음`
+			);
+		});
+	}
+
+	// 편지 해를 바꾸면 "다섯 달 뒤" 대조도 함께 걸리므로, 이 대조 자체의 불일치 이유가 끝 장에 있는지 본다.
+	test('이듬해(편지 → 죽음): bernard_letter.year = 1888 이면 끝 장에 편지 → 죽음 햇수 불일치', () => {
+		const data = buildStarryData(changed('bernard_letter', 'year', 1888));
+		assert.ok(data !== null);
+		const mismatches = findStarryMismatches(STARRY_CHAPTERS, data);
+		assert.ok(
+			mismatches.some(
+				(mismatch) =>
+					mismatch.target === 'end' && mismatch.message === 'bernard_letter → died: 2 years'
+			),
+			'끝 장에 편지 → 죽음 햇수 불일치가 없음'
+		);
+	});
+
+	// 들어간 달을 바꾸면 "이듬해 5월" 대조도 함께 걸리므로(귀 · 들어간 때는 날짜 대조가 있어 이 대조만 걸리게 바꿀 값이 없다),
+	// 이 대조 자체의 불일치 이유가 2장에 있는지 본다. 1888-12-23 → 1889-07-08 은 약 6.5개월이라 4~6 을 벗어난다.
+	test('반년 전(귀 → 들어간 때): admitted.month = 7 이면 2장에 귀 → 들어간 때 개월 수 불일치', () => {
+		const data = buildStarryData(changed('admitted', 'month', 7));
+		assert.ok(data !== null);
+		const mismatches = findStarryMismatches(STARRY_CHAPTERS, data);
+		assert.ok(
+			mismatches.some(
+				(mismatch) =>
+					mismatch.target === 'asylum' && mismatch.message.startsWith('ear → admitted: ')
+			),
+			'2장에 귀 → 들어간 때 개월 수 불일치가 없음'
+		);
+	});
+
+	test('시간 표지 지금 · 뉴욕: 소장 줄이 없으면 1장 표지 숨김', () => {
+		const removed = clone(eventsRaw);
+		removed.rows = removed.rows.filter((row) => row.key !== 'moma_acquired');
+		assert.ok(targets(removed).includes(timeMarkTarget('museum')));
+	});
+
+	test('작품 라벨 1889년 6월: 로컬 사본과 맞고, painted.month = 7 이면 라벨 2줄째 숨김', () => {
+		const labelTargets = (events: PublishedDataset): string[] => {
+			const data = buildStarryData(events);
+			assert.ok(data !== null);
+			return findLabelMismatches(ARTWORK_LABEL.detailsClaims, data).map((each) => each.target);
+		};
+		assert.deepEqual(labelTargets(eventsRaw), []);
+		assert.deepEqual(labelTargets(changed('painted', 'month', 7)), [LABEL_DETAILS_TARGET]);
 	});
 });
