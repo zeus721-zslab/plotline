@@ -2,7 +2,7 @@
 import type { LoadResult } from '../../story/fetchPublished.ts';
 import type { PublishedDataset } from '../../story/published.ts';
 import { datasetSourceViews, type SourceView } from '../../story/sourceViews.ts';
-import type { LoadStorySource } from '../../story/storySource.ts';
+import type { LoadStorySource, NextStory } from '../../story/storySource.ts';
 import { parseStoryImages, type StoryImage } from '../../story/storyMedia.ts';
 import { CHAPTER_ASIDES } from './asides.ts';
 import images from './black-hole.images.json' with { type: 'json' };
@@ -44,10 +44,11 @@ export function hiddenBlackHoleTargets(data: FallData, slots: Record<string, str
 	return new Set(mismatches.map((mismatch) => mismatch.target));
 }
 
-// 다음 이야기(source.next)는 싣지 않는다: 3편 끝에는 다음 이야기 링크를 두지 않는다(D-39).
 export type BlackHoleData = FallData & {
 	title: string;
 	sources: SourceView[];
+	// 목록에서 이 이야기 다음 항목. 없으면 null(다음 이야기 링크를 숨긴다).
+	next: NextStory | null;
 };
 
 export async function loadBlackHole(
@@ -75,7 +76,8 @@ export async function loadBlackHole(
 			sources: [
 				...datasetSourceViews(holesDataset.data),
 				...datasetSourceViews(boundariesDataset.data)
-			]
+			],
+			next: source.data.next
 		}
 	};
 }

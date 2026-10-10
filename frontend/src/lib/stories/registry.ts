@@ -39,6 +39,21 @@ import {
 import { storyYear } from './light-age/lightTime.ts';
 import { buildEarthMoments, buildSkyObjects } from './light-age/skyData.ts';
 import { findLightAgeMismatches } from './light-age/storyChecks.ts';
+import { CHAPTER_ASIDES as SUNKEN_ASIDES } from './sunken-cities/asides.ts';
+import {
+	CHAPTERS as SUNKEN_CHAPTERS,
+	chapterSlots as sunkenSlots
+} from './sunken-cities/chapters.ts';
+import { findSunkenMismatches } from './sunken-cities/storyChecks.ts';
+import { buildSunkenData } from './sunken-cities/sunkenData.ts';
+import {
+	CRITERIA_DATASET,
+	MEASURES_DATASET,
+	PLACES_DATASET,
+	SUNKEN_CITIES_DATASETS,
+	SUNKEN_CITIES_IMAGES,
+	SUNKEN_CITIES_STORY
+} from './sunken-cities/sunkenStory.ts';
 
 /** 묶음 내용이 공개 형식이 아니거나 이야기 데이터로 만들 수 없어 대조하지 못함. */
 export class StoryCheckError extends Error {}
@@ -107,6 +122,26 @@ function blackHoleHidden(datasets: Record<string, unknown>): Set<string> {
 	);
 }
 
+function sunkenCitiesHidden(datasets: Record<string, unknown>, now: Date): Set<string> {
+	const data = buildSunkenData(
+		requireDataset(datasets, CRITERIA_DATASET),
+		requireDataset(datasets, PLACES_DATASET),
+		requireDataset(datasets, MEASURES_DATASET)
+	);
+	if (data === null) throw new StoryCheckError('sunken cities datasets do not match');
+	const year = storyYear(now);
+	return targetsOf(
+		findSunkenMismatches(
+			SUNKEN_CHAPTERS,
+			SUNKEN_ASIDES,
+			data,
+			sunkenSlots(data, year),
+			SUNKEN_CITIES_IMAGES,
+			year
+		)
+	);
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
@@ -114,7 +149,12 @@ export const STORY_ENTRIES = [
 		checkHidden: elementDiscoveryHidden
 	},
 	{ story: LIGHT_AGE_STORY, datasetNames: LIGHT_AGE_DATASETS, checkHidden: lightAgeHidden },
-	{ story: BLACK_HOLE_STORY, datasetNames: BLACK_HOLE_DATASETS, checkHidden: blackHoleHidden }
+	{ story: BLACK_HOLE_STORY, datasetNames: BLACK_HOLE_DATASETS, checkHidden: blackHoleHidden },
+	{
+		story: SUNKEN_CITIES_STORY,
+		datasetNames: SUNKEN_CITIES_DATASETS,
+		checkHidden: sunkenCitiesHidden
+	}
 ] as const satisfies readonly StoryEntry[];
 
 export type RegisteredStory = (typeof STORY_ENTRIES)[number]['story'];

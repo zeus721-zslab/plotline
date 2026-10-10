@@ -17,6 +17,8 @@
 	import LightAgePage from '#lib/stories/light-age/LightAgePage.svelte';
 	import { LIGHT_AGE_STORY } from '#lib/stories/light-age/lightAge.ts';
 	import { findStoryEntry, type RegisteredStory } from '#lib/stories/registry.ts';
+	import SunkenCitiesPage from '#lib/stories/sunken-cities/SunkenCitiesPage.svelte';
+	import { SUNKEN_CITIES_STORY } from '#lib/stories/sunken-cities/sunkenStory.ts';
 	import type { LoadResult } from '#lib/story/fetchPublished.ts';
 	import { isPublishedDataset, type PublishedDataset } from '#lib/story/published.ts';
 	import type { LoadStorySource } from '#lib/story/storySource.ts';
@@ -37,7 +39,8 @@
 	const PAGES: Record<RegisteredStory, StoryPage> = {
 		[ELEMENT_DISCOVERY_STORY]: ElementDiscoveryPage,
 		[LIGHT_AGE_STORY]: LightAgePage,
-		[BLACK_HOLE_STORY]: BlackHolePage
+		[BLACK_HOLE_STORY]: BlackHolePage,
+		[SUNKEN_CITIES_STORY]: SunkenCitiesPage
 	};
 	const FORMAT_FAILURE: LoadResult<PublishedDataset> = { kind: 'error', reason: 'format' };
 

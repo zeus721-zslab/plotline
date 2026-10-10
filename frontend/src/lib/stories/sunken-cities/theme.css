@@ -1,0 +1,17 @@
+/* 바다 밑의 도시들 스토리 테마(짙은 청록). 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1 · 2 · 3편과 같게 둔다.
+   대비(바탕 #04161C 기준, AA 4.5:1 이상): 본문 약 16.7:1 · 보조 약 9.5:1 · 강조색 약 11.9:1 · 전설 약 11.2:1 · 상상 약 9.3:1 */
+.sunken-cities-theme {
+	--story-bg: #04161c;
+	--story-cell-off: #1b3c44;
+	--story-cell-on: #7fe0d0;
+	--story-cell-dim: #3f8a82;
+	--story-cell-bright: #c8fff4;
+	--story-text: #eaf6f5;
+	--story-muted: #9fc0c0;
+	--story-legend: #f0c27a;
+	--story-imagined: #c9a8ff;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}
