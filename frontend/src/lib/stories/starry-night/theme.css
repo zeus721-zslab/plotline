@@ -1,0 +1,17 @@
+/* 그가 실패작이라 부른 밤 스토리 테마(밤하늘 남색 · 별빛 노랑). 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1~4편과 같게 둔다.
+   대비(바탕 #070B16 기준, AA 4.5:1 이상): 본문 약 16.1:1 · 보조 약 8.9:1 · 강조색 약 12.0:1 · 상상 약 8.8:1 */
+.starry-night-theme {
+	--story-bg: #070b16;
+	--story-cell-off: #26304a;
+	--story-cell-on: #f2cf63;
+	--story-cell-dim: #8a7a3c;
+	--story-cell-bright: #fff3c4;
+	--story-text: #ece6d3;
+	--story-muted: #a9adbb;
+	--story-legend: #f0c27a;
+	--story-imagined: #c9a8ff;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}

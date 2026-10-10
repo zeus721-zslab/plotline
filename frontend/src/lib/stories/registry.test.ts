@@ -46,8 +46,8 @@ function changeRow(
 describe('registry.checkHidden — static/data 기준', () => {
 	const now = new Date();
 
-	test('네 이야기 모두 숨겨질 문구 0건', () => {
-		assert.equal(STORY_ENTRIES.length, 4);
+	test('다섯 이야기 모두 숨겨질 문구 0건', () => {
+		assert.equal(STORY_ENTRIES.length, 5);
 		for (const entry of STORY_ENTRIES) {
 			assert.deepEqual([...entry.checkHidden(staticDatasets(entry), now)], [], entry.story);
 		}
@@ -91,6 +91,13 @@ describe('registry.checkHidden — static/data 기준', () => {
 		assert.ok(row !== undefined);
 		row.values.verdict = 'no';
 		datasets.sunken_measures = copy;
+		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
+	});
+
+	test('5편: 고흐가 세상을 떠난 날을 바꾸면 숨겨질 문구가 생김', () => {
+		const entry = requireEntry('starry-night');
+		const datasets = staticDatasets(entry);
+		datasets.vangogh_starry_night = changeRow(datasets.vangogh_starry_night, 'died', 'day', 28);
 		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
 	});
 

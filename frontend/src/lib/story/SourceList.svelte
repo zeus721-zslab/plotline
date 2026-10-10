@@ -10,17 +10,30 @@
 		sources: SourceView[];
 		copySources: CopySource[];
 		images: StoryImage[];
-		note: string;
+		// 데이터 출처 아래 설명. 없으면 줄을 두지 않는다.
+		note?: string;
+		// 펼쳤을 때 출처 목록 위에 두는 짧은 안내
+		guides?: string[];
+		// 이미지 출처 묶음에 덧붙이는 크레디트 줄(그림을 가공한 도구 등)
+		imageCredits?: string[];
 	};
 
-	let { sources, copySources, images, note }: Props = $props();
+	let { sources, copySources, images, note, guides = [], imageCredits = [] }: Props = $props();
 
 	let open = $state(false);
-	const total = $derived(sources.length + copySources.length + images.length);
+	const total = $derived(sources.length + copySources.length + images.length + imageCredits.length);
 </script>
 
 <details bind:open>
 	<summary>{`출처 ${total}건 ${open ? '접기' : '보기'}`}</summary>
+
+	{#if guides.length > 0}
+		<div class="guides">
+			{#each guides as guide (guide)}
+				<p>{guide}</p>
+			{/each}
+		</div>
+	{/if}
 
 	<h3 class="first">데이터 출처</h3>
 	<ul class="sources">
@@ -36,7 +49,9 @@
 			</li>
 		{/each}
 	</ul>
-	<p class="note">{note}</p>
+	{#if note !== undefined}
+		<p class="note">{note}</p>
+	{/if}
 
 	{#if copySources.length > 0}
 		<h3>문구 출처</h3>
@@ -58,6 +73,9 @@
 					<br />
 					<a href={image.sourceUrl} target="_blank" rel="noopener noreferrer">{image.sourceName}</a>
 				</li>
+			{/each}
+			{#each imageCredits as credit (credit)}
+				<li>{credit}</li>
 			{/each}
 		</ul>
 	{/if}
@@ -121,6 +139,18 @@
 	a:focus-visible {
 		outline: 3px solid var(--story-text);
 		outline-offset: 2px;
+	}
+
+	.guides {
+		display: grid;
+		gap: 0.5rem;
+		margin-bottom: 2rem;
+		color: var(--story-muted);
+		font-size: 0.9375rem;
+	}
+
+	.guides p {
+		margin: 0;
 	}
 
 	.note {

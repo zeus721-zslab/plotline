@@ -9,4 +9,5 @@ STORY_REGISTRY: dict[str, tuple[str, ...]] = {
     "light-age": ("sky_objects", "earth_moments"),
     "black-hole": ("black_holes", "bh_boundaries"),
     "sunken-cities": ("atlantis_criteria", "sunken_places", "sunken_measures"),
+    "starry-night": ("vangogh_starry_night",),
 }
