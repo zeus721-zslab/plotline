@@ -1,0 +1,38 @@
+[
+	{
+		"id": "kircher-atlantis",
+		"title": "Map showing \"Insula Atlantis\", the lost continent of Atlantis",
+		"creator": "Athanasius Kircher",
+		"date": "1665",
+		"holder": "Library of Congress",
+		"license": "Public domain",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Map_showing_%22Insula_Atlantis%22,_the_lost_continent_of_Atlantis_LCCN2002698490.jpg",
+		"sourceName": "위키미디어 커먼즈",
+		"files": {
+			"480": "/stories/sunken-cities/images/kircher-atlantis-480.webp",
+			"960": "/stories/sunken-cities/images/kircher-atlantis-960.webp"
+		},
+		"width": 960,
+		"height": 641,
+		"portrait": false,
+		"alt": "가로줄 무늬로 새긴 바다 한가운데 산이 솟은 큰 섬 'Insula Atlantis'가 있고, 왼쪽에 아프리카와 히스파니아, 오른쪽에 아메리카, 오른쪽 위에 범선이 그려진 남쪽이 위로 놓인 옛 동판 지도."
+	},
+	{
+		"id": "port-royal-1692",
+		"title": "Aardbeving op Jamaica waarbij de stad Port Royal wordt vernietigd, 1692",
+		"creator": "Jan Luyken (판화) · Pieter van der Aa (출판)",
+		"date": "1698",
+		"holder": "Rijksmuseum",
+		"license": "CC0",
+		"sourceUrl": "https://commons.wikimedia.org/wiki/File:Aardbeving_op_Jamaica_waarbij_de_stad_Port_Royal_wordt_vernietigd,_1615,_RP-P-1896-A-19368-1584.jpg",
+		"sourceName": "위키미디어 커먼즈",
+		"files": {
+			"480": "/stories/sunken-cities/images/port-royal-1692-480.webp",
+			"960": "/stories/sunken-cities/images/port-royal-1692-960.webp"
+		},
+		"width": 960,
+		"height": 673,
+		"portrait": false,
+		"alt": "기울고 무너진 집들이 바닷물에 잠겨 들고, 앞쪽에는 쓰러진 사람들과 하늘을 향해 손을 뻗으며 달아나는 사람들, 왼쪽 먼바다에는 범선과 작은 배들이 보이는 흑백 동판화."
+	}
+]

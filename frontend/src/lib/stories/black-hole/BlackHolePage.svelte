@@ -1,6 +1,6 @@
 <script lang="ts">
 	// 사건의 지평선 너머 스토리: 표지(2편 끝 그림자) → 11장(멀리서 → 지평선 → 특이점 → 끝) → 출처. 상단 계기판 한 줄만 고정하고,
-	// 블랙홀 단면 지도 캔버스 위로 카드가 지나간다. 데이터는 출처(loadSource)에서 읽는다(D-37). 끝에는 다음 이야기 링크가 없다(D-39).
+	// 블랙홀 단면 지도 캔버스 위로 카드가 지나간다. 데이터는 출처(loadSource)에서 읽는다(D-37). 끝에는 2편과 같은 다음 이야기 링크(D-41).
 	// 장마다 카드 앞에 빈 장면 구간을 두어, 배경(카메라 · 띠 강조 · 여행자)이 먼저 다음 경계로 옮겨 간 뒤 카드가 올라오게 한다.
 	// PC(1024px 이상)는 최대 1600px 구도를 4:6 으로 나눠 카드를 왼쪽 열의 가운데 선 쪽에 두고, 지도 초점은 오른쪽 영역에 둔다(fallRenderer.ts 와 같은 값).
 	// 지도 그림은 화면 전체 폭에 깔린다.
@@ -338,6 +338,11 @@
 					images={BLACK_HOLE_IMAGES}
 					note={SOURCE_NOTE}
 				/>
+				{#if ready.data.next !== null}
+					<a class="next" href="/stories/{ready.data.next.story}">
+						다음 이야기: {ready.data.next.title}
+					</a>
+				{/if}
 			</section>
 		{/if}
 	</StoryStage>
@@ -381,7 +386,8 @@
 		text-decoration: none;
 	}
 
-	.top a:focus-visible {
+	.top a:focus-visible,
+	.next:focus-visible {
 		outline: 3px solid var(--story-text);
 		outline-offset: 2px;
 	}
@@ -536,6 +542,16 @@
 		max-width: 560px;
 		margin: 0 auto;
 		padding: 2rem 1rem 6rem;
+	}
+
+	/* 2편 LightAgePage .next 와 같은 값 */
+	.next {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		margin-top: 2rem;
+		color: var(--story-text);
+		font-weight: 700;
 	}
 
 	@media (min-width: 960px) {

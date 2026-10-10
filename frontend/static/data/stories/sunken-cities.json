@@ -1,0 +1,19 @@
+{
+  "story": "sunken-cities",
+  "title": "바다 밑의 도시들",
+  "published_at": "2026-10-11T00:00:00Z",
+  "datasets": {
+    "atlantis_criteria": {
+      "version": 1,
+      "path": "/data/datasets/atlantis_criteria/v1.json"
+    },
+    "sunken_places": {
+      "version": 1,
+      "path": "/data/datasets/sunken_places/v1.json"
+    },
+    "sunken_measures": {
+      "version": 2,
+      "path": "/data/datasets/sunken_measures/v2.json"
+    }
+  }
+}

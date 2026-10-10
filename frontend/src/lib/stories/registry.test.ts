@@ -46,8 +46,8 @@ function changeRow(
 describe('registry.checkHidden — static/data 기준', () => {
 	const now = new Date();
 
-	test('세 이야기 모두 숨겨질 문구 0건', () => {
-		assert.equal(STORY_ENTRIES.length, 3);
+	test('네 이야기 모두 숨겨질 문구 0건', () => {
+		assert.equal(STORY_ENTRIES.length, 4);
 		for (const entry of STORY_ENTRIES) {
 			assert.deepEqual([...entry.checkHidden(staticDatasets(entry), now)], [], entry.story);
 		}
@@ -80,6 +80,17 @@ describe('registry.checkHidden — static/data 기준', () => {
 		assert.ok(row !== undefined);
 		row.values.physical = true;
 		datasets.bh_boundaries = copy;
+		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
+	});
+
+	test('4편: 포트로열 속도를 바꾸면 숨겨질 문구가 생김', () => {
+		const entry = requireEntry('sunken-cities');
+		const datasets = staticDatasets(entry);
+		const copy = JSON.parse(JSON.stringify(datasets.sunken_measures)) as PublishedDataset;
+		const row = copy.rows.find((candidate) => candidate.key === 'port_royal|speed');
+		assert.ok(row !== undefined);
+		row.values.verdict = 'no';
+		datasets.sunken_measures = copy;
 		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
 	});
 
