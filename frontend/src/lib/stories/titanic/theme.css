@@ -1,0 +1,17 @@
+/* 마지막 2시간 40분 스토리 테마(1912년 밤바다 검정 · 배 불빛 주황). 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1~5편과 같게 둔다.
+   대비(바탕 #03050B 기준, AA 4.5:1 이상): 본문 약 17.0:1 · 보조 약 7.0:1 · 강조색 약 14.1:1 · 상상 약 10.2:1 */
+.titanic-theme {
+	--story-bg: #03050b;
+	--story-cell-off: #1f2638;
+	--story-cell-on: #ffcf86;
+	--story-cell-dim: #8a6a3c;
+	--story-cell-bright: #fff3d8;
+	--story-text: #e6ebf4;
+	--story-muted: #8e97ab;
+	--story-legend: #f0c27a;
+	--story-imagined: #c9a8ff;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}

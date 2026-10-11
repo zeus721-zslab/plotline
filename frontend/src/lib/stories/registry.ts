@@ -62,6 +62,14 @@ import {
 	SUNKEN_CITIES_IMAGES,
 	SUNKEN_CITIES_STORY
 } from './sunken-cities/sunkenStory.ts';
+import { CHAPTERS as TITANIC_CHAPTERS } from './titanic/chapters.ts';
+import { findTitanicMismatches } from './titanic/storyChecks.ts';
+import { buildTitanicData } from './titanic/titanicData.ts';
+import {
+	EVENTS_DATASET as TITANIC_EVENTS_DATASET,
+	TITANIC_DATASETS,
+	TITANIC_STORY
+} from './titanic/titanicStory.ts';
 
 /** 묶음 내용이 공개 형식이 아니거나 이야기 데이터로 만들 수 없어 대조하지 못함. */
 export class StoryCheckError extends Error {}
@@ -156,6 +164,12 @@ function starryNightHidden(datasets: Record<string, unknown>): Set<string> {
 	return targetsOf(findStarryMismatches(STARRY_CHAPTERS, data));
 }
 
+function titanicHidden(datasets: Record<string, unknown>, now: Date): Set<string> {
+	const data = buildTitanicData(requireDataset(datasets, TITANIC_EVENTS_DATASET));
+	if (data === null) throw new StoryCheckError('titanic dataset does not match');
+	return targetsOf(findTitanicMismatches(TITANIC_CHAPTERS, data, storyYear(now)));
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
@@ -173,7 +187,8 @@ export const STORY_ENTRIES = [
 		story: STARRY_NIGHT_STORY,
 		datasetNames: STARRY_NIGHT_DATASETS,
 		checkHidden: starryNightHidden
-	}
+	},
+	{ story: TITANIC_STORY, datasetNames: TITANIC_DATASETS, checkHidden: titanicHidden }
 ] as const satisfies readonly StoryEntry[];
 
 export type RegisteredStory = (typeof STORY_ENTRIES)[number]['story'];

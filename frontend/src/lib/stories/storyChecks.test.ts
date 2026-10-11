@@ -50,6 +50,12 @@ import {
 	gaugeTarget as sunkenGaugeTarget
 } from './sunken-cities/storyChecks.ts';
 import { buildSunkenData } from './sunken-cities/sunkenData.ts';
+import { CHAPTERS as TITANIC_CHAPTERS } from './titanic/chapters.ts';
+import {
+	findTitanicMismatches,
+	timeMarkTarget as titanicTimeMarkTarget
+} from './titanic/storyChecks.ts';
+import { buildTitanicData } from './titanic/titanicData.ts';
 
 const ELEMENT_DISCOVERY_STEP_COUNTS = [13, 14, 35, 48, 62, 64, 64, 75, 81, 81, 81, 89, 118];
 const LIGHT_AGE_ASIDE_COUNT = 18;
@@ -484,4 +490,82 @@ describe('5편 그가 실패작이라 부른 밤 — 문구-데이터 대조', (
 		assert.deepEqual(labelTargets(eventsRaw), []);
 		assert.deepEqual(labelTargets(changed('painted', 'month', 7)), [LABEL_DETAILS_TARGET]);
 	});
+});
+
+describe('6편 마지막 2시간 40분 — 문구-데이터 대조', () => {
+	const eventsRaw = readDataset('titanic.json', 'titanic_last_night');
+	// "백 년이 넘도록" 대조 기준 연도(테스트는 고정)
+	const STORY_YEAR = 2026;
+
+	function targets(events: PublishedDataset): string[] {
+		const data = buildTitanicData(events);
+		assert.ok(data !== null);
+		return findTitanicMismatches(TITANIC_CHAPTERS, data, STORY_YEAR).map(
+			(mismatch) => mismatch.target
+		);
+	}
+
+	function changed(key: string, field: string, value: number): PublishedDataset {
+		const copy = clone(eventsRaw);
+		const row = copy.rows.find((candidate) => candidate.key === key);
+		assert.ok(row !== undefined, key);
+		row.values[field] = value;
+		return copy;
+	}
+
+	// 양성: 장마다 로컬 사본(titanic_last_night v1)과 맞아 문단 · 시간 표지가 숨겨지지 않는다.
+	for (const chapter of TITANIC_CHAPTERS) {
+		test(`${chapter.label}(${chapter.id}): 로컬 사본과 일치(숨김 없음)`, () => {
+			const hidden = targets(eventsRaw);
+			assert.ok(!hidden.includes(chapter.id), `${chapter.id} 문단이 숨겨짐`);
+			assert.ok(!hidden.includes(titanicTimeMarkTarget(chapter.id)), `${chapter.id} 표지가 숨겨짐`);
+		});
+	}
+
+	// 음성: [문구, 바꿀 줄, 칸, 값, 숨겨져야 할 대상] — 데이터 값 하나만 바꾼다.
+	for (const [claim, key, field, value, target] of [
+		['바다 밑 3,800m(1장)', 'wreck_depth', 'value', 3700, 'now'],
+		['백 년이 넘도록', 'sank', 'year', 1930, 'now'],
+		['스물다섯 살 잭 필립스', 'phillips_born', 'year', 1886, 'stars'],
+		['스물두 살 해럴드 브라이드', 'bride_born', 'year', 1891, 'stars'],
+		['적어도 여섯 번', 'ice_warnings', 'value', 5, 'stars'],
+		['밤 10시 55분', 'californian_stopped', 'minute', 45, 'stars'],
+		['30분 뒤(수신기를 끔)', 'evans_off', 'hour', 22, 'stars'],
+		['그로부터 10분 뒤', 'collision', 'minute', 59, 'stars'],
+		['출항한 지 나흘', 'departed', 'day', 9, 'stars'],
+		['23:40(3장)', 'collision', 'minute', 41, 'collision'],
+		['30분쯤 지나(SOS)', 'first_sos', 'minute', 0, 'signals'],
+		['약 107km', 'carpathia_distance', 'value', 50, 'signals'],
+		['보트 스무 척', 'lifeboats', 'value', 16, 'signals'],
+		['모두 1,178명', 'lifeboat_capacity', 'value', 1100, 'signals'],
+		['2,200명이 넘었습니다', 'aboard', 'value', 2200, 'signals'],
+		['500석이 넘었습니다', 'left_in_boats', 'value', 700, 'signals'],
+		['새벽 1시 45분', 'last_clear_signal', 'minute', 40, 'signals'],
+		['새벽 2시 5분', 'released', 'minute', 10, 'last-signal'],
+		['2시 17분', 'last_signal', 'minute', 18, 'last-signal'],
+		['2시 20분', 'sank', 'minute', 25, 'last-signal'],
+		['1,500명이 넘는', 'deaths', 'value', 1499, 'last-signal'],
+		['새벽 3시쯔음', 'aurora', 'hour', 4, 'dawn'],
+		['4시가 조금 지나', 'carpathia_arrived', 'hour', 5, 'dawn'],
+		['아침 8시 반', 'rescue_done', 'minute', 0, 'dawn'],
+		['스무 개가 넘었고', 'icebergs', 'value', 20, 'dawn'],
+		['700명 남짓', 'survivors', 'value', 699, 'dawn'],
+		['73년 뒤', 'wreck_found', 'year', 1986, 'epilogue'],
+		['바다 밑 3,800m(에필로그)', 'wreck_depth', 'value', 3900, 'epilogue'],
+		['20km 넘게', 'position_error', 'value', 10, 'epilogue'],
+		['시간 표지 1912년 4월 14일', 'collision', 'day', 15, titanicTimeMarkTarget('stars')],
+		['시간 표지 23:40', 'collision', 'hour', 22, titanicTimeMarkTarget('collision')],
+		['시간 표지 4월 15일', 'first_cqd', 'day', 14, titanicTimeMarkTarget('signals')],
+		['시간 표지 00:15', 'first_cqd', 'minute', 20, titanicTimeMarkTarget('signals')],
+		['시간 표지 02:05', 'released', 'hour', 3, titanicTimeMarkTarget('last-signal')],
+		['시간 표지 03:00', 'aurora', 'minute', 30, titanicTimeMarkTarget('dawn')],
+		['시간 표지 1985년 9월', 'wreck_found', 'month', 8, titanicTimeMarkTarget('epilogue')]
+	] as const) {
+		test(`${claim}: ${key}.${field} = ${value} 이면 ${target} 숨김`, () => {
+			assert.ok(
+				targets(changed(key, field, value)).includes(target),
+				`${target} 이 숨김 대상에 없음`
+			);
+		});
+	}
 });

@@ -1,0 +1,11 @@
+{
+  "story": "titanic",
+  "title": "마지막 2시간 40분",
+  "published_at": "2026-10-11T00:00:00Z",
+  "datasets": {
+    "titanic_last_night": {
+      "version": 1,
+      "path": "/data/datasets/titanic_last_night/v1.json"
+    }
+  }
+}
