@@ -1,0 +1,19 @@
+/* 보이지 않는 짝 스토리 테마(깊은 밤 남색 · 별빛 금색, 시제품 :root 값). 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1~5편과 같게 둔다.
+   대비(바탕 #03050C 기준, AA 4.5:1 이상): 본문 약 18.2:1 · 보조 약 8.3:1 · 강조색 약 14.0:1 */
+.unseen-companion-theme {
+	--story-bg: #03050c;
+	--story-card: rgba(3, 5, 12, 0.66);
+	--story-cell-off: #1f2740;
+	--story-cell-on: #ffcf7a;
+	--story-cell-dim: #8a7448;
+	--story-cell-bright: #fff3d6;
+	--story-text: #eef2fb;
+	--story-muted: #9aa6bf;
+	--story-legend: #ffcf7a;
+	--story-accent: #ffcf7a;
+	--story-imagined: #c9a8ff;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family: 'IBM Plex Sans KR', system-ui, sans-serif;
+}
