@@ -21,7 +21,7 @@ export const logLerp = (a: number, b: number, k: number): number =>
 
 export const BESSEL_YEAR = 1844;
 
-/** 화면 순서의 비트 id(1-1 … 8-3) */
+/** 화면 순서의 비트 id(1-1 … 8-3, 32비트) */
 export const BEAT_IDS: string[] = BEAT_LIST.map((entry) => entry.beat.id);
 
 export function chapterOf(id: string): number {
@@ -110,6 +110,14 @@ export type GalaxyOptions = {
 	alpha: number;
 	time: number;
 	halo?: number;
+	// 7-4 · 7-5: 윤곽이 은하 크기에서 화면 짧은 변 쪽으로 커진 정도(0 → 1, haloRadius)
+	haloGrow?: number;
+	// 7-5: 윤곽 아래 옅은 빛 안개 밝기(0 → HALO_FOG) · 점 구름 밀도 · 밝기 올림(0 → 1)
+	fog?: number;
+	cloudBoost?: number;
+	// 7-5 이름: 빛을 지운 글자 "암흑 물질"의 지움 정도(0 → 1) · 넓힌 자간(1 → 0 이면 제자리)
+	nameErase?: number;
+	nameSpread?: number;
 	markers?: number;
 	markerTime?: number;
 };
@@ -145,7 +153,9 @@ export type Chart =
 			expectedDraw: number;
 			actual: number;
 			actualDraw: number;
-	  };
+	  }
+	// 7-4 비교 막대: 보이는 물질 칸 · 보이지 않는 물질 칸(MATTER_CELLS), draw 는 칸이 그려진 정도(0 → 1)
+	| { kind: 'matter'; alpha: number; draw: number; visible: number; invisible: number };
 
 export type Overlay =
 	| { kind: 'wave'; o: WaveOptions }
@@ -259,10 +269,28 @@ const GALAXY_TIME: Record<string, [number, number]> = {
 	'7-1': [0, 1.2],
 	'7-2': [1.2, 2.2],
 	'7-3': [3.4, 1.0],
-	'7-4': [4.4, 0.8]
+	'7-4': [4.4, 1.0],
+	'7-5': [5.4, 1.0],
+	'7-6': [6.4, 0.8]
 };
 const galaxyTime = (id: string, p: number): number => GALAXY_TIME[id][0] + GALAXY_TIME[id][1] * p;
 const MARKER_START = GALAXY_TIME['7-2'][0];
+
+// 7-4 우주 전체 비율(Planck 2018: 암흑 물질 약 27% · 보통 물질 약 5%)을 칸 수로: 보이는 물질 1 · 보이지 않는 물질 5
+export const MATTER_CELLS = { visible: 1, invisible: 5 } as const;
+// 보이지 않는 무게 윤곽: 은하 원반 반지름의 HALO_SCALE 배(7-3)에서 화면 짧은 변의 HALO_MAX_RATIO 배까지(7-4)
+const HALO_SCALE = 1.55;
+const HALO_MAX_RATIO = 0.9;
+// 7-5 이름이 드러나는 동안 은하 밝기를 낮추는 정도
+const GALAXY_NAME_DIM = 0.3;
+// 7-5 빛 안개 목표 밝기(윤곽 가운데 불투명도): 지운 글자 둘레가 글자 안보다 충분히 밝게(STEP 118 대비 기준)
+export const HALO_FOG = 0.3;
+
+/** 윤곽 반지름(px): grow 0 이면 7-3 윤곽(원반 × 1.55), 1 이면 화면 짧은 변 × 0.9(원반 윤곽이 이미 더 크면 그대로) */
+export function haloRadius(size: number, minSide: number, grow: number): number {
+	const base = size * HALO_SCALE;
+	return lerp(base, Math.max(base, minSide * HALO_MAX_RATIO), clamp(grow, 0, 1));
+}
 
 type BeatState = (p: number, input: SceneInput) => SceneState;
 
@@ -706,13 +734,64 @@ const BEAT_STATES: Record<string, BeatState> = {
 		];
 		return S;
 	},
+	// 규모가 드러남: 윤곽이 화면 짧은 변 쪽으로 커지고(0.1~0.7), 아래 띠에 1:5 비교 막대(0.2~0.6). 회전 그래프는 7-3 끝에 이미 내려가 있다
 	'7-4': (p) => {
+		const S = baseState(7);
+		S.focusKey = 'andromeda';
+		S.focus = 1;
+		S.dim = 0.3;
+		S.smudge = 0;
+		S.band = phase(p, 0.15, 0.25);
+		S.chart = {
+			kind: 'matter',
+			alpha: phase(p, 0.2, 0.3),
+			draw: linear(p, 0.2, 0.6),
+			...MATTER_CELLS
+		};
+		S.overlay = [
+			{
+				kind: 'galaxy',
+				alpha: 1,
+				time: galaxyTime('7-4', p),
+				halo: 1,
+				haloGrow: phase(p, 0.1, 0.7)
+			}
+		];
+		return S;
+	},
+	// 이름이 드러남: 커진 윤곽 그대로 은하를 조금 어둡게, 띠는 내린다. 빛 안개 · 점 구름이 짙어지고(0.1~0.3) 그 빛을 "암흑 물질" 글자 모양으로
+	// 지운다(0.3~0.6, 넓은 자간에서 조여짐). 끝(0.85~1)에 지움 · 안개 · 윤곽을 7-6 첫 상태(7-3 윤곽 · 은하 밝기)로 되돌려 이어 붙인다
+	'7-5': (p) => {
+		const S = baseState(7);
+		S.focusKey = 'andromeda';
+		S.focus = 1;
+		S.dim = 0.3;
+		S.smudge = 0;
+		S.band = 1 - phase(p, 0, 0.12);
+		S.chart = { kind: 'matter', alpha: 1, draw: 1, ...MATTER_CELLS };
+		const restore = phase(p, 0.85, 1);
+		S.overlay = [
+			{
+				kind: 'galaxy',
+				alpha: 1 - GALAXY_NAME_DIM * phase(p, 0, 0.2) * (1 - restore),
+				time: galaxyTime('7-5', p),
+				halo: 1,
+				haloGrow: 1 - restore,
+				fog: HALO_FOG * phase(p, 0.1, 0.3) * (1 - restore),
+				cloudBoost: phase(p, 0.1, 0.3) * (1 - restore),
+				nameErase: phase(p, 0.3, 0.6) * (1 - restore),
+				nameSpread: 1 - phase(p, 0.3, 0.6)
+			}
+		];
+		return S;
+	},
+	'7-6': (p) => {
 		const S = baseState(7);
 		S.focusKey = 'andromeda';
 		S.focus = 1 - phase(p, 0.6, 1);
 		S.dim = 0.3 * (1 - phase(p, 0.6, 1));
 		S.smudge = phase(p, 0.7, 0.95);
-		const time = galaxyTime('7-4', p);
+		const time = galaxyTime('7-6', p);
 		const echo = phase(p, 0.08, 0.25) * (1 - phase(p, 0.45, 0.62));
 		S.overlay = [
 			{
@@ -784,6 +863,7 @@ const TRANSITION_LEAVE = 0.85;
 const TRANSITION_ENTER = 0.2;
 const YEAR_ALPHA = 0.9;
 const YEAR_DIGITS = 4;
+const YEAR_HALF = 0.5; // 경계 구간(t 0~1)의 앞 장 · 다음 장 절반 나눔
 
 export type Transition = { side: 'leave' | 'enter'; from: number; to: number; k: number };
 
@@ -839,9 +919,21 @@ export function odometerDigits(value: number): number[] {
 	return digits;
 }
 
-/** 경계 구간 동안 화면 가운데에 장 연도: 앞 장 연도에서 다음 장 연도로 숫자가 굴러가며 바뀐다(투명도 0 → 0.9 → 0) */
+/**
+ * 경계 구간 동안 화면 가운데에 장 연도: 앞 장 연도에서 다음 장 연도로 숫자가 굴러가며 바뀐다(투명도 0 → 0.9 → 0).
+ * 연도가 거꾸로 가는 경계(6→7장 1995 → 1970)는 굴리지 않는다: 앞 절반에 앞 장 연도가 사라지고, 뒤 절반에 다음 장 연도가 떠올랐다 사라진다
+ * (되돌아가는 숫자 굴림이 어색해서, STEP 117). 한 번에 숫자 하나만 돌려주므로 두 연도가 함께 보이는 순간이 없고, 정수라 중간값도 없다
+ */
 export function yearRoll(transition: Transition): { alpha: number; value: number } {
 	const t = transition.side === 'leave' ? 0.5 * transition.k : 0.5 + 0.5 * transition.k;
+	const from = CHAPTER_YEAR[transition.from];
+	const to = CHAPTER_YEAR[transition.to];
+	if (to < from) {
+		// 앞 장 연도는 짧게 들어와(0 → 0.9) 앞 절반 끝에 0, 다음 장 연도는 뒤 절반 첫머리 0 에서 떠오른다
+		return t < YEAR_HALF
+			? { alpha: YEAR_ALPHA * phase(t, 0, 0.15) * (1 - phase(t, 0.3, YEAR_HALF)), value: from }
+			: { alpha: YEAR_ALPHA * phase(t, YEAR_HALF, 0.7) * (1 - phase(t, 0.85, 1)), value: to };
+	}
 	return {
 		alpha: YEAR_ALPHA * phase(t, 0, 0.3) * (1 - phase(t, 0.7, 1)),
 		value: lerp(CHAPTER_YEAR[transition.from], CHAPTER_YEAR[transition.to], phase(t, 0.2, 0.8))

@@ -23,6 +23,7 @@ import {
 	beatState,
 	chapterTransition,
 	clamp,
+	haloRadius,
 	landscapeScope,
 	lerp,
 	linear,
@@ -52,7 +53,7 @@ import {
 } from './unseenScene.ts';
 import type { StaticData } from './unseenStatic.ts';
 
-/** 비트 글 상자(글 층 기준 좌표, transform 무관 offset 값). 화면 순서대로 30개 */
+/** 비트 글 상자(글 층 기준 좌표, transform 무관 offset 값). 화면 순서대로 32개 */
 export type TextBox = { id: string; top: number; height: number; left: number; width: number };
 
 export type UnseenRenderer = {
@@ -194,6 +195,28 @@ const GALAXY_ANGLE = -0.55;
 const GALAXY_SPEED = 0.42; // 바깥 별 각속도(연출 단위)
 const GALAXY_CORE = 0.12; // 회전 곡선이 평평해지기 시작하는 반지름(비율)
 const GALAXY_LIGHT_EDGE = 0.3; // 예상 곡선: 빛이 엷어지는 바깥에서 케플러식으로 감소
+// 7-4 · 7-5 보이지 않는 무게(STEP 117): 윤곽과 같은 색의 옅은 점 구름 · 1:5 비교 막대
+const HALO_RGB = '150,165,225';
+const HALO_CLOUD_COUNT = 520;
+const HALO_CLOUD_SHOW: [number, number] = [0, 0.35]; // 윤곽이 커지는 정도(haloGrow) 중 점 구름이 나타나는 구간
+// 7-5 이름(STEP 118): 점 구름을 조금 짙게(덧붙는 점 · 밝기 배율), 그 빛을 글자 모양으로 지운다
+const HALO_CLOUD_EXTRA = 260; // cloudBoost 1 일 때 덧붙는 점 수(앞 520 개 자리는 그대로)
+const HALO_CLOUD_BRIGHTEN = 0.3; // cloudBoost 1 일 때 점 밝기 증가 비율
+const HALO_FOG_MID = 0.8; // 빛 안개 반지름 절반 자리의 밝기(가운데 대비 비율): 바깥 글자 둘레까지 밝게
+const NAME_TEXT = '암흑 물질';
+const NAME_FONT = '"IBM Plex Sans KR", sans-serif'; // 사이트 글꼴(굵게, 글 상자 강조 말이 같은 파일을 불러옴), 없으면 sans-serif
+const NAME_MEASURE_SIZE = 100; // 글자 폭 맞춤용 측정 크기(px)
+// 글자 폭(자간이 다 조여진 상태) = min(윤곽 지름 × 비율, (그림 영역 폭 − NAME_AREA_MARGIN) × 비율).
+// 사용자 검토(STEP 118): 처음 크기(0.7 · 1)에서 가로 PC 는 75%, 세로 화면은 85% 로 줄임
+const NAME_WIDTH_RATIO_WIDE = 0.525;
+const NAME_AREA_SHARE_WIDE = 0.75;
+const NAME_WIDTH_RATIO_PORTRAIT = 0.595;
+const NAME_AREA_SHARE_PORTRAIT = 0.85;
+const NAME_AREA_MARGIN = 48; // 자간이 벌어진 구간도 글자 전체 폭이 그림 영역 폭(세로 화면은 화면 폭) − 이 값을 넘지 않는다
+const NAME_SPREAD_EM = 0.3; // 지움이 시작될 때 글자 사이 넓힘(글자 크기 배)
+const NAME_ERASE_COLOR = '#03050c'; // 캔버스 바탕색(drawSky)으로 채워 빛을 지운다
+const MATTER_CELL_GAP = 4; // 비교 막대 칸 사이(× UI)
+const MATTER_BAR_HEIGHT = 30; // 비교 막대 높이(× UI)
 // 장 사이 연도
 const YEAR_FONT_MOBILE = 56;
 const YEAR_FONT_WIDE = 96;
@@ -247,6 +270,21 @@ const GALAXY = (() => {
 			size: 0.6 + Math.pow(rand(), 3) * 1.6,
 			alpha: 0.25 + rand() * 0.6,
 			warm: Math.max(0, 1 - radius * 1.6)
+		};
+	});
+})();
+
+// 7-4 점 구름: 단위 원 안 자리(가장자리 쪽이 조금 더 촘촘하게), 시드 고정. 뒤 HALO_CLOUD_EXTRA 개는 7-5 에 덧붙는 점
+const HALO_CLOUD = (() => {
+	const rand = rng(1933);
+	return Array.from({ length: HALO_CLOUD_COUNT + HALO_CLOUD_EXTRA }, () => {
+		const angle = rand() * TAU;
+		const radius = Math.pow(rand(), 0.35);
+		return {
+			u: Math.cos(angle) * radius,
+			v: Math.sin(angle) * radius,
+			size: 0.8 + rand() * 1.2,
+			alpha: 0.12 + rand() * 0.28
 		};
 	});
 })();
@@ -2507,13 +2545,21 @@ export function createUnseenRenderer(
 		if (o.alpha <= 0) return;
 		const [cx, cy] = center;
 		const halo = o.halo === undefined ? 0 : o.halo;
+		const haloGrow = o.haloGrow === undefined ? 0 : o.haloGrow;
 		const markers = o.markers === undefined ? 0 : o.markers;
 		const markerTime = o.markerTime === undefined ? 0 : o.markerTime;
+		const fog = o.fog === undefined ? 0 : o.fog;
+		const cloudBoost = o.cloudBoost === undefined ? 0 : o.cloudBoost;
+		const nameErase = o.nameErase === undefined ? 0 : o.nameErase;
+		const nameSpread = o.nameSpread === undefined ? 0 : o.nameSpread;
 		const base = ctx.globalAlpha;
+		const haloR = haloRadius(size, Math.min(W, H), haloGrow);
 		if (halo > 0) {
-			// 보이지 않는 덩어리: 은하를 감싸는 아주 옅은 윤곽
+			// 보이지 않는 덩어리: 은하를 감싸는 아주 옅은 윤곽(7-4 부터 화면 짧은 변 쪽으로 커진다)
 			ctx.globalAlpha = halo;
-			const haloR = size * 1.55;
+			if (fog > 0) drawHaloFog(cx, cy, haloR, fog);
+			if (haloGrow > 0)
+				drawHaloCloud(cx, cy, haloR, halo * phase(haloGrow, ...HALO_CLOUD_SHOW), cloudBoost);
 			const grad = ctx.createRadialGradient(cx, cy, size * 0.3, cx, cy, haloR);
 			grad.addColorStop(0, 'rgba(150,165,225,0.04)');
 			grad.addColorStop(0.85, 'rgba(150,165,225,0.06)');
@@ -2606,6 +2652,83 @@ export function createUnseenRenderer(
 			label('실제', ax, ay + 15, 'center', markers);
 			ctx.globalAlpha = base;
 		}
+		if (nameErase > 0) drawErasedName(cx, cy, haloR, base * nameErase, nameSpread);
+	}
+	// 7-5 빛 안개: 윤곽 가운데에서 바깥으로 엷어지는 윤곽 색 빛(점 구름 아래). 지운 글자가 읽힐 바탕
+	function drawHaloFog(cx: number, cy: number, radius: number, alpha: number): void {
+		const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+		grad.addColorStop(0, `rgba(${HALO_RGB},${alpha})`);
+		grad.addColorStop(0.5, `rgba(${HALO_RGB},${alpha * HALO_FOG_MID})`);
+		grad.addColorStop(1, `rgba(${HALO_RGB},0)`);
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.arc(cx, cy, radius, 0, TAU);
+		ctx.fill();
+	}
+	// 7-5 이름: 윤곽 가운데에 "암흑 물질" 글자 모양을 바탕색으로 채워 그 아래 빛(안개 · 점 구름 · 은하)을 지운다.
+	// 폭은 그 순간 윤곽 지름을 따라가고(그림 영역 안), spread 만큼 넓은 자간에서 제자리로 조여진다
+	function drawErasedName(
+		cx: number,
+		cy: number,
+		haloR: number,
+		alpha: number,
+		spread: number
+	): void {
+		const l = layout();
+		// 세로 화면의 그림 영역은 화면 전체(0 ~ W)라 영역 폭이 곧 화면 폭이다
+		const limit = l.area.right - l.area.left - NAME_AREA_MARGIN;
+		const width = l.wide
+			? Math.min(haloR * 2 * NAME_WIDTH_RATIO_WIDE, limit * NAME_AREA_SHARE_WIDE)
+			: Math.min(haloR * 2 * NAME_WIDTH_RATIO_PORTRAIT, limit * NAME_AREA_SHARE_PORTRAIT);
+		const chars = Array.from(NAME_TEXT);
+		ctx.save();
+		ctx.font = `700 ${NAME_MEASURE_SIZE}px ${NAME_FONT}`;
+		const measured = chars.map((char) => ctx.measureText(char).width);
+		const scale = width / measured.reduce((sum, value) => sum + value, 0);
+		const fontSize = NAME_MEASURE_SIZE * scale;
+		// 넓힌 자간은 글자 전체 폭이 limit 안에 들도록 줄인다(글자 크기는 그대로)
+		const gap = Math.min(NAME_SPREAD_EM * fontSize * spread, (limit - width) / (chars.length - 1));
+		ctx.font = `700 ${fontSize}px ${NAME_FONT}`;
+		ctx.globalAlpha = alpha;
+		ctx.fillStyle = NAME_ERASE_COLOR;
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'middle';
+		let x = cx - (width + gap * (chars.length - 1)) / 2;
+		chars.forEach((char, i) => {
+			ctx.fillText(char, x, cy);
+			x += measured[i] * scale + gap;
+		});
+		ctx.restore();
+	}
+	// 커진 윤곽 안의 옅은 점 구름(윤곽 타원과 같은 기울기 · 납작함). 은하보다 먼저 그려 은하를 가리지 않는다.
+	// boost(7-5): 덧붙는 점이 나타나고 점이 조금 밝아진다
+	function drawHaloCloud(
+		cx: number,
+		cy: number,
+		radius: number,
+		alpha: number,
+		boost: number
+	): void {
+		if (alpha <= 0) return;
+		const before = ctx.globalAlpha;
+		const c = Math.cos(GALAXY_ANGLE);
+		const s = Math.sin(GALAXY_ANGLE);
+		const count = boost > 0 ? HALO_CLOUD.length : HALO_CLOUD_COUNT;
+		const bright = Math.min(1, alpha * (1 + HALO_CLOUD_BRIGHTEN * boost));
+		ctx.fillStyle = `rgb(${HALO_RGB})`;
+		for (let i = 0; i < count; i++) {
+			const dot = HALO_CLOUD[i];
+			const lx = dot.u * radius * 0.93;
+			const ly = dot.v * radius * 0.8;
+			ctx.globalAlpha = bright * dot.alpha * (i < HALO_CLOUD_COUNT ? 1 : boost);
+			ctx.fillRect(
+				cx + lx * c - ly * s - dot.size / 2,
+				cy + lx * s + ly * c - dot.size / 2,
+				dot.size,
+				dot.size
+			);
+		}
+		ctx.globalAlpha = before;
 	}
 	function galaxyFrame(o: GalaxyOptions): void {
 		const point = targetPoint('andromeda');
@@ -2644,6 +2767,49 @@ export function createUnseenRenderer(
 			label('실제', mapX(0.85), mapY(actualSpeed(0.85)) - 14, 'center', o.actual);
 			ctx.globalAlpha = 1;
 		}
+	}
+
+	// 7-4 비교 막대: 보이는 물질 칸(밝은색)과 보이지 않는 물질 칸(윤곽 색, 옅게)을 나란히, 왼쪽부터 차례로 그린다
+	function chartMatter(o: Extract<Chart, { kind: 'matter' }>): void {
+		if (o.alpha <= 0) return;
+		const p = layout().plot;
+		const total = o.visible + o.invisible;
+		const gap = MATTER_CELL_GAP * UI;
+		const cell = (p.right - p.left - gap * (total - 1)) / total;
+		const barH = MATTER_BAR_HEIGHT * UI;
+		const top = (p.top + p.bottom) / 2 - barH / 2;
+		const cellLeft = (i: number): number => p.left + i * (cell + gap);
+		const base = ctx.globalAlpha;
+		ctx.globalAlpha = base * o.alpha;
+		bandTag('우주 전체 비율 · Planck 2018 관측값 기준');
+		for (let i = 0; i < total; i++) {
+			const shown = clamp(o.draw * total - i, 0, 1);
+			if (shown <= 0) continue;
+			const visible = i < o.visible;
+			ctx.globalAlpha = base * o.alpha * shown;
+			ctx.fillStyle = visible ? 'rgba(255,233,200,0.95)' : `rgba(${HALO_RGB},0.28)`;
+			ctx.beginPath();
+			ctx.roundRect(cellLeft(i), top, cell, barH, 3);
+			ctx.fill();
+			if (!visible) {
+				ctx.strokeStyle = `rgba(${HALO_RGB},0.6)`;
+				ctx.lineWidth = 1;
+				ctx.stroke();
+			}
+		}
+		ctx.globalAlpha = base * o.alpha;
+		const labelY = top + barH + 16 * UI;
+		label('보이는 물질', cellLeft(0), labelY, 'left', clamp(o.draw * total, 0, 1));
+		const invisibleCenter = (cellLeft(o.visible) + cellLeft(total - 1) + cell) / 2;
+		label(
+			'보이지 않는 물질 · 약 5배',
+			invisibleCenter,
+			labelY,
+			'center',
+			clamp(o.draw * total - o.visible, 0, 1),
+			'rgba(196,206,245,0.95)'
+		);
+		ctx.globalAlpha = base;
 	}
 
 	// ---------- 덧그림 · 띠 · 연도 ----------
@@ -2689,6 +2855,9 @@ export function createUnseenRenderer(
 				return;
 			case 'rotation':
 				chartRotation(chart);
+				return;
+			case 'matter':
+				chartMatter(chart);
 				return;
 		}
 	}

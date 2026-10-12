@@ -7,9 +7,13 @@ import {
 	BEAT_IDS,
 	beatAt,
 	beatShowsBand,
+	beatState,
 	chapterOf,
 	chapterTransition,
+	HALO_FOG,
+	haloRadius,
 	landscapeScope,
+	MATTER_CELLS,
 	odometerDigits,
 	scrollFor,
 	targetSpot,
@@ -21,7 +25,7 @@ import {
 import { parseStaticData, STATIC_FILES } from './unseenStatic.ts';
 import { splitLines, textFrame } from './unseenText.ts';
 
-const BEAT_COUNT = 30;
+const BEAT_COUNT = 32;
 const VIEWPORT_HEIGHT = 844;
 const SAMPLES = 50;
 const EPSILON = 1e-6;
@@ -49,24 +53,21 @@ function spansFor(viewportHeight: number): BeatSpan[] {
 }
 
 describe('장 구성', () => {
-	test('8장 30비트 · 비트 id 순서', () => {
+	test('8장 32비트 · 비트 id 순서', () => {
 		assert.equal(CHAPTERS.length, 8);
 		assert.equal(BEAT_IDS.length, BEAT_COUNT);
 		assert.deepEqual(BEAT_IDS.slice(0, 4), ['1-1', '1-2', '1-3', '2-1']);
 		assert.equal(BEAT_IDS[BEAT_COUNT - 1], '8-3');
 	});
 
-	test('본문 수정 2곳(2-1 · 6-3)', () => {
+	test('본문 v3.1 대조 숫자 문구 유지', () => {
 		const lines = (id: string): string[] => {
 			const found = BEATS.find((entry) => entry.beat.id === id);
 			assert.ok(found !== undefined, id);
 			return found.beat.lines;
 		};
-		assert.equal(lines('2-1')[1], '90년 가까이 쌓인 기록에서 시리우스의 길을 다시 그렸다.');
-		assert.equal(
-			lines('6-3')[0],
-			'목성 절반만큼 무거운 행성이, 해에 바짝 붙어 4일 만에 한 바퀴를 돌고 있었다.'
-		);
+		assert.ok(lines('2-1')[1].includes('90년 가까이'));
+		assert.ok(lines('6-3')[1].includes('목성 절반만큼 무거운'));
 	});
 });
 
@@ -131,7 +132,7 @@ describe('장 사이 연도 숫자', () => {
 			['2-4', '3-4', '4-4', '5-4', '6-4']
 		);
 		assert.equal(chapterTransition(BEAT_IDS.indexOf('1-3'), 0.95), null);
-		assert.equal(chapterTransition(BEAT_IDS.indexOf('7-4'), 0.95), null);
+		assert.equal(chapterTransition(BEAT_IDS.indexOf('7-6'), 0.95), null);
 	});
 
 	for (const lastIndex of boundaries) {
@@ -150,6 +151,38 @@ describe('장 사이 연도 숫자', () => {
 		});
 	}
 
+	test('6-4 → 7-1: 굴리지 않고 1995 → 1970 차례로(동시 표시 0 · 중간값 0 · 되감아도 같은 값)', () => {
+		const lastIndex = BEAT_IDS.indexOf('6-4');
+		const samples: { value: number; alpha: number }[] = [];
+		for (let i = 0; i <= SAMPLES; i++) {
+			const transition = chapterTransition(lastIndex, 0.85 + (0.15 * i) / SAMPLES);
+			assert.ok(transition !== null);
+			samples.push(yearRoll(transition));
+		}
+		for (let i = 0; i <= SAMPLES; i++) {
+			const transition = chapterTransition(lastIndex + 1, (0.2 * i) / SAMPLES);
+			assert.ok(transition !== null);
+			samples.push(yearRoll(transition));
+		}
+		// 표시되는 숫자는 두 장 연도뿐
+		assert.ok(samples.every((sample) => sample.value === 1995 || sample.value === 1970));
+		// 1995 가 보이는 구간이 모두 끝난 뒤에야 1970 이 보인다(둘 다 투명도 > 0 인 순간 없음)
+		const shown = (year: number): number[] =>
+			samples.flatMap((sample, i) => (sample.value === year && sample.alpha > 0 ? [i] : []));
+		const shown1995 = shown(1995);
+		const shown1970 = shown(1970);
+		assert.ok(shown1995.length > 0 && shown1970.length > 0);
+		assert.ok(Math.min(...shown1970) > Math.max(...shown1995));
+		// 앞 절반 끝(6-4 p1)과 다음 장 끝(7-1 p0.2)에서 투명도 0, 최대 0.9
+		assert.equal(samples[SAMPLES].alpha, 0);
+		assert.equal(samples[samples.length - 1].alpha, 0);
+		assert.ok(Math.abs(Math.max(...samples.map((s) => s.alpha)) - 0.9) < EPSILON);
+		// 되감기: 같은 진행 값이면 같은 결과
+		const again = chapterTransition(lastIndex, 0.9);
+		assert.ok(again !== null);
+		assert.deepEqual(yearRoll(again), yearRoll(again));
+	});
+
 	test('주행 거리계 자리: 1862 → 1915 사이 값의 자리 숫자를 합치면 원래 값(아래 자리 0~10)', () => {
 		for (let i = 0; i <= SAMPLES; i++) {
 			const value = 1862 + (53 * i) / SAMPLES;
@@ -158,6 +191,104 @@ describe('장 사이 연도 숫자', () => {
 			assert.ok(digits.every((digit) => digit >= 0 && digit < 10));
 			assert.equal(Math.floor(digits[0]), Math.floor(value / 1000) % 10);
 		}
+	});
+});
+
+describe('7장 암흑 물질(7-4 규모 · 7-5 이름)', () => {
+	const galaxyOf = (id: string, p: number) => {
+		const found = beatState(id, p, INPUT).overlay.find((item) => item.kind === 'galaxy');
+		assert.ok(found !== undefined && found.kind === 'galaxy', `${id} ${p}`);
+		return found;
+	};
+	const growOf = (id: string, p: number): number => {
+		const grow = galaxyOf(id, p).haloGrow;
+		return grow === undefined ? 0 : grow;
+	};
+
+	test('7-4: 윤곽 반지름이 p 따라 단조로 커지고 0.1~0.7 에서 은하 윤곽 → 짧은 변 0.9 배', () => {
+		for (const [size, minSide] of [
+			[179.4, 390],
+			[237.5, 900]
+		]) {
+			let previous = -Infinity;
+			for (let i = 0; i <= SAMPLES; i++) {
+				const radius = haloRadius(size, minSide, growOf('7-4', i / SAMPLES));
+				assert.ok(radius >= previous - EPSILON, `${size} p${i / SAMPLES}`);
+				previous = radius;
+			}
+			assert.equal(haloRadius(size, minSide, growOf('7-4', 0.1)), size * 1.55);
+			assert.ok(Math.abs(haloRadius(size, minSide, growOf('7-4', 0.7)) - minSide * 0.9) < EPSILON);
+			assert.ok(
+				haloRadius(size, minSide, growOf('7-4', 0.5)) >
+					haloRadius(size, minSide, growOf('7-4', 0.2))
+			);
+		}
+		// 7-3 은 기존 윤곽 그대로(커지지 않음), 7-4 시작은 7-3 끝과 같은 윤곽
+		assert.equal(growOf('7-3', 1), 0);
+		assert.equal(growOf('7-4', 0), 0);
+	});
+
+	test('7-4 · 7-5: 비교 막대 1:5', () => {
+		for (const [id, p] of [
+			['7-4', 0.5],
+			['7-5', 0.05]
+		] as const) {
+			const chart = beatState(id, p, INPUT).chart;
+			assert.ok(chart !== null && chart.kind === 'matter', id);
+			assert.equal(chart.visible, 1);
+			assert.equal(chart.invisible, 5);
+			assert.equal(chart.invisible / chart.visible, MATTER_CELLS.invisible / MATTER_CELLS.visible);
+		}
+	});
+
+	test('7-5: 커진 윤곽 유지 · 띠 내림 · 끝에서 7-6 첫 상태로 이어짐', () => {
+		assert.equal(growOf('7-4', 1), 1);
+		assert.equal(growOf('7-5', 0.5), 1);
+		assert.ok(galaxyOf('7-5', 0.5).alpha < 1);
+		assert.equal(beatState('7-5', 0.5, INPUT).band, 0);
+		assert.equal(growOf('7-5', 1), growOf('7-6', 0));
+		assert.equal(galaxyOf('7-5', 1).alpha, galaxyOf('7-6', 0).alpha);
+		assert.equal(galaxyOf('7-5', 1).halo, galaxyOf('7-6', 0).halo);
+	});
+
+	const near = (actual: number | undefined, expected: number, label: string): void => {
+		const value = actual === undefined ? 0 : actual;
+		assert.ok(Math.abs(value - expected) < EPSILON, `${label}: ${value} vs ${expected}`);
+	};
+
+	test('7-5 이름 지움: p0.3 = 0 · p0.6 = 1(넓은 자간에서 제자리로) · p1 = 0', () => {
+		near(galaxyOf('7-5', 0.3).nameErase, 0, 'p0.3');
+		near(galaxyOf('7-5', 0.6).nameErase, 1, 'p0.6');
+		near(galaxyOf('7-5', 0.75).nameErase, 1, 'p0.75');
+		near(galaxyOf('7-5', 1).nameErase, 0, 'p1');
+		near(galaxyOf('7-5', 0.3).nameSpread, 1, 'spread p0.3');
+		near(galaxyOf('7-5', 0.6).nameSpread, 0, 'spread p0.6');
+	});
+
+	test('7-5 빛 안개: p0 = 0 · p0.3 = 목표 · p1 = 0, 점 구름 올림도 같은 구간', () => {
+		near(galaxyOf('7-5', 0).fog, 0, 'p0');
+		near(galaxyOf('7-5', 0.3).fog, HALO_FOG, 'p0.3');
+		near(galaxyOf('7-5', 1).fog, 0, 'p1');
+		near(galaxyOf('7-5', 0).cloudBoost, 0, 'boost p0');
+		near(galaxyOf('7-5', 0.3).cloudBoost, 1, 'boost p0.3');
+		near(galaxyOf('7-5', 1).cloudBoost, 0, 'boost p1');
+	});
+
+	test('7-5 끝 상태(지움 · 안개 · 점 구름 · 윤곽 · 은하)가 7-6 시작과 이어짐', () => {
+		const end = galaxyOf('7-5', 1);
+		const start = galaxyOf('7-6', 0);
+		for (const key of ['fog', 'cloudBoost', 'nameErase', 'haloGrow', 'markers'] as const)
+			near(end[key], start[key] === undefined ? 0 : start[key], key);
+		near(end.alpha, start.alpha, 'alpha');
+		near(end.halo, start.halo === undefined ? 0 : start.halo, 'halo');
+		near(end.time, start.time, 'time');
+	});
+
+	test('7-5 강조 말: 끝 줄 끝 "암흑 물질."(글 상자는 화면 읽기용 · 동작 줄이기 평문, 이름은 캔버스 지움 글자)', () => {
+		const found = BEATS.find((entry) => entry.beat.id === '7-5');
+		assert.ok(found !== undefined && found.beat.emphasis !== undefined);
+		assert.ok(found.beat.lines[found.beat.lines.length - 1].endsWith(found.beat.emphasis));
+		assert.equal(found.beat.emphasis, '암흑 물질.');
 	});
 });
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	// 보이지 않는 짝(D-43): 표지 → 8장 30비트 → 출처. 시제품(sirius-flow.src.html)의 흐름 그대로, 화면은 진행 값(비트 · p)만으로 정해진다.
+	// 보이지 않는 짝(D-43): 표지 → 8장 32비트 → 출처. 시제품(sirius-flow.src.html)의 흐름 그대로, 화면은 진행 값(비트 · p)만으로 정해진다.
 	// 배경은 Canvas 2D(UnseenBackground), 글은 화면에 고정된 글 층(DOM)이고 비트마다 스크롤 길이(vh)만큼 빈 구역이 지나간다.
 	// 지금 비트 = 윗변이 화면 위를 지난 마지막 비트, p = 그 비트 안 진행 값. 첫 비트 앞(표지)에서는 글을 띄우지 않는다.
 	// 휴대폰(세로)은 글이 화면 위 또는 아래 한 단, PC(가로 · 폭 1024px 이상)는 글이 왼쪽 열 · 그림은 오른쪽 영역(시제품 STEP 111 P1).
@@ -67,13 +67,22 @@
 			const timeMark =
 				isFirstOfChapter && !hidden.has(timeMarkTarget(chapter.id)) ? chapter.timeMark : null;
 			const lines = hidden.has(chapter.id) ? [] : beat.lines;
+			// 강조 말(7-5)은 끝 줄 끝에서 떼어 따로 둔다: 평소에는 화면 읽기용으로만 두고(이름은 배경 캔버스가 빛을 지운 글자로 드러냄),
+			// 동작 줄이기면 캔버스가 정지 그림이라 굵은 평문으로 보인다(STEP 118)
+			const lastLine = lines.length > 0 ? lines[lines.length - 1] : '';
+			const emphasis =
+				beat.emphasis !== undefined && lastLine.endsWith(beat.emphasis) ? beat.emphasis : null;
+			const shownLines =
+				emphasis === null
+					? lines
+					: [...lines.slice(0, -1), lastLine.slice(0, lastLine.length - emphasis.length)];
 			const style = textStyleOf(chapterOf(beat.id));
-			const split = splitsChars(style, reduceMotion) ? splitLines(lines) : null;
+			const split = splitsChars(style, reduceMotion) ? splitLines(shownLines) : null;
 			const chars =
 				split === null
 					? []
 					: split.parts.flat().flatMap((part) => (part.kind === 'word' ? part.chars : []));
-			return { beat, timeMark, lines, style, split, chars };
+			return { beat, timeMark, lines, shownLines, emphasis, style, split, chars };
 		})
 	);
 
@@ -194,7 +203,7 @@
 				<p class="scroll-hint" aria-hidden="true">아래로 스크롤 ↓</p>
 			</header>
 
-			<!-- 글 층: 화면에 고정. 비트 글 상자 30개가 모두 있고, 지금 비트만 보인다(진행 값으로 정한 style). -->
+			<!-- 글 층: 화면에 고정. 비트 글 상자 32개가 모두 있고, 지금 비트만 보인다(진행 값으로 정한 style). -->
 			<div class="text-layer">
 				{#each texts as text, index (text.beat.id)}
 					<div
@@ -207,8 +216,13 @@
 					>
 						{#if text.timeMark !== null}<span class="chapter">{text.timeMark}</span>{/if}
 						{#if text.split === null}
-							{#each text.lines as line, lineIndex (lineIndex)}
-								<span class="line">{line}</span>
+							{#each text.shownLines as line, lineIndex (lineIndex)}
+								<span class="line"
+									>{line}{#if text.emphasis !== null && lineIndex === text.shownLines.length - 1}<span
+											class="emphasis"
+											class:plain={reduceMotion}>{text.emphasis}</span
+										>{/if}</span
+								>
 							{/each}
 						{:else}
 							{#each text.split.parts as parts, lineIndex (lineIndex)}
@@ -219,7 +233,10 @@
 														class="ch"
 														style={frames[index].chars[slot.index]}>{slot.text}</span
 													>{/each}</span
-											>{/if}{/each}</span
+											>{/if}{/each}{#if text.emphasis !== null && lineIndex === text.split.parts.length - 1}<span
+											class="emphasis"
+											class:plain={reduceMotion}>{text.emphasis}</span
+										>{/if}</span
 								>
 							{/each}
 						{/if}
@@ -402,6 +419,29 @@
 
 	.ch {
 		display: inline-block;
+	}
+
+	/* 7-5 강조 말: 평소에는 화면 읽기용(시각 숨김, 이름은 캔버스가 빛을 지운 글자로 보임). 굵기는 캔버스 글자와 같은 글꼴 파일을 미리 불러오게 둔다 */
+	.emphasis {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		font-weight: 700;
+	}
+
+	/* 동작 줄이기: 캔버스가 정지 그림이라 본문 크기 굵은 평문으로 보인다(등장 효과 없음) */
+	.emphasis.plain {
+		position: static;
+		width: auto;
+		height: auto;
+		margin: 0;
+		overflow: visible;
+		clip-path: none;
+		white-space: normal;
 	}
 
 	.arc .ch {
