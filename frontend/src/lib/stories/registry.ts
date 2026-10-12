@@ -62,6 +62,14 @@ import {
 	SUNKEN_CITIES_IMAGES,
 	SUNKEN_CITIES_STORY
 } from './sunken-cities/sunkenStory.ts';
+import { CHAPTERS as UNSEEN_CHAPTERS, SCREEN_MARKS } from './unseen-companion/chapters.ts';
+import { findScreenMarkMismatches, findUnseenMismatches } from './unseen-companion/storyChecks.ts';
+import { buildUnseenData } from './unseen-companion/unseenData.ts';
+import {
+	EVENTS_DATASET as UNSEEN_EVENTS_DATASET,
+	UNSEEN_DATASETS,
+	UNSEEN_STORY
+} from './unseen-companion/unseenStory.ts';
 
 /** 묶음 내용이 공개 형식이 아니거나 이야기 데이터로 만들 수 없어 대조하지 못함. */
 export class StoryCheckError extends Error {}
@@ -156,6 +164,15 @@ function starryNightHidden(datasets: Record<string, unknown>): Set<string> {
 	return targetsOf(findStarryMismatches(STARRY_CHAPTERS, data));
 }
 
+function unseenCompanionHidden(datasets: Record<string, unknown>): Set<string> {
+	const data = buildUnseenData(requireDataset(datasets, UNSEEN_EVENTS_DATASET));
+	if (data === null) throw new StoryCheckError('unseen companion dataset does not match');
+	return targetsOf([
+		...findUnseenMismatches(UNSEEN_CHAPTERS, data),
+		...findScreenMarkMismatches(SCREEN_MARKS, data)
+	]);
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
@@ -173,7 +190,8 @@ export const STORY_ENTRIES = [
 		story: STARRY_NIGHT_STORY,
 		datasetNames: STARRY_NIGHT_DATASETS,
 		checkHidden: starryNightHidden
-	}
+	},
+	{ story: UNSEEN_STORY, datasetNames: UNSEEN_DATASETS, checkHidden: unseenCompanionHidden }
 ] as const satisfies readonly StoryEntry[];
 
 export type RegisteredStory = (typeof STORY_ENTRIES)[number]['story'];

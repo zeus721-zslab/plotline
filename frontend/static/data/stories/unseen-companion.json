@@ -1,0 +1,11 @@
+{
+  "story": "unseen-companion",
+  "title": "보이지 않는 짝",
+  "published_at": "2026-10-12T00:00:00Z",
+  "datasets": {
+    "sirius_unseen": {
+      "version": 1,
+      "path": "/data/datasets/sirius_unseen/v1.json"
+    }
+  }
+}

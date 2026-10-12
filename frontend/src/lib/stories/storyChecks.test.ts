@@ -50,6 +50,18 @@ import {
 	gaugeTarget as sunkenGaugeTarget
 } from './sunken-cities/storyChecks.ts';
 import { buildSunkenData } from './sunken-cities/sunkenData.ts';
+import {
+	CHAPTERS as UNSEEN_CHAPTERS,
+	ORBIT_TARGET,
+	SCREEN_MARKS,
+	VELOCITY_BAND_TARGET
+} from './unseen-companion/chapters.ts';
+import {
+	findScreenMarkMismatches,
+	findUnseenMismatches,
+	timeMarkTarget as unseenTimeMarkTarget
+} from './unseen-companion/storyChecks.ts';
+import { buildUnseenData } from './unseen-companion/unseenData.ts';
 
 const ELEMENT_DISCOVERY_STEP_COUNTS = [13, 14, 35, 48, 62, 64, 64, 75, 81, 81, 81, 89, 118];
 const LIGHT_AGE_ASIDE_COUNT = 18;
@@ -483,5 +495,58 @@ describe('5편 그가 실패작이라 부른 밤 — 문구-데이터 대조', (
 		};
 		assert.deepEqual(labelTargets(eventsRaw), []);
 		assert.deepEqual(labelTargets(changed('painted', 'month', 7)), [LABEL_DETAILS_TARGET]);
+	});
+});
+
+describe('6편 보이지 않는 짝 — 문구-데이터 대조', () => {
+	const eventsRaw = readDataset('unseen-companion.json', 'sirius_unseen');
+
+	function targets(events: PublishedDataset): string[] {
+		const data = buildUnseenData(events);
+		assert.ok(data !== null);
+		return [
+			...findUnseenMismatches(UNSEEN_CHAPTERS, data),
+			...findScreenMarkMismatches(SCREEN_MARKS, data)
+		].map((mismatch) => mismatch.target);
+	}
+
+	function changed(key: string, field: string, value: number): PublishedDataset {
+		const copy = clone(eventsRaw);
+		const row = copy.rows.find((candidate) => candidate.key === key);
+		assert.ok(row !== undefined, key);
+		row.values[field] = value;
+		return copy;
+	}
+
+	test('불일치 0(로컬 사본 sirius_unseen v1, 장 · 시간 표지 · 화면 표기)', () => {
+		assert.deepEqual(targets(eventsRaw), []);
+	});
+
+	// [대조 종류 · 문구, 바꿀 줄, 칸, 값, 숨겨져야 할 대상(그것 하나만)]
+	for (const [claim, key, field, value, target] of [
+		['date: 1862년 1월 31일', 'clark_sighting', 'day', 30, 'clark'],
+		['years-after: 90년 가까이(브래들리 → 편지)', 'bradley_epoch', 'year', 1750, 'bessel'],
+		['days-after: 편지가 도착한 날 밤', 'neptune_found', 'day', 24, 'neptune'],
+		['value: 1도도 벗어나지 않은', 'neptune_offset', 'value', 2, 'neptune'],
+		['value: 지구만 한 크기(반지름 km)', 'siriusb_radius', 'value', 70000, 'white-dwarf'],
+		['scaled-value: 태양만큼 무거운(÷1000)', 'siriusb_mass', 'value', 1200, 'white-dwarf'],
+		['scaled-value: 4일(÷100)', 'peg_period', 'value', 600, 'pegasi'],
+		['시간 표지 1995', 'peg_announced', 'year', 1996, unseenTimeMarkTarget('pegasi')],
+		['화면 표기 초속 약 56m(value)', 'peg_wobble', 'value', 70, VELOCITY_BAND_TARGET],
+		['화면 표기 50년 궤도(scaled-value)', 'sirius_orbit_period', 'value', 5200, ORBIT_TARGET]
+	] as const) {
+		test(`${claim}: ${key}.${field} = ${value} 이면 ${target} 하나만 숨김`, () => {
+			assert.deepEqual(targets(changed(key, field, value)), [target]);
+		});
+	}
+
+	test('present: 가장 밝은 별 줄이 없으면 1장 숨김', () => {
+		const removed = clone(eventsRaw);
+		removed.rows = removed.rows.filter((row) => row.key !== 'sirius_brightest');
+		assert.deepEqual(targets(removed), ['hill']);
+	});
+
+	test('수량 칸이 정수가 아니면 해석 실패(null)', () => {
+		assert.equal(buildUnseenData(changed('peg_wobble', 'value', 55.77)), null);
 	});
 });
