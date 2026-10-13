@@ -1,35 +1,8 @@
 // 빛의 나이 배경 그리기(Canvas 2D): 지구 쪽(화면 아래)으로 흐르는 빛줄기와 별 입자, 장마다 색조 · 휨 · 블랙홀(blackHole.ts).
 // 독자가 아래로 읽어 내려갈수록 빛을 거슬러 오르는 느낌이 나도록 스크롤한 만큼 흐름을 빠르게 하고, 멈춰도 느리게 계속 흐른다.
+import { pickProfile, type RenderProfile } from '../../story/device.ts';
 import { BlackHole } from './blackHole.ts';
 import { SCENES, type SceneId, type SceneParams } from './scenes.ts';
-
-// 기기별 상한. 휴대폰은 화면이 작아 입자를 줄여도 밀도가 비슷하고, 30fps · 픽셀 배율 1.5 로 그리기 양을 1/4 가까이 줄인다.
-export type RenderProfile = {
-	stars: number;
-	streaks: number;
-	// 블랙홀 원반 위를 흐르는 호 조각 수
-	diskPieces: number;
-	fps: number;
-	pixelRatioCap: number;
-};
-export const DESKTOP_PROFILE: RenderProfile = {
-	stars: 180,
-	streaks: 30,
-	diskPieces: 160,
-	fps: 60,
-	pixelRatioCap: 2
-};
-export const MOBILE_PROFILE: RenderProfile = {
-	stars: 80,
-	streaks: 14,
-	diskPieces: 70,
-	fps: 30,
-	pixelRatioCap: 1.5
-};
-const MOBILE_MAX_WIDTH_PX = 768;
-// 저사양(코어 2개 이하 또는 메모리 2GB 이하)은 움직이지 않는 한 장만 그린다.
-const LOW_END_MAX_CORES = 2;
-const LOW_END_MAX_MEMORY_GB = 2;
 
 // theme.css --story-bg 와 같은 값
 const BACKGROUND = '#070b16';
@@ -77,24 +50,6 @@ function lerp(from: number, to: number, ratio: number): number {
 
 function toMixed(params: SceneParams): Mixed {
 	return { ...params, tint: [...params.tint], probe: params.probe ? 1 : 0 };
-}
-
-function deviceMemoryGb(): number | null {
-	// deviceMemory 는 일부 브라우저에만 있다(타입 정의에 없음).
-	const memory: unknown = Reflect.get(navigator, 'deviceMemory');
-	return typeof memory === 'number' ? memory : null;
-}
-
-export function isLowEndDevice(): boolean {
-	const memory = deviceMemoryGb();
-	return (
-		navigator.hardwareConcurrency <= LOW_END_MAX_CORES ||
-		(memory !== null && memory <= LOW_END_MAX_MEMORY_GB)
-	);
-}
-
-export function pickProfile(viewportWidth: number): RenderProfile {
-	return viewportWidth < MOBILE_MAX_WIDTH_PX ? MOBILE_PROFILE : DESKTOP_PROFILE;
 }
 
 /** 끝 장에서 화면을 다 덮는 그림자 반지름(CSS px) */

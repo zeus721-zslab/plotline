@@ -2,8 +2,9 @@
 	// 빛의 나이 시그니처 배경: 화면 전체 Canvas 2D. 동작 줄이기 · 저사양이면 움직이지 않는 한 장만 그린다.
 	import { onMount } from 'svelte';
 	import { prefersReducedMotion } from 'svelte/motion';
+	import { isLowEndDevice } from '#lib/story/device.ts';
 	import type { SceneId } from './scenes.ts';
-	import { isLowEndDevice, SkyRenderer } from './skyRenderer.ts';
+	import { SkyRenderer } from './skyRenderer.ts';
 
 	type Props = { scene: SceneId; endProgress: number };
 

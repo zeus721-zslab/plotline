@@ -14,3 +14,19 @@ export function toSourceView(datasetTitle: string, source: PublishedSource): Sou
 export function datasetSourceViews(dataset: PublishedDataset): SourceView[] {
 	return dataset.sources.map((source) => toSourceView(dataset.title, source));
 }
+
+/** 묶음 출처 중 줄이 가리키는 것만, 같은 URL 은 한 번만 */
+export function usedSourceViews(dataset: PublishedDataset): SourceView[] {
+	const used = new Set(dataset.rows.map((row) => row.source));
+	const seen = new Set<string>();
+	return datasetSourceViews({
+		...dataset,
+		sources: dataset.sources.filter((source) => {
+			if (!used.has(source.id)) return false;
+			const key = source.kind === 'external' ? source.url : source.id;
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		})
+	});
+}

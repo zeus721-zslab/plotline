@@ -1,0 +1,76 @@
+// 사건형 데이터(eventData.ts) 문구 대조(순수 함수). 불일치가 있는 대상은 화면에서 숨긴다. 6 · 7편이 쓴다(D-45).
+// 여기에는 두 편이 같은 의미로 쓰는 종류만 둔다. 편마다 의미가 다르거나 한 편만 쓰는 종류(date 등)는 그 편이 Claim 을 넓혀 직접 대조한다.
+// 기존 종류의 의미를 바꾸면 쓰는 편의 대조가 함께 바뀌므로, 바꿀 일이 생기면 새 종류를 더한다.
+import type { EventRecord } from './eventData.ts';
+
+/** 문구가 기대는 사실 하나(공용 종류) */
+export type Claim<Id extends string> =
+	// 두 사건 사이 햇수(연도 차)
+	| { kind: 'years-after'; from: Id; to: Id; min: number; max: number }
+	// 수량 칸 값이 범위 안
+	| { kind: 'value'; event: Id; min: number; max: number }
+	// 수량 칸을 divisor 로 나눈 값이 범위 안(배율을 곱해 정수로 저장한 값)
+	| { kind: 'scaled-value'; event: Id; divisor: number; min: number; max: number };
+
+export type StoryMismatch = { target: string; message: string };
+
+export function within(value: number | null, min: number, max: number): boolean {
+	return value !== null && value >= min && value <= max;
+}
+
+export function eventOf<Id extends string>(
+	events: Map<Id, EventRecord>,
+	id: Id
+): EventRecord | null {
+	const found = events.get(id);
+	return found === undefined ? null : found;
+}
+
+export function valueOf<Id extends string>(events: Map<Id, EventRecord>, id: Id): number | null {
+	const found = eventOf(events, id);
+	return found === null ? null : found.value;
+}
+
+/** 문구가 기대는 사실이 데이터와 맞는가. 맞으면 null, 아니면 이유. */
+export function claimProblem<Id extends string>(
+	claim: Claim<Id>,
+	events: Map<Id, EventRecord>
+): string | null {
+	switch (claim.kind) {
+		case 'years-after': {
+			const from = eventOf(events, claim.from);
+			const to = eventOf(events, claim.to);
+			const amount = from === null || to === null ? null : to.year - from.year;
+			return within(amount, claim.min, claim.max)
+				? null
+				: `${claim.from} → ${claim.to}: ${amount} (years-after)`;
+		}
+		case 'value': {
+			const amount = valueOf(events, claim.event);
+			return within(amount, claim.min, claim.max) ? null : `${claim.event}: value ${amount}`;
+		}
+		case 'scaled-value': {
+			const amount = valueOf(events, claim.event);
+			const scaled = amount === null ? null : amount / claim.divisor;
+			return within(scaled, claim.min, claim.max)
+				? null
+				: `${claim.event} ÷ ${claim.divisor}: ${scaled}`;
+		}
+	}
+}
+
+/**
+ * 대상마다 그 대상이 기대는 사실을 대조한다(대상 순서 → 사실 순서).
+ * problem 은 편의 대조 함수(공용 종류 + 그 편 종류)다. 대상 이름과 숨김 표시는 편이 정한다.
+ */
+export function findTargetMismatches<C>(
+	items: readonly { target: string; claims: readonly C[] }[],
+	problem: (claim: C) => string | null
+): StoryMismatch[] {
+	return items.flatMap((item) =>
+		item.claims.flatMap((claim) => {
+			const message = problem(claim);
+			return message === null ? [] : [{ target: item.target, message }];
+		})
+	);
+}

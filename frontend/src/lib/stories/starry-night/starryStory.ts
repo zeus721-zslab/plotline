@@ -3,11 +3,10 @@ import type { LoadResult } from '../../story/fetchPublished.ts';
 import { datasetSourceViews, type SourceView } from '../../story/sourceViews.ts';
 import type { LoadStorySource, NextStory } from '../../story/storySource.ts';
 import { parseStoryImages, type StoryImage } from '../../story/storyMedia.ts';
-import { ARTWORK_LABEL, CHAPTERS } from './chapters.ts';
 // node:test 가 registry.ts 를 거쳐 이 모듈을 읽으므로 JSON 모듈 속성을 밝힌다.
 import images from './starry-night.images.json' with { type: 'json' };
 import { buildStarryData, type StarryData } from './starryData.ts';
-import { findLabelMismatches, findStarryMismatches } from './storyChecks.ts';
+import { storyMismatches } from './storyChecks.ts';
 
 export const STARRY_NIGHT_STORY = 'starry-night';
 export const EVENTS_DATASET = 'vangogh_starry_night';
@@ -18,10 +17,7 @@ export const STARRY_NIGHT_IMAGES: StoryImage[] = parseStoryImages(images);
 
 /** 문구 대조로 숨길 대상. 운영에서도 숨기고, 콘솔 기록은 개발 모드에서만 남긴다. */
 export function hiddenStarryTargets(data: StarryData): Set<string> {
-	const mismatches = [
-		...findStarryMismatches(CHAPTERS, data),
-		...findLabelMismatches(ARTWORK_LABEL.detailsClaims, data)
-	];
+	const mismatches = storyMismatches(data);
 	if (import.meta.env.DEV && mismatches.length > 0) {
 		console.error('story copy does not match data', mismatches);
 	}

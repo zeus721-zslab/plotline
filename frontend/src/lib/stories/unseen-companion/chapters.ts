@@ -1,6 +1,7 @@
 // 보이지 않는 짝 장 구성: 8장 32비트. 비트마다 글 자리(위 · 아래) · 스크롤 길이(vh) · 줄 문구, 장마다 시간 표지와 문구가 기대는 사실(claims).
 // 문구 · 비트 길이는 시제품(sirius-flow.src.html, STEP 106~111) 그대로이고, 본문은 v3.1(사실 나열 → 한 줄기 이야기, D-43 보완 STEP 115·116)
 // 숫자 · 날짜는 storyChecks 가 데이터 묶음과 대조해 어긋나면 그 장 글(또는 시간 표지 · 화면 표기)을 숨긴다.
+import type { Claim as EventClaim } from '../../story/eventClaims.ts';
 import type { CopySource } from '../../story/storyConfig.ts';
 import type { EventId } from './unseenData.ts';
 
@@ -16,18 +17,13 @@ export const CHAPTER_IDS = [
 ] as const;
 export type ChapterId = (typeof CHAPTER_IDS)[number];
 
-/** 문구가 기대는 사실 하나. 월 · 일이 null 이면 그 자리는 대조하지 않는다. */
+/** 문구가 기대는 사실 하나: 공용 종류(years-after · value · scaled-value) + 이 편 종류. 월 · 일이 null 이면 그 자리는 대조하지 않는다. */
 export type Claim =
+	| EventClaim<EventId>
 	| { kind: 'present'; event: EventId }
 	| { kind: 'date'; event: EventId; year: number; month: number | null; day: number | null }
-	// 두 사건 사이 햇수(연도 차)
-	| { kind: 'years-after'; from: EventId; to: EventId; min: number; max: number }
 	// 두 사건 사이 날 수(날짜 차, 둘 다 월 · 일이 있어야 셀 수 있다)
-	| { kind: 'days-after'; from: EventId; to: EventId; min: number; max: number }
-	// 수량 칸 값이 범위 안
-	| { kind: 'value'; event: EventId; min: number; max: number }
-	// 수량 칸을 divisor 로 나눈 값이 범위 안(×100 · ×1000 으로 정수 저장한 값)
-	| { kind: 'scaled-value'; event: EventId; divisor: number; min: number; max: number };
+	| { kind: 'days-after'; from: EventId; to: EventId; min: number; max: number };
 
 /** 글 자리: 1 · 8장은 화면 아래(언덕 장면이 위), 2~7장은 화면 위(그림이 아래). PC 는 둘 다 왼쪽 열 */
 export type TextSlot = 'top' | 'bottom';

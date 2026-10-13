@@ -6,7 +6,7 @@
 // 계기판 바로 아래로, 7장은 신호 띠 바로 아래로), PC(1024px 이상)는 최대 1600px 구도의 오른쪽 6할 영역(초점은 가운데 선 쪽)이고,
 // PC 왼쪽 카드 쪽은 화면 왼쪽 끝 → 가운데 선으로 옅어지는 어두운 그늘을 덮는다. 7장은 계기판 아래 신호 띠(signalBand.ts)를 더한다.
 // 기기별 상한(입자 수 · 프레임 · 픽셀 배율)과 저사양 판정은 2편 배경과 같은 기준을 쓴다.
-import { pickProfile, type RenderProfile } from '../light-age/skyRenderer.ts';
+import { pickProfile, type RenderProfile } from '../../story/device.ts';
 import {
 	paintEffect,
 	paintStars,
@@ -29,8 +29,6 @@ import {
 } from './mapPaint.ts';
 import { SCENES, type SceneId, type SceneParams } from './scenes.ts';
 import { SIGNAL_BAND_PX, SignalBand, type SignalReading } from './signalBand.ts';
-
-export { isLowEndDevice } from '../light-age/skyRenderer.ts';
 
 const BACKGROUND_RGB: [number, number, number] = [3, 4, 10];
 const INSIDE_RGB: [number, number, number] = [46, 6, 8];

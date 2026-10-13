@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { isPublishedDataset, isPublishedStory, type PublishedDataset } from '../story/published.ts';
 import { findStoryEntry, STORY_ENTRIES, StoryCheckError, type StoryEntry } from './registry.ts';
+import { LABEL_DETAILS_TARGET } from './starry-night/storyChecks.ts';
 
 function readJson(path: string): unknown {
 	return JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -99,6 +100,13 @@ describe('registry.checkHidden — static/data 기준', () => {
 		const datasets = staticDatasets(entry);
 		datasets.vangogh_starry_night = changeRow(datasets.vangogh_starry_night, 'died', 'day', 28);
 		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
+	});
+
+	test('5편: 그린 달을 바꾸면 작품 라벨 2줄째도 숨겨질 대상(페이지와 같은 계산)', () => {
+		const entry = requireEntry('starry-night');
+		const datasets = staticDatasets(entry);
+		datasets.vangogh_starry_night = changeRow(datasets.vangogh_starry_night, 'painted', 'month', 7);
+		assert.ok(entry.checkHidden(datasets, now).has(LABEL_DETAILS_TARGET), '작품 라벨 대상이 없음');
 	});
 
 	test('6편: 클라크가 본 날을 바꾸면 숨겨질 문구가 생김', () => {

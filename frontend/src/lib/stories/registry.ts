@@ -39,14 +39,13 @@ import {
 import { storyYear } from './light-age/lightTime.ts';
 import { buildEarthMoments, buildSkyObjects } from './light-age/skyData.ts';
 import { findLightAgeMismatches } from './light-age/storyChecks.ts';
-import { CHAPTERS as STARRY_CHAPTERS } from './starry-night/chapters.ts';
 import { buildStarryData } from './starry-night/starryData.ts';
 import {
 	EVENTS_DATASET,
 	STARRY_NIGHT_DATASETS,
 	STARRY_NIGHT_STORY
 } from './starry-night/starryStory.ts';
-import { findStarryMismatches } from './starry-night/storyChecks.ts';
+import { storyMismatches as starryNightMismatches } from './starry-night/storyChecks.ts';
 import { CHAPTER_ASIDES as SUNKEN_ASIDES } from './sunken-cities/asides.ts';
 import {
 	CHAPTERS as SUNKEN_CHAPTERS,
@@ -62,24 +61,16 @@ import {
 	SUNKEN_CITIES_IMAGES,
 	SUNKEN_CITIES_STORY
 } from './sunken-cities/sunkenStory.ts';
-import { CHAPTERS as UNSEEN_CHAPTERS, SCREEN_MARKS } from './unseen-companion/chapters.ts';
-import { findScreenMarkMismatches, findUnseenMismatches } from './unseen-companion/storyChecks.ts';
+import { storyMismatches as unseenCompanionMismatches } from './unseen-companion/storyChecks.ts';
 import { buildUnseenData } from './unseen-companion/unseenData.ts';
 import {
 	EVENTS_DATASET as UNSEEN_EVENTS_DATASET,
 	UNSEEN_DATASETS,
 	UNSEEN_STORY
 } from './unseen-companion/unseenStory.ts';
-import {
-	CHAPTERS as LINE_CHAPTERS,
-	SCREEN_MARKS as LINE_SCREEN_MARKS
-} from './uncrossable-line/chapters.ts';
 import { buildLineData } from './uncrossable-line/lineData.ts';
 import { LINE_DATASET, LINE_DATASETS, LINE_STORY } from './uncrossable-line/lineStory.ts';
-import {
-	findLineMismatches,
-	findScreenMarkMismatches as findLineScreenMarkMismatches
-} from './uncrossable-line/storyChecks.ts';
+import { storyMismatches as uncrossableLineMismatches } from './uncrossable-line/storyChecks.ts';
 
 /** 묶음 내용이 공개 형식이 아니거나 이야기 데이터로 만들 수 없어 대조하지 못함. */
 export class StoryCheckError extends Error {}
@@ -171,25 +162,19 @@ function sunkenCitiesHidden(datasets: Record<string, unknown>, now: Date): Set<s
 function starryNightHidden(datasets: Record<string, unknown>): Set<string> {
 	const data = buildStarryData(requireDataset(datasets, EVENTS_DATASET));
 	if (data === null) throw new StoryCheckError('starry night dataset does not match');
-	return targetsOf(findStarryMismatches(STARRY_CHAPTERS, data));
+	return targetsOf(starryNightMismatches(data));
 }
 
 function unseenCompanionHidden(datasets: Record<string, unknown>): Set<string> {
 	const data = buildUnseenData(requireDataset(datasets, UNSEEN_EVENTS_DATASET));
 	if (data === null) throw new StoryCheckError('unseen companion dataset does not match');
-	return targetsOf([
-		...findUnseenMismatches(UNSEEN_CHAPTERS, data),
-		...findScreenMarkMismatches(SCREEN_MARKS, data)
-	]);
+	return targetsOf(unseenCompanionMismatches(data));
 }
 
 function uncrossableLineHidden(datasets: Record<string, unknown>): Set<string> {
 	const data = buildLineData(requireDataset(datasets, LINE_DATASET));
 	if (data === null) throw new StoryCheckError('uncrossable line dataset does not match');
-	return targetsOf([
-		...findLineMismatches(LINE_CHAPTERS, data),
-		...findLineScreenMarkMismatches(LINE_SCREEN_MARKS, data)
-	]);
+	return targetsOf(uncrossableLineMismatches(data));
 }
 
 export const STORY_ENTRIES = [

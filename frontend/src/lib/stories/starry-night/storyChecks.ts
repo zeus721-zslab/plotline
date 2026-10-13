@@ -1,6 +1,6 @@
 // 그가 실패작이라 부른 밤 문구-데이터 대조(순수 함수). 1~4편 storyChecks 와 같은 방식: 불일치가 있는 대상은 화면에서 숨긴다.
 // 대상(target): 장 id(그 장 카드 문단 전체) · timeMarkTarget(장 id)(시간 표지 한 줄) · LABEL_DETAILS_TARGET(작품 라벨 2줄째).
-import type { Chapter, Claim } from './chapters.ts';
+import { ARTWORK_LABEL, CHAPTERS, type Chapter, type Claim } from './chapters.ts';
 import type { EventDate, EventId, StarryData } from './starryData.ts';
 
 export type StoryMismatch = { target: string; message: string };
@@ -108,4 +108,12 @@ export function findLabelMismatches(claims: Claim[], data: StarryData): StoryMis
 		const message = claimProblem(claim, data);
 		return message === null ? [] : [{ target: LABEL_DETAILS_TARGET, message }];
 	});
+}
+
+/** 이 편 문구 대조 전체(장 · 시간 표지 · 작품 라벨). 페이지 숨김과 관리자 대조(registry)가 같은 계산을 쓴다. */
+export function storyMismatches(data: StarryData): StoryMismatch[] {
+	return [
+		...findStarryMismatches(CHAPTERS, data),
+		...findLabelMismatches(ARTWORK_LABEL.detailsClaims, data)
+	];
 }
