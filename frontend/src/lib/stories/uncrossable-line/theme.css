@@ -1,0 +1,28 @@
+/* 넘을 수 없는 선 스토리 테마(어둠 속 따뜻한 빛, 시제품 :root 값). 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1~6편과 같게 둔다.
+   대비(바탕 #0A0807 기준, AA 4.5:1 이상): 본문 #F4EDE3 약 17.2:1 · 보조 #B3A796 약 8.5:1 · 강조색 #FFB25A 약 11.2:1 */
+.uncrossable-line-theme {
+	--story-bg: #0a0807;
+	--story-card: rgba(10, 8, 7, 0.66);
+	--story-cell-off: #2a211b;
+	--story-cell-on: #ffb25a;
+	--story-cell-dim: #8a6a44;
+	--story-cell-bright: #fff1dc;
+	--story-text: #f4ede3;
+	--story-muted: #b3a796;
+	--story-legend: #ffb25a;
+	--story-accent: #ffb25a;
+	--story-imagined: #c9a8ff;
+	/* 자막 그림자(lineText.ts SUB_SHADOW 와 같은 값) */
+	--sub-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.95), 0 0 3px rgba(0, 0, 0, 0.9), 0 0 18px rgba(0, 0, 0, 0.78);
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family:
+		system-ui,
+		-apple-system,
+		'Apple SD Gothic Neo',
+		'Malgun Gothic',
+		'Noto Sans KR',
+		sans-serif;
+}

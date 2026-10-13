@@ -11,4 +11,5 @@ STORY_REGISTRY: dict[str, tuple[str, ...]] = {
     "sunken-cities": ("atlantis_criteria", "sunken_places", "sunken_measures"),
     "starry-night": ("vangogh_starry_night",),
     "unseen-companion": ("sirius_unseen",),
+    "uncrossable-line": ("bell_line",),
 }

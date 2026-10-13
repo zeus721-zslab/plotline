@@ -1,0 +1,11 @@
+{
+  "story": "uncrossable-line",
+  "title": "넘을 수 없는 선",
+  "published_at": "2026-10-13T00:00:00Z",
+  "datasets": {
+    "bell_line": {
+      "version": 1,
+      "path": "/data/datasets/bell_line/v1.json"
+    }
+  }
+}

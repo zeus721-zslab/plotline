@@ -62,6 +62,19 @@ import {
 	timeMarkTarget as unseenTimeMarkTarget
 } from './unseen-companion/storyChecks.ts';
 import { buildUnseenData } from './unseen-companion/unseenData.ts';
+import {
+	CHAPTERS as LINE_CHAPTERS,
+	SCORE_75_TARGET,
+	SCORE_84_TARGET,
+	SCORE_85_TARGET,
+	SCREEN_MARKS as LINE_SCREEN_MARKS,
+	yearMarkTarget
+} from './uncrossable-line/chapters.ts';
+import { buildLineData } from './uncrossable-line/lineData.ts';
+import {
+	findLineMismatches,
+	findScreenMarkMismatches as findLineScreenMarkMismatches
+} from './uncrossable-line/storyChecks.ts';
 
 const ELEMENT_DISCOVERY_STEP_COUNTS = [13, 14, 35, 48, 62, 64, 64, 75, 81, 81, 81, 89, 118];
 const LIGHT_AGE_ASIDE_COUNT = 18;
@@ -548,5 +561,83 @@ describe('6편 보이지 않는 짝 — 문구-데이터 대조', () => {
 
 	test('수량 칸이 정수가 아니면 해석 실패(null)', () => {
 		assert.equal(buildUnseenData(changed('peg_wobble', 'value', 55.77)), null);
+	});
+});
+
+describe('7편 넘을 수 없는 선 — 문구-데이터 대조', () => {
+	const eventsRaw = readDataset('uncrossable-line.json', 'bell_line');
+
+	function targets(events: PublishedDataset): string[] {
+		const data = buildLineData(events);
+		assert.ok(data !== null);
+		return [
+			...findLineMismatches(LINE_CHAPTERS, data),
+			...findLineScreenMarkMismatches(LINE_SCREEN_MARKS, data)
+		].map((mismatch) => mismatch.target);
+	}
+
+	function changed(key: string, field: string, value: number): PublishedDataset {
+		const copy = clone(eventsRaw);
+		const row = copy.rows.find((candidate) => candidate.key === key);
+		assert.ok(row !== undefined, key);
+		row.values[field] = value;
+		return copy;
+	}
+
+	test('불일치 0(로컬 사본 bell_line v1, 비트 글 · 연도 표지 · 점수 숫자)', () => {
+		assert.deepEqual(targets(eventsRaw), []);
+	});
+
+	// [대조 종류 · 문구, 바꿀 줄, 칸, 값, 숨겨져야 할 대상(정렬, 그것들만)]
+	for (const [claim, key, field, value, expected] of [
+		['date: 1905년', 'einstein_lightquanta', 'year', 1906, ['1-5', '2-1', yearMarkTarget('2-1')]],
+		['date: 1926년', 'born_letter', 'year', 1927, ['2-4']],
+		['years-after: 7년 뒤 · 30여 년 전', 'bohr_died', 'year', 1961, ['4-4']],
+		[
+			'years-after: 30년 묵은(28~32)',
+			'bell_theorem',
+			'year',
+			1970,
+			['5-1', '5-6', yearMarkTarget('5-1')]
+		],
+		['value: 6미터', 'switch_distance', 'value', 7, ['1-2']],
+		['value: 12미터', 'switch_separation', 'value', 10, ['1-3']],
+		['scaled-value: 1억분의 2초(÷10)', 'photon_flight', 'value', 30, ['1-4', '8-1']],
+		[
+			'scaled-value: 75판(÷10) · 화면 75',
+			'classical_bound',
+			'value',
+			760,
+			['1-5', SCORE_75_TARGET]
+		],
+		['rounded-value: 84판(83.7) · 화면 84', 'aspect_fixed', 'value', 846, ['7-2', SCORE_84_TARGET]],
+		[
+			'rounded-value: 약 85판(85.4) · 화면 85',
+			'quantum_bound',
+			'value',
+			856,
+			['5-6', SCORE_85_TARGET]
+		],
+		['ratio: 네 번쯤(신호 시간 ÷ 스위치 간격)', 'switch_interval', 'value', 20, ['8-3']],
+		['month-in: 1982년 여름', 'aspect_fixed', 'month', 9, ['7-2']],
+		['month-in: 그해 겨울', 'aspect_switching', 'month', 6, ['8-4']],
+		['연도 표지 2022', 'nobel_2022', 'year', 2023, ['9-2', yearMarkTarget('9-2')]]
+	] as const) {
+		test(`${claim}: ${key}.${field} = ${value} 이면 ${expected.join(', ')} 만 숨김`, () => {
+			assert.deepEqual(
+				[...new Set(targets(changed(key, field, value)))].sort(),
+				[...expected].sort()
+			);
+		});
+	}
+
+	test('줄 삭제: 보른 편지 줄이 없으면 2-4 숨김', () => {
+		const removed = clone(eventsRaw);
+		removed.rows = removed.rows.filter((row) => row.key !== 'born_letter');
+		assert.deepEqual(targets(removed), ['2-4']);
+	});
+
+	test('수량 칸이 정수가 아니면 해석 실패(null)', () => {
+		assert.equal(buildLineData(changed('quantum_bound', 'value', 85.4)), null);
 	});
 });
