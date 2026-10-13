@@ -21,6 +21,8 @@
 	import { STARRY_NIGHT_STORY } from '#lib/stories/starry-night/starryStory.ts';
 	import SunkenCitiesPage from '#lib/stories/sunken-cities/SunkenCitiesPage.svelte';
 	import { SUNKEN_CITIES_STORY } from '#lib/stories/sunken-cities/sunkenStory.ts';
+	import UncrossableLinePage from '#lib/stories/uncrossable-line/UncrossableLinePage.svelte';
+	import { LINE_STORY } from '#lib/stories/uncrossable-line/lineStory.ts';
 	import UnseenCompanionPage from '#lib/stories/unseen-companion/UnseenCompanionPage.svelte';
 	import { UNSEEN_STORY } from '#lib/stories/unseen-companion/unseenStory.ts';
 	import type { LoadResult } from '#lib/story/fetchPublished.ts';
@@ -46,7 +48,8 @@
 		[BLACK_HOLE_STORY]: BlackHolePage,
 		[SUNKEN_CITIES_STORY]: SunkenCitiesPage,
 		[STARRY_NIGHT_STORY]: StarryNightPage,
-		[UNSEEN_STORY]: UnseenCompanionPage
+		[UNSEEN_STORY]: UnseenCompanionPage,
+		[LINE_STORY]: UncrossableLinePage
 	};
 	const FORMAT_FAILURE: LoadResult<PublishedDataset> = { kind: 'error', reason: 'format' };
 

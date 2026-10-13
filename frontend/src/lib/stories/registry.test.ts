@@ -46,8 +46,8 @@ function changeRow(
 describe('registry.checkHidden — static/data 기준', () => {
 	const now = new Date();
 
-	test('여섯 이야기 모두 숨겨질 문구 0건', () => {
-		assert.equal(STORY_ENTRIES.length, 6);
+	test('일곱 이야기 모두 숨겨질 문구 0건', () => {
+		assert.equal(STORY_ENTRIES.length, 7);
 		for (const entry of STORY_ENTRIES) {
 			assert.deepEqual([...entry.checkHidden(staticDatasets(entry), now)], [], entry.story);
 		}
@@ -105,6 +105,13 @@ describe('registry.checkHidden — static/data 기준', () => {
 		const entry = requireEntry('unseen-companion');
 		const datasets = staticDatasets(entry);
 		datasets.sirius_unseen = changeRow(datasets.sirius_unseen, 'clark_sighting', 'day', 30);
+		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
+	});
+
+	test('7편: 아스페 고정 실험 점수를 바꾸면 숨겨질 문구가 생김', () => {
+		const entry = requireEntry('uncrossable-line');
+		const datasets = staticDatasets(entry);
+		datasets.bell_line = changeRow(datasets.bell_line, 'aspect_fixed', 'value', 800);
 		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
 	});
 

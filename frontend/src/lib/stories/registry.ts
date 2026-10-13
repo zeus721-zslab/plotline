@@ -70,6 +70,16 @@ import {
 	UNSEEN_DATASETS,
 	UNSEEN_STORY
 } from './unseen-companion/unseenStory.ts';
+import {
+	CHAPTERS as LINE_CHAPTERS,
+	SCREEN_MARKS as LINE_SCREEN_MARKS
+} from './uncrossable-line/chapters.ts';
+import { buildLineData } from './uncrossable-line/lineData.ts';
+import { LINE_DATASET, LINE_DATASETS, LINE_STORY } from './uncrossable-line/lineStory.ts';
+import {
+	findLineMismatches,
+	findScreenMarkMismatches as findLineScreenMarkMismatches
+} from './uncrossable-line/storyChecks.ts';
 
 /** 묶음 내용이 공개 형식이 아니거나 이야기 데이터로 만들 수 없어 대조하지 못함. */
 export class StoryCheckError extends Error {}
@@ -173,6 +183,15 @@ function unseenCompanionHidden(datasets: Record<string, unknown>): Set<string> {
 	]);
 }
 
+function uncrossableLineHidden(datasets: Record<string, unknown>): Set<string> {
+	const data = buildLineData(requireDataset(datasets, LINE_DATASET));
+	if (data === null) throw new StoryCheckError('uncrossable line dataset does not match');
+	return targetsOf([
+		...findLineMismatches(LINE_CHAPTERS, data),
+		...findLineScreenMarkMismatches(LINE_SCREEN_MARKS, data)
+	]);
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
@@ -191,7 +210,8 @@ export const STORY_ENTRIES = [
 		datasetNames: STARRY_NIGHT_DATASETS,
 		checkHidden: starryNightHidden
 	},
-	{ story: UNSEEN_STORY, datasetNames: UNSEEN_DATASETS, checkHidden: unseenCompanionHidden }
+	{ story: UNSEEN_STORY, datasetNames: UNSEEN_DATASETS, checkHidden: unseenCompanionHidden },
+	{ story: LINE_STORY, datasetNames: LINE_DATASETS, checkHidden: uncrossableLineHidden }
 ] as const satisfies readonly StoryEntry[];
 
 export type RegisteredStory = (typeof STORY_ENTRIES)[number]['story'];

@@ -10,6 +10,8 @@ import StarryNightPreview from './starry-night/CoverPreview.svelte';
 import './starry-night/theme.css';
 import SunkenCitiesPreview from './sunken-cities/CoverPreview.svelte';
 import './sunken-cities/theme.css';
+import UncrossableLinePreview from './uncrossable-line/CoverPreview.svelte';
+import './uncrossable-line/theme.css';
 import UnseenCompanionPreview from './unseen-companion/CoverPreview.svelte';
 import './unseen-companion/theme.css';
 
@@ -21,7 +23,8 @@ const COVERS: Record<string, StoryCover> = {
 	'black-hole': { themeClass: 'black-hole-theme', preview: BlackHolePreview },
 	'sunken-cities': { themeClass: 'sunken-cities-theme', preview: SunkenCitiesPreview },
 	'starry-night': { themeClass: 'starry-night-theme', preview: StarryNightPreview },
-	'unseen-companion': { themeClass: 'unseen-companion-theme', preview: UnseenCompanionPreview }
+	'unseen-companion': { themeClass: 'unseen-companion-theme', preview: UnseenCompanionPreview },
+	'uncrossable-line': { themeClass: 'uncrossable-line-theme', preview: UncrossableLinePreview }
 };
 
 // 목록에 새 스토리가 먼저 올라와도 표지는 그려지도록 1편 테마 · 그림 없음으로 둔다.
