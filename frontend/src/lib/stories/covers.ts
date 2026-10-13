@@ -14,6 +14,8 @@ import UncrossableLinePreview from './uncrossable-line/CoverPreview.svelte';
 import './uncrossable-line/theme.css';
 import UnseenCompanionPreview from './unseen-companion/CoverPreview.svelte';
 import './unseen-companion/theme.css';
+import VanishedDigitsPreview from './vanished-digits/CoverPreview.svelte';
+import './vanished-digits/theme.css';
 
 export type StoryCover = { themeClass: string; preview: Component | null };
 
@@ -24,7 +26,8 @@ const COVERS: Record<string, StoryCover> = {
 	'sunken-cities': { themeClass: 'sunken-cities-theme', preview: SunkenCitiesPreview },
 	'starry-night': { themeClass: 'starry-night-theme', preview: StarryNightPreview },
 	'unseen-companion': { themeClass: 'unseen-companion-theme', preview: UnseenCompanionPreview },
-	'uncrossable-line': { themeClass: 'uncrossable-line-theme', preview: UncrossableLinePreview }
+	'uncrossable-line': { themeClass: 'uncrossable-line-theme', preview: UncrossableLinePreview },
+	'vanished-digits': { themeClass: 'vanished-digits-theme', preview: VanishedDigitsPreview }
 };
 
 // 목록에 새 스토리가 먼저 올라와도 표지는 그려지도록 1편 테마 · 그림 없음으로 둔다.

@@ -5,9 +5,11 @@
 		ELEMENT_DISCOVERY_DATASETS,
 		ELEMENT_DISCOVERY_STORY
 	} from '#lib/stories/element-discovery/elementDiscovery.ts';
+	import SocialMeta from '#lib/story/SocialMeta.svelte';
 	import { loadPublishedSource } from '#lib/story/storySource.ts';
 
 	const loadSource = () => loadPublishedSource(ELEMENT_DISCOVERY_STORY, ELEMENT_DISCOVERY_DATASETS);
 </script>
 
+<SocialMeta story="element-discovery" />
 <ElementDiscoveryPage {loadSource} />

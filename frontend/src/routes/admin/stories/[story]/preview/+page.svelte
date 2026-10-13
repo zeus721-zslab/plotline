@@ -25,6 +25,8 @@
 	import { LINE_STORY } from '#lib/stories/uncrossable-line/lineStory.ts';
 	import UnseenCompanionPage from '#lib/stories/unseen-companion/UnseenCompanionPage.svelte';
 	import { UNSEEN_STORY } from '#lib/stories/unseen-companion/unseenStory.ts';
+	import { CHAOS_STORY } from '#lib/stories/vanished-digits/chaosStory.ts';
+	import VanishedDigitsPage from '#lib/stories/vanished-digits/VanishedDigitsPage.svelte';
 	import type { LoadResult } from '#lib/story/fetchPublished.ts';
 	import { isPublishedDataset, type PublishedDataset } from '#lib/story/published.ts';
 	import type { LoadStorySource } from '#lib/story/storySource.ts';
@@ -49,7 +51,8 @@
 		[SUNKEN_CITIES_STORY]: SunkenCitiesPage,
 		[STARRY_NIGHT_STORY]: StarryNightPage,
 		[UNSEEN_STORY]: UnseenCompanionPage,
-		[LINE_STORY]: UncrossableLinePage
+		[LINE_STORY]: UncrossableLinePage,
+		[CHAOS_STORY]: VanishedDigitsPage
 	};
 	const FORMAT_FAILURE: LoadResult<PublishedDataset> = { kind: 'error', reason: 'format' };
 
