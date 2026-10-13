@@ -557,12 +557,13 @@
 		height: 0;
 	}
 
+	/* 휴대폰: 자막을 그림 바로 아래(28%)로 올린 만큼 그림자층을 높여 자막 대비 14 이상을 지킨다(STEP 131 측정: 74% 14.0 · 76% 14.2) */
 	.shade {
 		position: fixed;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		height: 46%;
+		height: 76%;
 		z-index: 2;
 		pointer-events: none;
 		background: linear-gradient(
@@ -578,7 +579,8 @@
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: 18%;
+		/* 휴대폰 세로: 그림(화면 위 0.38~0.45)과 떨어지지 않게 자막을 그림 바로 아래에 둔다(STEP 131) */
+		bottom: 28%;
 		z-index: 3;
 		pointer-events: none;
 		display: flex;

@@ -2,6 +2,7 @@
 // 비트마다 본문 문단 하나(화면에는 문장 단위 자막으로 보인다, sentences.ts)와 스크롤 길이(vh, 시제품 layout 규칙), 그 문단이 기대는 사실(claims).
 // 숫자 · 연도는 storyChecks 가 데이터 묶음 bell_line 과 대조해 어긋나면 그 비트 글(또는 장 밖 화면 표기)을 숨긴다.
 import type { EventId } from './lineData.ts';
+import { splitSentences } from './sentences.ts';
 import type { Claim } from './storyChecks.ts';
 
 export type Beat = {
@@ -19,11 +20,13 @@ export type Chapter = {
 	beats: Beat[];
 };
 
-// 시제품 layout(flow.src.html :171): 높이 = clamp(80 + 0.9 × 글자 수, 170, 330)vh
+// 시제품 layout(flow.src.html :171) 높이 max(80 + 0.9 × 글자 수, 170)vh 에, 휴대폰에서 다 읽기 전에 넘어가지 않도록(STEP 131)
+// 문장 수 × SENTENCE_MIN_VH + 80 을 하한으로 더한다. 상한(330)은 두지 않는다
 const BEAT_VH_BASE = 80;
 const BEAT_VH_PER_CHAR = 0.9;
 const BEAT_VH_MIN = 170;
-const BEAT_VH_MAX = 330;
+/** 문장 하나가 차지하는 최소 스크롤 길이(vh). 문장 구간 분할(lineScene sentenceCuts)도 이 값 밑으로 줄이지 않는다 */
+export const SENTENCE_MIN_VH = 60;
 // 점수(판)는 ×10 정수 행으로 저장한다(75판 = 750). 시간은 ns 행이라 ÷10 이 "1억분의 N초"의 N 이다
 const SCORE_SCALE = 10;
 const NANOSECONDS_PER_UNIT = 10;
@@ -32,7 +35,8 @@ const WINTER_MONTHS = [12, 1, 2];
 
 export function beatHeightVh(text: string): number {
 	const height = BEAT_VH_BASE + Array.from(text).length * BEAT_VH_PER_CHAR;
-	return Math.max(BEAT_VH_MIN, Math.min(BEAT_VH_MAX, height));
+	const sentenceHeight = splitSentences(text).sentences.length * SENTENCE_MIN_VH + BEAT_VH_BASE;
+	return Math.max(BEAT_VH_MIN, height, sentenceHeight);
 }
 
 function beat(id: string, text: string, claims: Claim[] = []): Beat {

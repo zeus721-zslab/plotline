@@ -1,7 +1,7 @@
 // 넘을 수 없는 선 스크롤 → 장면 상태(순수 함수, 시제품 flow.src.html 문장 구간 · 스크롤 구간 :143-225).
 // 이야기 구간(track)은 장 사이 암전 구간(gap: 장 제목 카드)과 비트 구간(beat)이 번갈아 놓이고, 높이는 vh 를 화면 높이 px 로 바꿔 둔다.
-// 비트 안 진행값 p 를 문장마다 "글자 수 + 16" 가중치로 나눠(cuts) 지금 문장을 고르고, 그림은 "문장 k 의 시작~끝" 진행값으로 문장과 맞물린다.
-import { BEATS, CHAPTERS } from './chapters.ts';
+// 비트 안 진행값 p 를 문장마다 "글자 수 + 16" 가중치로 나눠(cuts, 문장마다 최소 SENTENCE_MIN_VH) 지금 문장을 고르고, 그림은 "문장 k 의 시작~끝" 진행값으로 문장과 맞물린다.
+import { BEATS, CHAPTERS, SENTENCE_MIN_VH } from './chapters.ts';
 import { splitSentences } from './sentences.ts';
 
 // 장 사이 암전 구간 · 첫 장 앞(장 제목만 보이는 구간) · 마지막 장 뒤 길이(vh)
@@ -133,13 +133,37 @@ export function trackScrollFor(entryIndex: number, p: number, layout: TrackLayou
 
 export type BeatSentences = { sentences: string[]; separators: string[]; cuts: number[] };
 
-/** 문장마다 구간 끝(누적 비율). 가중치 = 글자 수 + 16 */
-export function sentenceCuts(sentences: string[]): number[] {
+/**
+ * 문장마다 비트 안 몫(합 1). 가중치대로 나누되 minimumShare 보다 작은 문장은 minimumShare 로 올리고,
+ * 남은 몫을 나머지 문장에 가중치대로 다시 나눈다(더 올릴 문장이 없을 때까지). minimumShare × 문장 수 ≤ 1 이어야 한다
+ */
+function sentenceShares(weights: number[], minimumShare: number): number[] {
+	const raised = new Set<number>();
+	for (;;) {
+		const freeWeight = weights.reduce(
+			(sum, weight, index) => (raised.has(index) ? sum : sum + weight),
+			0
+		);
+		const freeShare = 1 - raised.size * minimumShare;
+		let changed = false;
+		weights.forEach((weight, index) => {
+			if (raised.has(index) || (weight / freeWeight) * freeShare >= minimumShare) return;
+			raised.add(index);
+			changed = true;
+		});
+		if (!changed)
+			return weights.map((weight, index) =>
+				raised.has(index) ? minimumShare : (weight / freeWeight) * freeShare
+			);
+	}
+}
+
+/** 문장마다 구간 끝(누적 비율). 가중치 = 글자 수 + 16, 어떤 문장도 SENTENCE_MIN_VH 보다 짧지 않다(beatVh: 비트 높이) */
+export function sentenceCuts(sentences: string[], beatVh: number): number[] {
 	const weights = sentences.map((sentence) => Array.from(sentence).length + SENTENCE_WEIGHT_PAD);
-	const total = weights.reduce((sum, weight) => sum + weight, 0);
 	let accumulated = 0;
-	return weights.map((weight) => {
-		accumulated += weight / total;
+	return sentenceShares(weights, SENTENCE_MIN_VH / beatVh).map((share) => {
+		accumulated += share;
 		return accumulated;
 	});
 }
@@ -147,7 +171,7 @@ export function sentenceCuts(sentences: string[]): number[] {
 /** BEATS 순서대로 비트 문장과 문장 구간 */
 export const BEAT_SENTENCES: BeatSentences[] = BEATS.map(({ beat }) => {
 	const split = splitSentences(beat.text);
-	return { ...split, cuts: sentenceCuts(split.sentences) };
+	return { ...split, cuts: sentenceCuts(split.sentences, beat.heightVh) };
 });
 
 const BEAT_INDEX_BY_ID = new Map(BEATS.map((entry, index) => [entry.beat.id, index]));

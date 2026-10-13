@@ -47,10 +47,11 @@ describe('스크롤 구간', () => {
 		);
 	});
 
-	test('비트 높이: clamp(80 + 0.9 × 글자 수, 170, 330)vh', () => {
+	test('비트 높이: max(80 + 0.9 × 글자 수, 170, 문장 수 × 60 + 80)vh, 상한 없음', () => {
 		assert.equal(beatHeightVh('가'.repeat(10)), 170);
 		assert.equal(beatHeightVh('가'.repeat(150)), 215);
-		assert.equal(beatHeightVh('가'.repeat(400)), 330);
+		assert.equal(beatHeightVh('가'.repeat(400)), 440);
+		assert.equal(beatHeightVh(Array(6).fill('가.').join(' ')), 440);
 	});
 
 	test('구간 앞은 첫 암전 p 0, 뒤는 마지막 암전 p 1', () => {
@@ -96,9 +97,20 @@ describe('스크롤 구간', () => {
 
 describe('문장 구간', () => {
 	test('cuts: 가중치 = 글자 수 + 16, 마지막은 1', () => {
-		const cuts = sentenceCuts(['가'.repeat(4), '가'.repeat(24)]);
+		const cuts = sentenceCuts(['가'.repeat(4), '가'.repeat(24)], 200);
 		assert.ok(Math.abs(cuts[0] - 20 / 60) < 1e-12);
 		assert.ok(Math.abs(cuts[1] - 1) < 1e-12);
+	});
+
+	test('cuts: 어떤 비트의 어떤 문장 구간도 60vh 미만이 아니다', () => {
+		BEATS.forEach(({ beat }, index) => {
+			const cuts = BEAT_SENTENCES[index].cuts;
+			assert.ok(Math.abs(cuts[cuts.length - 1] - 1) < 1e-12, beat.id);
+			cuts.forEach((cut, sentence) => {
+				const spanVh = (cut - (sentence === 0 ? 0 : cuts[sentence - 1])) * beat.heightVh;
+				assert.ok(spanVh >= 60 - 1e-9, `${beat.id} 문장 ${sentence + 1}: ${spanVh}vh`);
+			});
+		});
 	});
 
 	test('sentenceIndex: 구간 경계에서 다음 문장으로 넘어간다', () => {
