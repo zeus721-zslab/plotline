@@ -1,0 +1,25 @@
+/* 사라진 세 자리 스토리 테마(어둠 속 금빛 궤적, 시제품 chaos-full.src.html :root · 색 값). 이 클래스를 단 요소 안에서만 쓴다. 공통 부품이 읽는 --story-* 이름을 1~7편과 같게 둔다.
+   대비(바탕 #0A0B0D 기준, AA 4.5:1 이상): 본문 #ECE7DC 약 16.0:1 · 보조 #AAA293 약 7.8:1 · 강조색 #F0BE69 약 11.5:1 */
+.vanished-digits-theme {
+	--story-bg: #0a0b0d;
+	--story-card: rgba(10, 11, 13, 0.66);
+	--story-cell-off: #1e1d1b;
+	--story-cell-on: #f0be69;
+	--story-cell-dim: #8a7448;
+	--story-cell-bright: #fff8ec;
+	--story-text: #ece7dc;
+	--story-muted: #aaa293;
+	--story-legend: #f0be69;
+	--story-accent: #f0be69;
+	--story-imagined: #cbbfa5;
+
+	background: var(--story-bg);
+	color: var(--story-text);
+	font-family:
+		system-ui,
+		-apple-system,
+		'Apple SD Gothic Neo',
+		'Malgun Gothic',
+		'Noto Sans KR',
+		sans-serif;
+}

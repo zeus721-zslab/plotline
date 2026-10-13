@@ -5,9 +5,11 @@
 		STARRY_NIGHT_DATASETS,
 		STARRY_NIGHT_STORY
 	} from '#lib/stories/starry-night/starryStory.ts';
+	import SocialMeta from '#lib/story/SocialMeta.svelte';
 	import { loadPublishedSource } from '#lib/story/storySource.ts';
 
 	const loadSource = () => loadPublishedSource(STARRY_NIGHT_STORY, STARRY_NIGHT_DATASETS);
 </script>
 
+<SocialMeta story="starry-night" />
 <StarryNightPage {loadSource} />

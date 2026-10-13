@@ -47,8 +47,8 @@ function changeRow(
 describe('registry.checkHidden — static/data 기준', () => {
 	const now = new Date();
 
-	test('일곱 이야기 모두 숨겨질 문구 0건', () => {
-		assert.equal(STORY_ENTRIES.length, 7);
+	test('여덟 이야기 모두 숨겨질 문구 0건', () => {
+		assert.equal(STORY_ENTRIES.length, 8);
 		for (const entry of STORY_ENTRIES) {
 			assert.deepEqual([...entry.checkHidden(staticDatasets(entry), now)], [], entry.story);
 		}
@@ -120,6 +120,13 @@ describe('registry.checkHidden — static/data 기준', () => {
 		const entry = requireEntry('uncrossable-line');
 		const datasets = staticDatasets(entry);
 		datasets.bell_line = changeRow(datasets.bell_line, 'aspect_fixed', 'value', 800);
+		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
+	});
+
+	test('8편: 쉰한 번(앙상블 예보 수)을 바꾸면 숨겨질 문구가 생김', () => {
+		const entry = requireEntry('vanished-digits');
+		const datasets = staticDatasets(entry);
+		datasets.lorenz_chaos = changeRow(datasets.lorenz_chaos, 'ensemble_members', 'value', 52);
 		assert.ok(entry.checkHidden(datasets, now).size >= 1, '데이터를 바꿨는데 0건(false-green)');
 	});
 

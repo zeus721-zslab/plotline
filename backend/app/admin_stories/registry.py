@@ -12,4 +12,5 @@ STORY_REGISTRY: dict[str, tuple[str, ...]] = {
     "starry-night": ("vangogh_starry_night",),
     "unseen-companion": ("sirius_unseen",),
     "uncrossable-line": ("bell_line",),
+    "vanished-digits": ("lorenz_chaos",),
 }

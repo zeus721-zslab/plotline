@@ -71,6 +71,9 @@ import {
 import { buildLineData } from './uncrossable-line/lineData.ts';
 import { LINE_DATASET, LINE_DATASETS, LINE_STORY } from './uncrossable-line/lineStory.ts';
 import { storyMismatches as uncrossableLineMismatches } from './uncrossable-line/storyChecks.ts';
+import { buildChaosData } from './vanished-digits/chaosData.ts';
+import { CHAOS_DATASET, CHAOS_DATASETS, CHAOS_STORY } from './vanished-digits/chaosStory.ts';
+import { storyMismatches as vanishedDigitsMismatches } from './vanished-digits/storyChecks.ts';
 
 /** 묶음 내용이 공개 형식이 아니거나 이야기 데이터로 만들 수 없어 대조하지 못함. */
 export class StoryCheckError extends Error {}
@@ -177,6 +180,12 @@ function uncrossableLineHidden(datasets: Record<string, unknown>): Set<string> {
 	return targetsOf(uncrossableLineMismatches(data));
 }
 
+function vanishedDigitsHidden(datasets: Record<string, unknown>): Set<string> {
+	const data = buildChaosData(requireDataset(datasets, CHAOS_DATASET));
+	if (data === null) throw new StoryCheckError('vanished digits dataset does not match');
+	return targetsOf(vanishedDigitsMismatches(data));
+}
+
 export const STORY_ENTRIES = [
 	{
 		story: ELEMENT_DISCOVERY_STORY,
@@ -196,7 +205,8 @@ export const STORY_ENTRIES = [
 		checkHidden: starryNightHidden
 	},
 	{ story: UNSEEN_STORY, datasetNames: UNSEEN_DATASETS, checkHidden: unseenCompanionHidden },
-	{ story: LINE_STORY, datasetNames: LINE_DATASETS, checkHidden: uncrossableLineHidden }
+	{ story: LINE_STORY, datasetNames: LINE_DATASETS, checkHidden: uncrossableLineHidden },
+	{ story: CHAOS_STORY, datasetNames: CHAOS_DATASETS, checkHidden: vanishedDigitsHidden }
 ] as const satisfies readonly StoryEntry[];
 
 export type RegisteredStory = (typeof STORY_ENTRIES)[number]['story'];

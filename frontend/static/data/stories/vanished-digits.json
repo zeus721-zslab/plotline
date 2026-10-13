@@ -1,0 +1,11 @@
+{
+  "story": "vanished-digits",
+  "title": "사라진 세 자리",
+  "published_at": "2026-10-14T00:00:00Z",
+  "datasets": {
+    "lorenz_chaos": {
+      "version": 1,
+      "path": "/data/datasets/lorenz_chaos/v1.json"
+    }
+  }
+}

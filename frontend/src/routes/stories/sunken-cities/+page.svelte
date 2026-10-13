@@ -5,9 +5,11 @@
 		SUNKEN_CITIES_DATASETS,
 		SUNKEN_CITIES_STORY
 	} from '#lib/stories/sunken-cities/sunkenStory.ts';
+	import SocialMeta from '#lib/story/SocialMeta.svelte';
 	import { loadPublishedSource } from '#lib/story/storySource.ts';
 
 	const loadSource = () => loadPublishedSource(SUNKEN_CITIES_STORY, SUNKEN_CITIES_DATASETS);
 </script>
 
+<SocialMeta story="sunken-cities" />
 <SunkenCitiesPage {loadSource} />

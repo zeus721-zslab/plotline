@@ -4,6 +4,7 @@
 	import { loadStoryIndex } from '#lib/story/fetchPublished.ts';
 	import LoadStatus from '#lib/story/LoadStatus.svelte';
 	import type { StoryIndexEntry } from '#lib/story/published.ts';
+	import SocialMeta from '#lib/story/SocialMeta.svelte';
 	import StoryCoverCard from '#lib/story/StoryCoverCard.svelte';
 	import { storyCover } from '#lib/stories/covers.ts';
 
@@ -31,6 +32,7 @@
 	<title>Plotline</title>
 	<meta name="description" content="숫자 몇 개로 읽는 긴 이야기" />
 </svelte:head>
+<SocialMeta story="home" />
 
 <main class="home">
 	<header>
