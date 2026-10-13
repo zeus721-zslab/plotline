@@ -4,7 +4,8 @@
 	// instant 는 두 장 이상 건너뛰어 옮겨 가기 없이 바로 놓을지.
 	import { onMount } from 'svelte';
 	import { prefersReducedMotion } from 'svelte/motion';
-	import { isLowEndDevice, SeaRenderer, type SceneId } from './seaRenderer.ts';
+	import { isLowEndDevice } from '#lib/story/device.ts';
+	import { SeaRenderer, type SceneId } from './seaRenderer.ts';
 
 	type Props = {
 		scene: SceneId;

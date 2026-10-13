@@ -50,31 +50,20 @@ import {
 	gaugeTarget as sunkenGaugeTarget
 } from './sunken-cities/storyChecks.ts';
 import { buildSunkenData } from './sunken-cities/sunkenData.ts';
+import { ORBIT_TARGET, VELOCITY_BAND_TARGET } from './unseen-companion/chapters.ts';
 import {
-	CHAPTERS as UNSEEN_CHAPTERS,
-	ORBIT_TARGET,
-	SCREEN_MARKS,
-	VELOCITY_BAND_TARGET
-} from './unseen-companion/chapters.ts';
-import {
-	findScreenMarkMismatches,
-	findUnseenMismatches,
+	storyMismatches as unseenCompanionMismatches,
 	timeMarkTarget as unseenTimeMarkTarget
 } from './unseen-companion/storyChecks.ts';
 import { buildUnseenData } from './unseen-companion/unseenData.ts';
 import {
-	CHAPTERS as LINE_CHAPTERS,
 	SCORE_75_TARGET,
 	SCORE_84_TARGET,
 	SCORE_85_TARGET,
-	SCREEN_MARKS as LINE_SCREEN_MARKS,
 	yearMarkTarget
 } from './uncrossable-line/chapters.ts';
 import { buildLineData } from './uncrossable-line/lineData.ts';
-import {
-	findLineMismatches,
-	findScreenMarkMismatches as findLineScreenMarkMismatches
-} from './uncrossable-line/storyChecks.ts';
+import { storyMismatches as uncrossableLineMismatches } from './uncrossable-line/storyChecks.ts';
 
 const ELEMENT_DISCOVERY_STEP_COUNTS = [13, 14, 35, 48, 62, 64, 64, 75, 81, 81, 81, 89, 118];
 const LIGHT_AGE_ASIDE_COUNT = 18;
@@ -517,10 +506,7 @@ describe('6편 보이지 않는 짝 — 문구-데이터 대조', () => {
 	function targets(events: PublishedDataset): string[] {
 		const data = buildUnseenData(events);
 		assert.ok(data !== null);
-		return [
-			...findUnseenMismatches(UNSEEN_CHAPTERS, data),
-			...findScreenMarkMismatches(SCREEN_MARKS, data)
-		].map((mismatch) => mismatch.target);
+		return unseenCompanionMismatches(data).map((mismatch) => mismatch.target);
 	}
 
 	function changed(key: string, field: string, value: number): PublishedDataset {
@@ -570,10 +556,7 @@ describe('7편 넘을 수 없는 선 — 문구-데이터 대조', () => {
 	function targets(events: PublishedDataset): string[] {
 		const data = buildLineData(events);
 		assert.ok(data !== null);
-		return [
-			...findLineMismatches(LINE_CHAPTERS, data),
-			...findLineScreenMarkMismatches(LINE_SCREEN_MARKS, data)
-		].map((mismatch) => mismatch.target);
+		return uncrossableLineMismatches(data).map((mismatch) => mismatch.target);
 	}
 
 	function changed(key: string, field: string, value: number): PublishedDataset {

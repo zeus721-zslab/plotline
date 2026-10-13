@@ -4,7 +4,8 @@
 	// fade 는 7장 신호 띠 깜빡임이 사라진 정도(0~1), instant 는 두 장 이상 건너뛰어 옮겨 가기 없이 바로 놓을지.
 	import { onMount } from 'svelte';
 	import { prefersReducedMotion } from 'svelte/motion';
-	import { FallRenderer, isLowEndDevice } from './fallRenderer.ts';
+	import { isLowEndDevice } from '#lib/story/device.ts';
+	import { FallRenderer } from './fallRenderer.ts';
 	import type { MapLayout } from './mapLayout.ts';
 	import type { SceneId } from './scenes.ts';
 

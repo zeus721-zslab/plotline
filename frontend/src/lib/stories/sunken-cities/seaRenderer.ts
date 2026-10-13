@@ -3,11 +3,9 @@
 // 두 장 이상 한 번에 건너뛰면 옮겨 가기 없이 새 장으로 바로 놓는다. 시그니처(3장 물이 차오름 · 7장 도시가 기울며 가라앉음
 // · 8장 조각 조립)와 4장 골목 윤곽(흩어진 돌 → 벽 줄)은 setSignature 진행도를 따른다. 동작 줄이기 · 저사양은 장마다 끝난 모습 한 장만 그린다.
 // 구도: 휴대폰은 계기판 아래 전체, PC(1024px 이상)는 최대 1600px 구도의 오른쪽 6할 영역에 윤곽을 둔다(3편과 같은 4:6 구도).
-import { pickProfile, type RenderProfile } from '../light-age/skyRenderer.ts';
+import { pickProfile, type RenderProfile } from '../../story/device.ts';
 import type { ChapterId } from './chapters.ts';
 import { HARBOR_TILT_RAD, paintOutline, type Geometry, type OutlineId } from './seaPaint.ts';
-
-export { isLowEndDevice } from '../light-age/skyRenderer.ts';
 
 export type SceneId = 'cover' | ChapterId;
 

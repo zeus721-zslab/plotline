@@ -5,11 +5,11 @@
 	// 오른쪽 위 연도 · 왼쪽 위 장 바로가기 · 오른쪽 아래 정직성 표기는 이야기 구간 안에서만 보인다(표지 · 출처에서는 숨김).
 	import { onMount, tick, untrack } from 'svelte';
 	import { prefersReducedMotion } from 'svelte/motion';
+	import { isLowEndDevice } from '#lib/story/device.ts';
 	import LoadStatus from '#lib/story/LoadStatus.svelte';
 	import SourceList from '#lib/story/SourceList.svelte';
 	import StoryStage from '#lib/story/StoryStage.svelte';
 	import type { LoadStorySource } from '#lib/story/storySource.ts';
-	import { isLowEndDevice } from '../light-age/skyRenderer.ts';
 	import {
 		BEATS,
 		CHAPTERS,
